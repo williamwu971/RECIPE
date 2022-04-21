@@ -33,6 +33,7 @@ void run(char **argv) {
 //                tree->put(keys[i], &keys[i], t);
 
                 /**
+                 * CORE modification
                  * the size of value should change depending on the key
                  */
 
