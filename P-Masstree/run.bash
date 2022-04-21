@@ -10,8 +10,4 @@ for var in "$@"; do
   fi
 done
 
-if [ "$use_perf" = true ]; then
-
-fi
-
 /home/blepers/linux/tools/perf/perf record --call-graph dwarf -a -g ./build/example "$1" "$2"
