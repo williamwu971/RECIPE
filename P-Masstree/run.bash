@@ -9,3 +9,5 @@ for var in "$@"; do
     echo "" && echo "############" && echo "rebuilt" && echo "############" && echo ""
   fi
 done
+
+./build/example 10000 4
