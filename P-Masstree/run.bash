@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+for var in "$@"; do
+  if [ "$var" = "build" ]; then
+    rm -rf build && mkdir build
+    cd build
+    cmake .. && make -j
+    cd ..
+    echo "############" && echo "rebuilt" && echo "############"
+  fi
+done
