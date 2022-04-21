@@ -10,4 +10,4 @@ for var in "$@"; do
   fi
 done
 
-./build/example 10000 4
+./build/example "$1" "$2"
