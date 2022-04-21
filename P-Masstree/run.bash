@@ -6,6 +6,6 @@ for var in "$@"; do
     cd build
     cmake .. && make -j
     cd ..
-    echo "############" && echo "rebuilt" && echo "############"
+    echo "" && echo "############" && echo "rebuilt" && echo "############" && echo ""
   fi
 done
