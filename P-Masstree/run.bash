@@ -10,4 +10,4 @@ for var in "$@"; do
   fi
 done
 
-/home/blepers/linux/tools/perf/perf record -g ./build/example "$1" "$2"
+/home/blepers/linux/tools/perf/perf record ./build/example "$1" "$2"
