@@ -36,9 +36,9 @@ void run(char **argv) {
                  * the size of value should change depending on the key
                  */
 
-                int size = rand()%2048;
-                void* value = malloc(size);
-
+                int size = rand()%2048+sizeof(uint64_t);
+                uint64_t * value = (uint64_t *)malloc(size);
+                *value=keys[i];
 
 
                 tree->put(keys[i], value, t);
