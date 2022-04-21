@@ -30,7 +30,18 @@ void run(char **argv) {
         tbb::parallel_for(tbb::blocked_range<uint64_t>(0, n), [&](const tbb::blocked_range<uint64_t> &range) {
             auto t = tree->getThreadInfo();
             for (uint64_t i = range.begin(); i != range.end(); i++) {
-                tree->put(keys[i], &keys[i], t);
+//                tree->put(keys[i], &keys[i], t);
+
+                /**
+                 * the size of value should change depending on the key
+                 */
+
+                int size = rand()%2048;
+                void* value = malloc(size);
+
+
+
+                tree->put(keys[i], value, t);
             }
         });
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
