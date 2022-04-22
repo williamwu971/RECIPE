@@ -44,6 +44,7 @@ void run(char **argv) {
                 // todo: if RP_malloc is used here, values will be stored in PMEM
 
 //                int size = rand()%2048+sizeof(uint64_t);
+                int size = sizeof(uint64_t);
 #ifdef posix_memalign
                 uint64_t * value = (uint64_t *)RP_malloc(sizeof(uint64_t));
 #else
