@@ -12,14 +12,14 @@ void run(char **argv) {
     std::cout << "Simple Example of P-Masstree" << std::endl;
 
     uint64_t n = std::atoll(argv[1]);
-    uint64_t *keys = new uint64_t[n];
+    uint64_t *keys = new uint64_t[n]; // todo: insert random keys
 
 
     // init Ralloc with 64G pool
     RP_init("masstree",64*1024*1024*1024ULL);
 
 
-    // Generate keys
+    // Generate keys todo: random keys
     for (uint64_t i = 0; i < n; i++) {
         keys[i] = i + 1;
     }
@@ -40,10 +40,13 @@ void run(char **argv) {
 
 
                 // todo: if RP_malloc is used here, values will be stored in PMEM
+                // todo: free memory, make templates/cpp (modular) <- important
 
+                // todo: size randomize (YCSB/Facebook workload)
 //                int size = rand()%2048+sizeof(uint64_t);
                 int size = sizeof(uint64_t);
 
+                // todo: value should be flushed before inserting
                 uint64_t * value = (uint64_t *)RP_malloc(size);
 //                uint64_t * value = (uint64_t *)malloc(size);
 
