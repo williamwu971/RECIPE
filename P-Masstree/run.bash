@@ -25,7 +25,6 @@ for var in "$@"; do
     fi
 
     echo "" && echo "############" && echo "OK" && echo "############" && echo ""
-
   fi
 done
 
