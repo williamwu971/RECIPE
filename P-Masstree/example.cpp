@@ -16,7 +16,7 @@ void run(char **argv) {
 
 
     // init Ralloc with 64G pool
-    RP_init("masstree",64*1024*1024*1024ULL);
+//    RP_init("masstree",64*1024*1024*1024ULL);
 
 
     // Generate keys
@@ -44,8 +44,8 @@ void run(char **argv) {
 //                int size = rand()%2048+sizeof(uint64_t);
                 int size = sizeof(uint64_t);
 
-                uint64_t * value = (uint64_t *)RP_malloc(size);
-                uint64_t * value = (uint64_t *)RP_malloc(size);
+//                uint64_t * value = (uint64_t *)RP_malloc(size);
+                uint64_t * value = (uint64_t *)malloc(size);
 
 
                 *value=keys[i];
