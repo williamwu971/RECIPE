@@ -8,11 +8,6 @@ inline int RP_memalign(void **memptr, size_t alignment, size_t size){
     return 0;
 }
 
-// todo: if this marco is defined, indexes will be stored in PMEM
-#define posix_memalign RP_memalign
-
-
-
 using namespace MASS;
 
 namespace masstree {

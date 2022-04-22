@@ -16,6 +16,9 @@
 
 #include "Epoche.h"
 
+// todo: if this marco is defined, indexes will be stored in PMEM
+#define posix_memalign RP_memalign
+
 namespace masstree {
 
 #define LEAF_WIDTH          15

@@ -15,8 +15,10 @@ void run(char **argv) {
     uint64_t *keys = new uint64_t[n];
 
 
-    // init Ralloc
+    // init Ralloc with 64G pool
+#ifdef posix_memalign
     RP_init("masstree",64*1024*1024*1024ULL);
+#endif
 
 
     // Generate keys
