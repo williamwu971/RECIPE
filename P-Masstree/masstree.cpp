@@ -1,6 +1,11 @@
 #include "masstree.h"
 #include "Epoche.cpp"
 
+#include "ralloc.hpp"
+
+// todo: if this marco is defined, indexes will be stored in PMEM
+#define posix_memalign RP_MALLOC
+
 using namespace MASS;
 
 namespace masstree {

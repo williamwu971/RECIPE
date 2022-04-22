@@ -16,9 +16,6 @@ void run(char **argv) {
 
 
     // init Ralloc
-//    uint64_t ralloc_region_size=n*1024;
-//    if (ralloc_region_size<1*1024*1024*1024ULL) ralloc_region_size=1*1024*1024*1024ULL;
-//    if (ralloc_region_size>64*1024*1024*1024ULL) ralloc_region_size=64*1024*1024*1024ULL;
     RP_init("masstree",64*1024*1024*1024ULL);
 
 
@@ -41,10 +38,8 @@ void run(char **argv) {
             for (uint64_t i = range.begin(); i != range.end(); i++) {
 //                tree->put(keys[i], &keys[i], t);
 
-                /**
-                 * CORE modification
-                 * the size of value should change depending on the key
-                 */
+
+                // todo: if RP_malloc is used here, values will be stored in PMEM
 
 //                int size = rand()%2048+sizeof(uint64_t);
 //                uint64_t * value = (uint64_t *)malloc(size);
