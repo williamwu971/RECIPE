@@ -17,6 +17,8 @@ void run(char **argv) {
 
     // init Ralloc
     RP_init("masstree",64*1024*1024*1024ULL);
+    extern int (*custom_memalign)(void **, size_t , size_t ) ;
+    custom_memalign== posix_memalign;
 
 
     // Generate keys
