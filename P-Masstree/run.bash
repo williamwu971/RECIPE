@@ -29,5 +29,8 @@ for var in "$@"; do
 done
 
 cd /home/xiaoxiang/RECIPE/P-Masstree/build/ || exit
-rm -rf /pmem0/*
-/home/blepers/linux/tools/perf/perf record ./example "$1" "$2"
+
+for i in {0..4}; do
+  rm -rf /pmem0/*
+  /home/blepers/linux/tools/perf/perf record ./example 100000000 $((2 ** i))
+done
