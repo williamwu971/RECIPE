@@ -45,11 +45,8 @@ void run(char **argv) {
 
 //                int size = rand()%2048+sizeof(uint64_t);
                 int size = sizeof(uint64_t);
-#ifdef posix_memalign
-                uint64_t * value = (uint64_t *)RP_malloc(sizeof(uint64_t));
-#else
-                uint64_t * value = (uint64_t *)malloc(size);
-#endif
+                uint64_t * value;
+                posix_memalign(&value,64,size);
 
 
                 *value=keys[i];
