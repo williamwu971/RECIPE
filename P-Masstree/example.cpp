@@ -6,6 +6,7 @@
 using namespace std;
 
 #include "masstree.h"
+#include "ralloc.hpp"
 
 void run(char **argv) {
     std::cout << "Simple Example of P-Masstree" << std::endl;

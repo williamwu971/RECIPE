@@ -4,21 +4,28 @@ for var in "$@"; do
   if [ "$var" = "build" ]; then
 
     # build ralloc
-    cd /home/xiaoxiang/ralloc/test/
+    cd /home/xiaoxiang/ralloc/test/ || exit
     git pull
     make clean
     make libralloc.a
+    if [ ! -f libralloc.a ]; then
+      echo "Failed to build ralloc!"
+    fi
 
     # build P-Masstree
-    cd /home/xiaoxiang/RECIPE/P-Masstree/
+    cd /home/xiaoxiang/RECIPE/P-Masstree/ || exit
     git pull
     rm -rf build && mkdir build
-    cd build
+    cd build || exit
     cmake .. && make -j
+    if [ ! -f example ]; then
+      echo "Failed to build P-Masstree!"
+    fi
 
-    echo "" && echo "############" && echo "rebuilt" && echo "############" && echo ""
+    echo "" && echo "############" && echo "OK" && echo "############" && echo ""
+
   fi
 done
 
-cd /home/xiaoxiang/RECIPE/P-Masstree/
-/home/blepers/linux/tools/perf/perf record ./build/example "$1" "$2"
+cd /home/xiaoxiang/RECIPE/P-Masstree/build/ || exit
+/home/blepers/linux/tools/perf/perf record ./example "$1" "$2"
