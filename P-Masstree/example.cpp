@@ -16,10 +16,10 @@ void run(char **argv) {
 
 
     // init Ralloc
-    uint64_t ralloc_region_size=n*1024;
-    if (ralloc_region_size<1*1024*1024*1024ULL) ralloc_region_size=1*1024*1024*1024ULL;
-    if (ralloc_region_size>64*1024*1024*1024ULL) ralloc_region_size=64*1024*1024*1024ULL;
-    RP_init("masstree",ralloc_region_size);
+//    uint64_t ralloc_region_size=n*1024;
+//    if (ralloc_region_size<1*1024*1024*1024ULL) ralloc_region_size=1*1024*1024*1024ULL;
+//    if (ralloc_region_size>64*1024*1024*1024ULL) ralloc_region_size=64*1024*1024*1024ULL;
+    RP_init("masstree",64*1024*1024*1024ULL);
 
 
     // Generate keys
