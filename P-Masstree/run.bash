@@ -10,6 +10,7 @@ for var in "$@"; do
     make libralloc.a
     if [ ! -f libralloc.a ]; then
       echo "Failed to build ralloc!"
+      exit
     fi
 
     # build P-Masstree
@@ -20,6 +21,7 @@ for var in "$@"; do
     cmake .. && make -j
     if [ ! -f example ]; then
       echo "Failed to build P-Masstree!"
+      exit
     fi
 
     echo "" && echo "############" && echo "OK" && echo "############" && echo ""
