@@ -14,6 +14,11 @@ void run(char **argv) {
     uint64_t n = std::atoll(argv[1]);
     uint64_t *keys = new uint64_t[n];
 
+
+    // init Ralloc
+    RP_init("masstree",n*512);
+
+
     // Generate keys
     for (uint64_t i = 0; i < n; i++) {
         keys[i] = i + 1;
@@ -40,7 +45,7 @@ void run(char **argv) {
 
 //                int size = rand()%2048+sizeof(uint64_t);
 //                uint64_t * value = (uint64_t *)malloc(size);
-                uint64_t * value = (uint64_t *)malloc(sizeof(uint64_t));
+                uint64_t * value = (uint64_t *)RP_malloc(sizeof(uint64_t));
                 *value=keys[i];
 
 
