@@ -80,12 +80,14 @@ void run(char **argv) {
 //                int size = rand()%2048+sizeof(uint64_t);
                 int size = sizeof(uint64_t);
 
-                // todo: value should be flushed before inserting
+
                 uint64_t * value = (uint64_t *)which_malloc(size);
-//                uint64_t * value = (uint64_t *)malloc(size);
 
-
+                // flush value before inserting
                 *value=keys[i];
+                asm volatile(".byte 0x66; xsaveopt %0" : "+m" (*(volatile char *)(value)));
+                asm volatile("sfence":::"memory");
+
                 tree->put(keys[i], value, t);
             }
         });

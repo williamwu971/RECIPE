@@ -39,8 +39,8 @@ num_threads=(1 2 4 8 16)
 printf "index,value," >>insert.csv
 printf "index,value," >>lookup.csv
 for n in "${num_threads[@]}"; do
-  printf "$n," >>insert.csv
-  printf "$n," >>lookup.csv
+  printf "T=$n," >>insert.csv
+  printf "T=$n," >>lookup.csv
 done
 echo "" >>insert.csv
 echo "" >>lookup.csv
