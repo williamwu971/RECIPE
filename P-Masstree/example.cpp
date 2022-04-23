@@ -29,16 +29,6 @@ void run(char **argv) {
         keys[i] = i + 1;
     }
 
-    // shuffle the array todo: random keys
-    srand(time(NULL));
-    for (uint64_t i = 0; i < n - 1; i++)
-    {
-        uint64_t j = i + rand() / (RAND_MAX / (n - i) + 1);
-        uint64_t t = keys[j];
-        keys[j] = keys[i];
-        keys[i] = t;
-    }
-
     int num_thread = atoi(argv[2]);
     tbb::task_scheduler_init init(num_thread);
 
@@ -48,6 +38,7 @@ void run(char **argv) {
     which_malloc=malloc;
     which_free=free;
     int require_init=0;
+    int shuffle_keys=0;
 
     for (int ac=0;ac<5;ac++){
         if (strcasestr(argv[ac],"index")){
@@ -61,11 +52,27 @@ void run(char **argv) {
                 which_free=RP_free;
                 require_init=1;
             }
+        }else if (strcasestr(argv[ac],"key")){
+            if (strcasestr(argv[ac],"rand")){
+                shuffle_keys=1;
+            }
         }
     }
 
     if (require_init){
         RP_init("masstree",64*1024*1024*1024ULL);
+    }
+
+    if (shuffle_keys){
+        // shuffle the array todo: random keys
+        srand(time(NULL));
+        for (uint64_t i = 0; i < n - 1; i++)
+        {
+            uint64_t j = i + rand() / (RAND_MAX / (n - i) + 1);
+            uint64_t t = keys[j];
+            keys[j] = keys[i];
+            keys[i] = t;
+        }
     }
 
     double insert_throughput;
