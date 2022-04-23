@@ -45,6 +45,8 @@ void run(char **argv) {
         }
     }
 
+    double insert_throughput;
+    double lookup_throughput;
 
 
     printf("operation,n,ops/s\n");
@@ -79,6 +81,7 @@ void run(char **argv) {
                 std::chrono::system_clock::now() - starttime);
         printf("Throughput: insert,%ld,%f ops/us\n", n, (n * 1.0) / duration.count());
         printf("Elapsed time: insert,%ld,%f sec\n", n, duration.count() / 1000000.0);
+        insert_throughput=(n * 1.0) / duration.count();
     }
 
     {
@@ -98,7 +101,20 @@ void run(char **argv) {
                 std::chrono::system_clock::now() - starttime);
         printf("Throughput: lookup,%ld,%f ops/us\n", n, (n * 1.0) / duration.count());
         printf("Elapsed time: lookup,%ld,%f sec\n", n, duration.count() / 1000000.0);
+        lookup_throughput=(n * 1.0) / duration.count();
     }
+
+    // logging throughput to files
+
+    FILE* insert_throughput_file=fopen("insert.csv","a");
+    FILE* lookup_throughput_file=fopen("lookup.csv","a");
+
+    fprintf(insert_throughput_file,"%.2f,", insert_throughput);
+    fprintf(lookup_throughput_file,"%.2f,", lookup_throughput);
+
+    fclose(insert_throughput_file);
+    fclose(lookup_throughput_file);
+
 
     delete[] keys;
 }
