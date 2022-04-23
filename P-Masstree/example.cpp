@@ -67,7 +67,7 @@ void run(char **argv) {
                 int size = sizeof(uint64_t);
 
                 // todo: value should be flushed before inserting
-                uint64_t * value = (uint64_t *)RP_malloc(size);
+                uint64_t * value = (uint64_t *)masstree::which_malloc(size);
 //                uint64_t * value = (uint64_t *)malloc(size);
 
 
