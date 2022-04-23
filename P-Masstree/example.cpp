@@ -88,7 +88,6 @@ void run(char **argv) {
                 *value=keys[i];
 //                asm volatile(".byte 0x66; xsaveopt %0" : "+m" (*(volatile char *)(value)));
 //                asm volatile("sfence":::"memory");
-                printf("POINTER: %p\n",value);
                 tree->put(keys[i], value, t);
             }
         });
@@ -105,15 +104,12 @@ void run(char **argv) {
         tbb::parallel_for(tbb::blocked_range<uint64_t>(0, n), [&](const tbb::blocked_range<uint64_t> &range) {
             auto t = tree->getThreadInfo();
             for (uint64_t i = range.begin(); i != range.end(); i++) {
-                void* ptr = tree->get(keys[i], t);
-//                uint64_t *ret = reinterpret_cast<uint64_t *> (tree->get(keys[i], t));
-                uint64_t *ret = reinterpret_cast<uint64_t *> (ptr);
+                uint64_t *ret = reinterpret_cast<uint64_t *> (tree->get(keys[i], t));
                 if (*ret != keys[i]) {
                     std::cout << "wrong value read: " << *ret << " expected:" << keys[i] << std::endl;
                     throw;
                 }
-                printf("POINTER: %p\n",ptr);
-//                which_free(ptr);
+                which_free(ret);
             }
         });
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
