@@ -33,7 +33,7 @@ rm -rf insert.csv lookup.csv
 
 index_location=("dram" "pmem")
 value_location=("dram" "pmem")
-num_threads=(1 2 4 8 16)
+num_threads=(4 8 16)
 
 # the header of csv file
 printf "index,value," >>insert.csv
