@@ -13,6 +13,10 @@ inline int RP_memalign(void **memptr, size_t alignment, size_t size){
     return 0;
 }
 
+int (*which_memalign)(void **memptr, size_t alignment, size_t size);
+void *(*which_malloc)(size_t size);
+void (*which_free)(void *ptr);
+
 void run(char **argv) {
     std::cout << "Simple Example of P-Masstree" << std::endl;
 
