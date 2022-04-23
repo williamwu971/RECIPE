@@ -21,7 +21,7 @@ void run(char **argv) {
     std::cout << "Simple Example of P-Masstree" << std::endl;
 
     uint64_t n = std::atoll(argv[1]);
-    uint64_t *keys = new uint64_t[n]; // todo: insert random keys
+    uint64_t *keys = new uint64_t[n];
 
 
     // Generate keys todo: random keys
