@@ -35,9 +35,10 @@ index_location=("dram" "pmem")
 value_location=("dram" "pmem")
 num_threads=(16)
 workload=100000000
+key_order="random"
 
-echo "insert,workload=$workload,unit=ops/us" >insert.csv
-echo "lookup,workload=$workload,unit=ops/us" >lookup.csv
+echo "insert,workload=$workload,unit=ops/us,key_order=$key_order" >insert.csv
+echo "lookup,workload=$workload,unit=ops/us,key_order=$key_order" >lookup.csv
 
 # the header of csv file
 printf "index,value," >>insert.csv
@@ -58,7 +59,7 @@ for i in "${index_location[@]}"; do
 
     for n in "${num_threads[@]}"; do
       rm -rf /pmem0/*
-      /home/blepers/linux/tools/perf/perf record ./example "$workload" "$n" index="$i" value="$v"
+      /home/blepers/linux/tools/perf/perf record ./example "$workload" "$n" index="$i" value="$v" key="$key_order"
       #      ./example 100 "$n" index="$i" value="$v"
     done
 
