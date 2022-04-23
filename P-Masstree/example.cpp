@@ -26,7 +26,8 @@ void run(char **argv) {
 
     // Generate keys todo: random keys
     for (uint64_t i = 0; i < n; i++) {
-        keys[i] = i + 1;
+//        keys[i] = i + 1;
+        keys[i]=rand();
     }
 
     int num_thread = atoi(argv[2]);
