@@ -34,7 +34,7 @@ cd /home/xiaoxiang/RECIPE/P-Masstree/build/ || exit
 index_location=("dram" "pmem")
 value_location=("dram" "pmem")
 num_threads=(16)
-workload=1
+workload=10000
 
 echo "insert,workload=$workload,unit=ops/us" >insert.csv
 echo "lookup,workload=$workload,unit=ops/us" >lookup.csv
