@@ -14,6 +14,7 @@ inline int RP_memalign(void **memptr, size_t alignment, size_t size){
 }
 
 int (*which_memalign)(void **memptr, size_t alignment, size_t size);
+void (*which_memfree)(void *ptr);
 void *(*which_malloc)(size_t size);
 void (*which_free)(void *ptr);
 
@@ -35,6 +36,7 @@ void run(char **argv) {
 
     // todo: make templates/cpp (modular) <- important
     which_memalign=posix_memalign;
+    which_memfree=free;
     which_malloc=malloc;
     which_free=free;
     int require_init=0;
@@ -44,6 +46,7 @@ void run(char **argv) {
         if (strcasestr(argv[ac],"index")){
             if (strcasestr(argv[ac],"pmem")){
                 which_memalign=RP_memalign;
+                which_memfree=RP_free;
                 require_init=1;
             }
         }else if (strcasestr(argv[ac],"value")){

@@ -4,9 +4,11 @@
 #include "ralloc.hpp"
 
 extern int (*which_memalign)(void **memptr, size_t alignment, size_t size);
+extern void (*which_memfree)(void *ptr);
 
 // todo: if this marco is defined, indexes will be stored in PMEM
 #define posix_memalign which_memalign
+#define free which_memfree
 
 using namespace MASS;
 
