@@ -25,6 +25,7 @@ for var in "$@"; do
     fi
 
     echo "" && echo "############" && echo "OK" && echo "############" && echo ""
+    exit
   fi
 done
 
@@ -55,7 +56,7 @@ for i in "${index_location[@]}"; do
     for n in "${num_threads[@]}"; do
       rm -rf /pmem0/*
       /home/blepers/linux/tools/perf/perf record ./example 100000000 "$n" index="$i" value="$v"
-#      ./example 100 "$n" index="$i" value="$v"
+      #      ./example 100 "$n" index="$i" value="$v"
     done
 
     # this should result in two csv files insert.csv and lookup.csv
