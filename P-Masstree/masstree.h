@@ -18,6 +18,10 @@
 
 namespace masstree {
 
+int (*which_memalign)(void **memptr, size_t alignment, size_t size);
+void *(*which_malloc)(size_t size);
+void (*which_free)(void *ptr);
+
 #define LEAF_WIDTH          15
 #define LEAF_THRESHOLD      1
 

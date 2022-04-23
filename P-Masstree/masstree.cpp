@@ -3,13 +3,8 @@
 
 #include "ralloc.hpp"
 
-inline int RP_memalign(void **memptr, size_t alignment, size_t size){
-    *memptr=RP_malloc(size);
-    return 0;
-}
-
 // todo: if this marco is defined, indexes will be stored in PMEM
-#define posix_memalign RP_memalign
+#define posix_memalign which_memalign
 
 using namespace MASS;
 

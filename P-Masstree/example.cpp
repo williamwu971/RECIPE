@@ -8,15 +8,16 @@ using namespace std;
 #include "masstree.h"
 #include "ralloc.hpp"
 
+inline int RP_memalign(void **memptr, size_t alignment, size_t size){
+    *memptr=RP_malloc(size+(alignment-size%alignment));
+    return 0;
+}
+
 void run(char **argv) {
     std::cout << "Simple Example of P-Masstree" << std::endl;
 
     uint64_t n = std::atoll(argv[1]);
     uint64_t *keys = new uint64_t[n]; // todo: insert random keys
-
-
-    // init Ralloc with 64G pool
-    RP_init("masstree",64*1024*1024*1024ULL);
 
 
     // Generate keys todo: random keys
@@ -26,6 +27,25 @@ void run(char **argv) {
 
     int num_thread = atoi(argv[2]);
     tbb::task_scheduler_init init(num_thread);
+
+
+    masstree::which_memalign=posix_memalign;
+    masstree::which_malloc=malloc;
+    masstree::which_free=free;
+
+    for (int ac=0;ac<5;ac++){
+        if (strcasestr(argv[ac],"index")){
+            if (strcasestr(argv[ac],"pmem")){
+                masstree::which_memalign=RP_memalign;
+            }
+        }else if (strcasestr(argv[ac],"value")){
+            if (strcasestr(argv[ac],"pmem")){
+                masstree::which_malloc=RP_malloc;
+            }
+        }
+    }
+
+
 
     printf("operation,n,ops/s\n");
     masstree::masstree *tree = new masstree::masstree();
