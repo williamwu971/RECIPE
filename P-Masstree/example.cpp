@@ -127,7 +127,7 @@ void run(char **argv) {
                     throw;
                 }
 
-                // (TP dropped) todo: free memory
+                // (TP dropped) todo: free memory, is this correct?
                 which_free(ret);
             }
         });
