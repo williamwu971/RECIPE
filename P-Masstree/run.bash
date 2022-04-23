@@ -44,8 +44,8 @@ echo "lookup,workload=$workload,unit=ops/us,key_order=$key_order" >lookup.csv
 printf "index,value," >>insert.csv
 printf "index,value," >>lookup.csv
 for n in "${num_threads[@]}"; do
-  printf 'T=%s,'"$n" >>insert.csv
-  printf 'T=%s,'"$n" >>lookup.csv
+  printf 'T=%s,' "$n" >>insert.csv
+  printf 'T=%s,' "$n" >>lookup.csv
 done
 echo "" >>insert.csv
 echo "" >>lookup.csv
@@ -54,8 +54,8 @@ for i in "${index_location[@]}"; do
   for v in "${value_location[@]}"; do
 
     # the first two columns
-    printf '%s,%s,'"$i""$v" >>insert.csv
-    printf '%s,%s,'"$i""$v" >>lookup.csv
+    printf '%s,%s,' "$i" "$v" >>insert.csv
+    printf '%s,%s,' "$i" "$v" >>lookup.csv
 
     for n in "${num_threads[@]}"; do
       rm -rf /pmem0/*
