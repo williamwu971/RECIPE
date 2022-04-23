@@ -24,10 +24,19 @@ void run(char **argv) {
     uint64_t *keys = new uint64_t[n];
 
 
-    // Generate keys todo: random keys
+    // Generate keys
     for (uint64_t i = 0; i < n; i++) {
-//        keys[i] = i + 1;
-        keys[i]=rand();
+        keys[i] = i + 1;
+    }
+
+    // shuffle the array todo: random keys
+    srand(time(NULL));
+    for (uint64_t i = 0; i < n - 1; i++)
+    {
+        size_t j = i + rand() / (RAND_MAX / (n - i) + 1);
+        uint64_t t = keys[j];
+        keys[j] = keys[i];
+        keys[i] = t;
     }
 
     int num_thread = atoi(argv[2]);
