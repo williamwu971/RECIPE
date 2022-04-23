@@ -33,7 +33,7 @@ cd /home/xiaoxiang/RECIPE/P-Masstree/build/ || exit
 
 index_location=("dram" "pmem")
 value_location=("dram" "pmem")
-num_threads=(16)
+num_threads=(1 2 4 8 16)
 workload=100000000
 key_order="random"
 
