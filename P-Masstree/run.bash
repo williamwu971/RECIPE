@@ -36,8 +36,8 @@ value_location=("dram" "pmem")
 num_threads=(4 8 16)
 workload=100000000
 
-echo "workload=$workload,unit=ops/us" >insert.csv
-echo "workload=$workload,unit=ops/us" >lookup.csv
+echo "insert,workload=$workload,unit=ops/us" >insert.csv
+echo "lookup,workload=$workload,unit=ops/us" >lookup.csv
 
 # the header of csv file
 printf "index,value," >>insert.csv
