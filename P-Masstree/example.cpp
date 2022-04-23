@@ -33,7 +33,7 @@ void run(char **argv) {
     srand(time(NULL));
     for (uint64_t i = 0; i < n - 1; i++)
     {
-        size_t j = i + rand() / (RAND_MAX / (n - i) + 1);
+        uint64_t j = i + rand() / (RAND_MAX / (n - i) + 1);
         uint64_t t = keys[j];
         keys[j] = keys[i];
         keys[i] = t;
