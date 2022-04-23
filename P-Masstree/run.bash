@@ -30,11 +30,14 @@ for var in "$@"; do
 done
 
 cd /home/xiaoxiang/RECIPE/P-Masstree/build/ || exit
-rm -rf insert.csv lookup.csv
 
 index_location=("dram" "pmem")
 value_location=("dram" "pmem")
 num_threads=(4 8 16)
+workload=100000000
+
+echo "workload=$workload,unit=ops/us" >insert.csv
+echo "workload=$workload,unit=ops/us" >lookup.csv
 
 # the header of csv file
 printf "index,value," >>insert.csv
@@ -55,7 +58,7 @@ for i in "${index_location[@]}"; do
 
     for n in "${num_threads[@]}"; do
       rm -rf /pmem0/*
-      /home/blepers/linux/tools/perf/perf record ./example 100000000 "$n" index="$i" value="$v"
+      /home/blepers/linux/tools/perf/perf record ./example "$workload" "$n" index="$i" value="$v"
       #      ./example 100 "$n" index="$i" value="$v"
     done
 
