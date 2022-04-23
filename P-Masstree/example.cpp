@@ -110,7 +110,7 @@ void run(char **argv) {
                     std::cout << "wrong value read: " << *ret << " expected:" << keys[i] << std::endl;
                     throw;
                 }
-                which_free(ret);
+//                which_free(ret);
             }
         });
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
