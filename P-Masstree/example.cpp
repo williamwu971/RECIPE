@@ -124,7 +124,7 @@ void run(char **argv) {
 }
 
 int main(int argc, char **argv) {
-    if (argc != 3) {
+    if (argc != 5) {
         printf("usage: %s [n] [nthreads]\nn: number of keys (integer)\nnthreads: number of threads (integer)\n", argv[0]);
         return 1;
     }
