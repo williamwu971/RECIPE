@@ -47,6 +47,7 @@ void run(char **argv) {
         }else if (strcasestr(argv[ac],"value")){
             if (strcasestr(argv[ac],"pmem")){
                 which_malloc=RP_malloc;
+                which_free=RP_free;
                 require_init=1;
             }
         }
@@ -106,6 +107,7 @@ void run(char **argv) {
                     std::cout << "wrong value read: " << *ret << " expected:" << keys[i] << std::endl;
                     throw;
                 }
+                which_free(ret);
             }
         });
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
