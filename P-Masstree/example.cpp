@@ -88,7 +88,7 @@ void run(char **argv) {
                 *value=keys[i];
 //                asm volatile(".byte 0x66; xsaveopt %0" : "+m" (*(volatile char *)(value)));
 //                asm volatile("sfence":::"memory");
-
+                printf("POINTER: %p\n",value);
                 tree->put(keys[i], value, t);
             }
         });
@@ -112,6 +112,7 @@ void run(char **argv) {
                     std::cout << "wrong value read: " << *ret << " expected:" << keys[i] << std::endl;
                     throw;
                 }
+                printf("POINTER: %p\n",ptr);
 //                which_free(ptr);
             }
         });
