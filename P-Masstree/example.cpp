@@ -40,7 +40,7 @@ void run(char **argv) {
     int require_init=0;
     int shuffle_keys=0;
 
-    for (int ac=0;ac<5;ac++){
+    for (int ac=0;ac<6;ac++){
         if (strcasestr(argv[ac],"index")){
             if (strcasestr(argv[ac],"pmem")){
                 which_memalign=RP_memalign;
@@ -151,7 +151,7 @@ void run(char **argv) {
 }
 
 int main(int argc, char **argv) {
-    if (argc != 5) {
+    if (argc != 6) {
         printf("usage: %s [n] [nthreads]\nn: number of keys (integer)\nnthreads: number of threads (integer)\n", argv[0]);
         return 1;
     }
