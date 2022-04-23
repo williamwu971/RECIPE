@@ -86,8 +86,8 @@ void run(char **argv) {
 
                 // flush value before inserting
                 *value=keys[i];
-                asm volatile(".byte 0x66; xsaveopt %0" : "+m" (*(volatile char *)(value)));
-                asm volatile("sfence":::"memory");
+//                asm volatile(".byte 0x66; xsaveopt %0" : "+m" (*(volatile char *)(value)));
+//                asm volatile("sfence":::"memory");
 
                 tree->put(keys[i], value, t);
             }
