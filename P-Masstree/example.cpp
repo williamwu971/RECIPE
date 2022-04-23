@@ -43,6 +43,7 @@ void run(char **argv) {
     tbb::task_scheduler_init init(num_thread);
 
 
+    // todo: make templates/cpp (modular) <- important
     which_memalign=posix_memalign;
     which_malloc=malloc;
     which_free=free;
@@ -82,10 +83,6 @@ void run(char **argv) {
             for (uint64_t i = range.begin(); i != range.end(); i++) {
 //                tree->put(keys[i], &keys[i], t);
 
-
-                // todo: if RP_malloc is used here, values will be stored in PMEM
-                // todo: free memory, make templates/cpp (modular) <- important
-
                 // todo: size randomize (YCSB/Facebook workload)
 //                int size = rand()%2048+sizeof(uint64_t);
                 int size = sizeof(uint64_t);
@@ -93,10 +90,10 @@ void run(char **argv) {
 
                 uint64_t * value = (uint64_t *)which_malloc(size);
 
-                // flush value before inserting
+                // flush value before inserting todo: should this exist for DRAM+DRAM?
                 *value=keys[i];
-//                asm volatile(".byte 0x66; xsaveopt %0" : "+m" (*(volatile char *)(value)));
-//                asm volatile("sfence":::"memory");
+                asm volatile(".byte 0x66; xsaveopt %0" : "+m" (*(volatile char *)(value)));
+                asm volatile("sfence":::"memory");
                 tree->put(keys[i], value, t);
             }
         });
@@ -118,6 +115,8 @@ void run(char **argv) {
                     std::cout << "wrong value read: " << *ret << " expected:" << keys[i] << std::endl;
                     throw;
                 }
+
+                // todo: free memory
                 which_free(ret);
             }
         });
