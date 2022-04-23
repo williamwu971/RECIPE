@@ -63,8 +63,9 @@ void run(char **argv) {
         RP_init("masstree",64*1024*1024*1024ULL);
     }
 
+    // (TP dropped) shuffle the array todo: random keys
     if (shuffle_keys){
-        // shuffle the array todo: random keys
+
         srand(time(NULL));
         for (uint64_t i = 0; i < n - 1; i++)
         {
@@ -123,7 +124,7 @@ void run(char **argv) {
                     throw;
                 }
 
-                // todo: free memory
+                // (TP dropped) todo: free memory
                 which_free(ret);
             }
         });
