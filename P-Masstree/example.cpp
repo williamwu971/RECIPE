@@ -36,17 +36,24 @@ void run(char **argv) {
     which_memalign=posix_memalign;
     which_malloc=malloc;
     which_free=free;
+    int require_init=0;
 
     for (int ac=0;ac<5;ac++){
         if (strcasestr(argv[ac],"index")){
             if (strcasestr(argv[ac],"pmem")){
                 which_memalign=RP_memalign;
+                require_init=1;
             }
         }else if (strcasestr(argv[ac],"value")){
             if (strcasestr(argv[ac],"pmem")){
                 which_malloc=RP_malloc;
+                require_init=1;
             }
         }
+    }
+
+    if (require_init){
+        RP_init("masstree",64*1024*1024*1024ULL);
     }
 
     double insert_throughput;
