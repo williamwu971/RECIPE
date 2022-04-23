@@ -29,18 +29,18 @@ void run(char **argv) {
     tbb::task_scheduler_init init(num_thread);
 
 
-    masstree::which_memalign=posix_memalign;
-    masstree::which_malloc=malloc;
-    masstree::which_free=free;
+    which_memalign=posix_memalign;
+    which_malloc=malloc;
+    which_free=free;
 
     for (int ac=0;ac<5;ac++){
         if (strcasestr(argv[ac],"index")){
             if (strcasestr(argv[ac],"pmem")){
-                masstree::which_memalign=RP_memalign;
+                which_memalign=RP_memalign;
             }
         }else if (strcasestr(argv[ac],"value")){
             if (strcasestr(argv[ac],"pmem")){
-                masstree::which_malloc=RP_malloc;
+                which_malloc=RP_malloc;
             }
         }
     }
@@ -69,7 +69,7 @@ void run(char **argv) {
                 int size = sizeof(uint64_t);
 
                 // todo: value should be flushed before inserting
-                uint64_t * value = (uint64_t *)masstree::which_malloc(size);
+                uint64_t * value = (uint64_t *)which_malloc(size);
 //                uint64_t * value = (uint64_t *)malloc(size);
 
 
