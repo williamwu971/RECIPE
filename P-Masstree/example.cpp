@@ -15,15 +15,11 @@ inline int RP_memalign(void **memptr, size_t alignment, size_t size){
 
 static constexpr uint64_t CACHE_LINE_SIZE = 64;
 
-static inline void mfence() {
-    asm volatile("sfence":::"memory");
-}
-
 static inline void clflush(char *data, int len, bool front, bool back)
 {
     volatile char *ptr = (char *)((unsigned long)data &~(CACHE_LINE_SIZE-1));
     if (front)
-        mfence();
+        asm volatile("sfence":::"memory");
     for(; ptr<data+len; ptr+=CACHE_LINE_SIZE){
 #ifdef CLFLUSH
         asm volatile("clflush %0" : "+m" (*(volatile char *)ptr));
@@ -34,7 +30,7 @@ static inline void clflush(char *data, int len, bool front, bool back)
 #endif
     }
     if (back)
-        mfence();
+        asm volatile("sfence":::"memory");
 }
 
 int (*which_memalign)(void **memptr, size_t alignment, size_t size);
