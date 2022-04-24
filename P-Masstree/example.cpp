@@ -13,6 +13,34 @@ inline int RP_memalign(void **memptr, size_t alignment, size_t size){
     return 0;
 }
 
+static constexpr uint64_t CACHE_LINE_SIZE = 64;
+
+static inline void fence() {
+    asm volatile("" : : : "memory");
+}
+
+static inline void mfence() {
+    asm volatile("sfence":::"memory");
+}
+
+static inline void clflush(char *data, int len, bool front, bool back)
+{
+    volatile char *ptr = (char *)((unsigned long)data &~(CACHE_LINE_SIZE-1));
+    if (front)
+        mfence();
+    for(; ptr<data+len; ptr+=CACHE_LINE_SIZE){
+#ifdef CLFLUSH
+        asm volatile("clflush %0" : "+m" (*(volatile char *)ptr));
+#elif CLFLUSH_OPT
+        asm volatile(".byte 0x66; clflush %0" : "+m" (*(volatile char *)(ptr)));
+#elif CLWB
+        asm volatile(".byte 0x66; xsaveopt %0" : "+m" (*(volatile char *)(ptr)));
+#endif
+    }
+    if (back)
+        mfence();
+}
+
 int (*which_memalign)(void **memptr, size_t alignment, size_t size);
 void (*which_memfree)(void *ptr);
 void *(*which_malloc)(size_t size);
@@ -103,8 +131,7 @@ void run(char **argv) {
 
                 // flush value before inserting todo: should this exist for DRAM+DRAM?
                 *value=keys[i];
-                asm volatile(".byte 0x66; xsaveopt %0" : "+m" (*(volatile char *)(value)));
-                asm volatile("sfence":::"memory");
+                clflush(value,size,true,true);
                 tree->put(keys[i], value, t);
             }
         });
@@ -162,3 +189,4 @@ int main(int argc, char **argv) {
     run(argv);
     return 0;
 }
+
