@@ -68,6 +68,7 @@ void run(char **argv) {
     which_malloc=malloc;
     which_free=free;
     int require_init=0;
+    int require_flush=0;
     int shuffle_keys=0;
 
     for (int ac=0;ac<6;ac++){
@@ -82,6 +83,7 @@ void run(char **argv) {
                 which_malloc=RP_malloc;
                 which_free=RP_free;
                 require_init=1;
+                require_flush=1;
             }
         }else if (strcasestr(argv[ac],"key")){
             if (strcasestr(argv[ac],"rand")){
@@ -131,7 +133,7 @@ void run(char **argv) {
 
                 // flush value before inserting todo: should this exist for DRAM+DRAM?
                 *value=keys[i];
-                clflush((char*)value,size,true,true);
+                if (require_flush) clflush((char*)value,size,true,true);
                 tree->put(keys[i], value, t);
             }
         });
