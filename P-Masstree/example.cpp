@@ -131,7 +131,7 @@ void run(char **argv) {
 
                 // flush value before inserting todo: should this exist for DRAM+DRAM?
                 *value=keys[i];
-                clflush(value,size,true,true);
+                clflush((char*)value,size,true,true);
                 tree->put(keys[i], value, t);
             }
         });
