@@ -15,10 +15,6 @@ inline int RP_memalign(void **memptr, size_t alignment, size_t size){
 
 static constexpr uint64_t CACHE_LINE_SIZE = 64;
 
-static inline void fence() {
-    asm volatile("" : : : "memory");
-}
-
 static inline void mfence() {
     asm volatile("sfence":::"memory");
 }
