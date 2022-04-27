@@ -785,6 +785,8 @@ void ycsb_load_run_randint(int index_type, int wl, int kt, int ap, int num_threa
     range_complete.store(0);
     range_incomplete.store(0);
 
+    fprintf(stderr, "ready\n");
+
     if (index_type == TYPE_ART) {
         ART_ROWEX::Tree tree(loadKey);
 
