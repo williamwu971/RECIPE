@@ -231,12 +231,24 @@ void loadKey(TID tid, Key &key) {
     return ;
 }
 
+int (*which_memalign)(void **memptr, size_t alignment, size_t size);
+void (*which_memfree)(void *ptr);
+void *(*which_malloc)(size_t size);
+void (*which_free)(void *ptr);
+
 void ycsb_load_run_string(int index_type, int wl, int kt, int ap, int num_thread,
         std::vector<Key *> &init_keys,
         std::vector<Key *> &keys,
         std::vector<int> &ranges,
         std::vector<int> &ops)
 {
+
+    which_memalign=posix_memalign;
+    which_memfree=free;
+    which_malloc=malloc;
+    which_free=free;
+
+
     std::string init_file;
     std::string txn_file;
 
