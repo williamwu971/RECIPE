@@ -3,6 +3,9 @@
 for var in "$@"; do
   if [ "$var" = "build" ]; then
 
+    apt-get update
+    apt-get install -y build-essential cmake libboost-all-dev libpapi-dev default-jdk libtbb-dev libjemalloc-dev
+
     # build ralloc
     cd /home/xiaoxiang/ralloc/test/ || exit
     git pull
