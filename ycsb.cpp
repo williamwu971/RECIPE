@@ -243,11 +243,6 @@ void ycsb_load_run_string(int index_type, int wl, int kt, int ap, int num_thread
         std::vector<int> &ops)
 {
 
-    which_memalign=posix_memalign;
-    which_memfree=free;
-    which_malloc=malloc;
-    which_free=free;
-
 
     std::string init_file;
     std::string txn_file;
@@ -1309,6 +1304,11 @@ int main(int argc, char **argv) {
     }
 
     printf("%s, workload%s, %s, %s, threads %s\n", argv[1], argv[2], argv[3], argv[4], argv[5]);
+
+    which_memalign=posix_memalign;
+    which_memfree=free;
+    which_malloc=malloc;
+    which_free=free;
 
     int index_type;
     if (strcmp(argv[1], "art") == 0)
