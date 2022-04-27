@@ -43,7 +43,8 @@ index_location=("pmem")
 value_location=("pmem")
 num_threads=(16)
 workload=100000000
-key_order="random"
+#key_order="random"
+key_order="seq"
 
 echo "insert,workload=$workload,unit=ops/us,key_order=$key_order" >insert.csv
 echo "lookup,workload=$workload,unit=ops/us,key_order=$key_order" >lookup.csv
