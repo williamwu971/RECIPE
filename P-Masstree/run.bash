@@ -5,7 +5,7 @@ for var in "$@"; do
 
     apt-get update
     apt-get install -y build-essential cmake libboost-all-dev libpapi-dev default-jdk
-    apt-get install -y libtbb-dev libjemalloc-dev libpmem
+    apt-get install -y libtbb-dev libjemalloc-dev libpmem-dev
 
     # build ralloc
     cd /home/xiaoxiang/ralloc/test/ || exit
