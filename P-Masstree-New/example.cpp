@@ -39,7 +39,7 @@ void *(*which_malloc)(size_t size);
 void (*which_free)(void *ptr);
 
 void run(char **argv) {
-    std::cout << "Simple Example of P-Masstree" << std::endl;
+    std::cout << "Simple Example of P-Masstree-New" << std::endl;
 
     uint64_t n = std::atoll(argv[1]);
     uint64_t *keys = new uint64_t[n];

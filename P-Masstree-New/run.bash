@@ -13,14 +13,14 @@ for var in "$@"; do
       exit
     fi
 
-    # build P-Masstree
-    cd /home/xiaoxiang/RECIPE/P-Masstree/ || exit
+    # build P-Masstree-New
+    cd /home/xiaoxiang/RECIPE/P-Masstree-New/ || exit
     git pull
     rm -rf build && mkdir build
     cd build || exit
     cmake .. && make -j
     if [ ! -f example ]; then
-      echo "Failed to build P-Masstree!"
+      echo "Failed to build P-Masstree-New!"
       exit
     fi
 
@@ -29,7 +29,7 @@ for var in "$@"; do
   fi
 done
 
-cd /home/xiaoxiang/RECIPE/P-Masstree/build/ || exit
+cd /home/xiaoxiang/RECIPE/P-Masstree-New/build/ || exit
 
 #index_location=("dram" "pmem")
 #value_location=("dram" "pmem")
