@@ -1310,6 +1310,11 @@ int main(int argc, char **argv) {
     which_malloc=malloc;
     which_free=free;
 
+    if (strcmp(argv[1], "masstree") != 0){
+        printf("only masstree is allowed!\n");
+        return 1;
+    }
+
     int index_type;
     if (strcmp(argv[1], "art") == 0)
         index_type = TYPE_ART;
