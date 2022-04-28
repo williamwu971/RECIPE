@@ -297,7 +297,7 @@ void run(char **argv) {
             if (strcasestr(argv[ac],"rand")){
                 shuffle_keys=1;
             }
-        }else{
+        }else if (strcasestr(argv[ac],"ycsb")){
             launch_ycsb(ycsb_a_uniform,n);
             exit(0);
         }
