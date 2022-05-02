@@ -298,6 +298,11 @@ void run(char **argv) {
                 which_free=RP_free;
                 require_RP_init=1;
                 require_flush=1;
+            }else if (strcasestr(argv[ac],"log")){
+                which_malloc=log_malloc;
+                which_free=log_free;
+                require_log_init=1;
+                require_flush=1;
             }
         }else if (strcasestr(argv[ac],"key")){
             if (strcasestr(argv[ac],"rand")){
