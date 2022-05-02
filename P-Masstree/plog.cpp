@@ -41,7 +41,6 @@ void log_init(const char *fn, uint64_t num_logs) {
 
     assert(size >= 2 * LOG_SIZE);
     size_t file_size = (num_logs + 1) * LOG_SIZE;
-    printf("file size %ld\n",file_size);
 
     int fd = open(fn, O_RDWR | O_CREAT | O_EXCL, 00777);
     if (fd < 0)die("fd error: %d", fd);

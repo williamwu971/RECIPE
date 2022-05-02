@@ -321,7 +321,6 @@ void run(char **argv) {
     if (require_log_init){
         char const *fn = "/pmem0/masstree_log";
         log_init(fn,10240);
-        printf("log init complete\n");
     }
 
     // todo: add latency tracker and perf
