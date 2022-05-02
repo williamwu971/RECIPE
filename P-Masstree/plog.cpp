@@ -59,6 +59,7 @@ void log_init(const char *fn, off_t size) {
         lm.entries[i][0] = AVAILABLE;
     }
 
+    assert(lm.num_entries>0);
     inited = 1;
 }
 
@@ -71,9 +72,7 @@ int log_new() {
     }
     int success = 0;
     pthread_mutex_lock(&lm_lock);
-    printf("num of entries:%d\n",lm.num_entries);
     for (int i = 0; i < lm.num_entries; i++) {
-        printf("entry %d is %d\n",i,lm.entries[i][0]);
         if (lm.entries[i][0] == AVAILABLE) {
             lm.entries[i][0] = OCCUPIED;
             success = 1;
