@@ -1,8 +1,4 @@
 #include "plog.h"
-#include <iostream>
-#include <chrono>
-#include <random>
-#include "tbb/tbb.h"
 
 enum {
     AVAILABLE,
@@ -41,7 +37,7 @@ pthread_mutex_t lm_lock = PTHREAD_MUTEX_INITIALIZER;
 // every thread hold its own log
 __thread struct log *thread_log = NULL;
 
-void log_init(const char *fn, u_int64_t num_logs) {
+void log_init(const char *fn, uint64_t num_logs) {
 
     assert(size >= 2 * LOG_SIZE);
     size_t file_size = (num_logs + 1) * LOG_SIZE;
@@ -56,7 +52,7 @@ void log_init(const char *fn, u_int64_t num_logs) {
 
     lm.num_entries = num_logs;
     lm.entries = (int **) malloc(sizeof(int *) * lm.num_entries);
-    for (int i = 0; i < lm.num_entries; i++) {
+    for (uint64_t i = 0; i < lm.num_entries; i++) {
         lm.entries[i] = (int *) ((char *) big_map + CACHE_LINE_SIZE * i);
         lm.entries[i][0] = AVAILABLE;
     }

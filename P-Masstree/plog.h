@@ -7,6 +7,10 @@
 #include <sys/mman.h>
 #include <assert.h>
 #include <pthread.h>
+#include <iostream>
+#include <chrono>
+#include <random>
+#include "tbb/tbb.h"
 
 #define LOG_SIZE 4*1024*1024
 #define LOG_MERGE_THRESHOLD 2*1024*1024
@@ -22,7 +26,7 @@
       exit(-1); \
    } while(0)
 
-void log_init(const char *fn, u_int64_t num_logs);
+void log_init(const char *fn, uint64_t num_logs);
 
 void *log_malloc(size_t size);
 
