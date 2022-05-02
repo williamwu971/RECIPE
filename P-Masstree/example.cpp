@@ -2,6 +2,7 @@
 #include <chrono>
 #include <random>
 #include "tbb/tbb.h"
+#include "plog.cpp"
 
 
 int (*which_memalign)(void **memptr, size_t alignment, size_t size);
@@ -25,7 +26,7 @@ inline int RP_memalign(void **memptr, size_t alignment, size_t size){
     return 0;
 }
 
-static constexpr uint64_t CACHE_LINE_SIZE = 64;
+//static constexpr uint64_t CACHE_LINE_SIZE = 64;
 
 static inline void clflush(char *data, int len, bool front, bool back)
 {
@@ -275,7 +276,8 @@ void run(char **argv) {
     which_memfree=free;
     which_malloc=malloc;
     which_free=free;
-    int require_init=0;
+    int require_RP_init=0;
+    int require_log_init=0;
     int require_flush=0;
     int shuffle_keys=0;
 
@@ -284,13 +286,17 @@ void run(char **argv) {
             if (strcasestr(argv[ac],"pmem")){
                 which_memalign=RP_memalign;
                 which_memfree=RP_free;
-                require_init=1;
+                require_RP_init=1;
+            }else if (strcasestr(argv[ac],"log")){
+                which_memalign=log_memalign;
+                which_memfree=log_free;
+                require_log_init=1;
             }
         }else if (strcasestr(argv[ac],"value")){
             if (strcasestr(argv[ac],"pmem")){
                 which_malloc=RP_malloc;
                 which_free=RP_free;
-                require_init=1;
+                require_RP_init=1;
                 require_flush=1;
             }
         }else if (strcasestr(argv[ac],"key")){
@@ -303,8 +309,13 @@ void run(char **argv) {
         }
     }
 
-    if (require_init){
+    if (require_RP_init){
         RP_init("masstree",64*1024*1024*1024ULL);
+    }
+
+    if (require_log_init){
+        char const *fn = "/pmem0/masstree_log";
+        log_init(fn,64*1024*1024);
     }
 
     // todo: add latency tracker and perf

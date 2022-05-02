@@ -41,7 +41,7 @@ pthread_mutex_t lm_lock = PTHREAD_MUTEX_INITIALIZER;
 // every thread hold its own log
 __thread struct log *thread_log = NULL;
 
-void log_init(char *fn, off_t size) {
+void log_init(const char *fn, off_t size) {
 
     assert(size >= 2 * LOG_SIZE);
 
@@ -93,7 +93,9 @@ void *log_malloc(size_t size) {
     size_t required_size = size + sizeof(struct log_cell);
 
     if (unlikely(thread_log == NULL || thread_log->free_space < required_size)) {
-        assert(log_new());
+        if (!log_new()) {
+            return NULL;
+        }
     }
 
     // write and decrease size
@@ -104,4 +106,21 @@ void *log_malloc(size_t size) {
     thread_log->curr = (char *) thread_log->curr + required_size;
 
     return to_return;
+}
+
+
+int log_memalign(void **memptr, size_t alignment, size_t size) {
+
+    (void) alignment;
+
+    // todo: how to make sure memory is aligned
+    *memptr = log_malloc(size);
+}
+
+void log_free(void *ptr) {
+
+
+    // todo: how to mark entry as freed
+    (void) ptr;
+    return;
 }

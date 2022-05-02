@@ -15,8 +15,10 @@
 #define likely(x)       __builtin_expect((x),1)
 #define unlikely(x)     __builtin_expect((x),0)
 
-void log_init(char *fn, off_t size);
+void log_init(const char *fn, off_t size);
 
 void *log_malloc(size_t size);
+
+void log_free(void *ptr);
 
 #endif
