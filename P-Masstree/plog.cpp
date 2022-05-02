@@ -58,6 +58,7 @@ void log_init(const char *fn, int num_logs) {
     lm.entries = (int **) malloc(sizeof(int *) * lm.num_entries);
     for (int i = 0; i < lm.num_entries; i++) {
         lm.entries[i] = (int *) ((char *) big_map + CACHE_LINE_SIZE * i);
+        printf("entries %d %p",i,lm.entries[i]);
         lm.entries[i][0] = AVAILABLE;
     }
 
