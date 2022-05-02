@@ -115,6 +115,8 @@ int log_memalign(void **memptr, size_t alignment, size_t size) {
 
     // todo: how to make sure memory is aligned
     *memptr = log_malloc(size);
+
+    return 0;
 }
 
 void log_free(void *ptr) {
