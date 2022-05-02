@@ -41,7 +41,7 @@ index_location=("dram" "pmem")
 value_location=("pmem" "log")
 num_threads=(16)
 
-workload=100000000
+workload=10
 key_order="random"
 #key_order="seq"
 
@@ -70,6 +70,7 @@ for i in "${index_location[@]}"; do
       echo "$workload" "$n" index="$i" value="$v" key="$key_order"
 #      /home/blepers/linux/tools/perf/perf record -g ./example "$workload" "$n" index="$i" value="$v" key="$key_order"
       ./example "$workload" "$n" index="$i" value="$v" key="$key_order"
+      exit
       #      ./example 100 "$n" index="$i" value="$v"
     done
 
