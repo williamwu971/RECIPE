@@ -55,10 +55,11 @@ void log_init(const char *fn, int num_logs) {
     if(big_map == MAP_FAILED)die("map error");
 
     lm.num_entries = num_logs;
+    printf("map at %p\n",big_map);
     lm.entries = (int **) malloc(sizeof(int *) * lm.num_entries);
     for (int i = 0; i < lm.num_entries; i++) {
         lm.entries[i] = (int *) ((char *) big_map + CACHE_LINE_SIZE * i);
-        printf("entries %d %p",i,lm.entries[i]);
+        printf("entries %d %p\n",i,lm.entries[i]);
         lm.entries[i][0] = AVAILABLE;
     }
 
