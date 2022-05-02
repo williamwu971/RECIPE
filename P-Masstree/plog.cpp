@@ -45,7 +45,7 @@ void log_init(const char *fn, off_t size) {
 
     assert(size >= 2 * LOG_SIZE);
 
-    int fd = open(fn, O_RDWR | O_CREAT | O_EXCL);
+    int fd = open(fn, O_RDWR | O_CREAT | O_EXCL, 00777);
     assert(fd > 0);
     posix_fallocate(fd, 0, size);
 
