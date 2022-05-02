@@ -11,7 +11,7 @@ enum {
 
 // occupy the first 4m of log file
 struct log_map {
-    int num_entries;
+    uint64_t num_entries;
 
     // aligned to CACHELINE size
     int **entries;
@@ -73,7 +73,7 @@ int log_new() {
     }
     int success = 0;
     pthread_mutex_lock(&lm_lock);
-    for (int i = 0; i < lm.num_entries; i++) {
+    for (uint64_t i = 0; i < lm.num_entries; i++) {
         if (lm.entries[i][0] == AVAILABLE) {
             lm.entries[i][0] = OCCUPIED;
             success = 1;
