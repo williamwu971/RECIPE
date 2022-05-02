@@ -56,6 +56,7 @@ void log_init(const char *fn, off_t size) {
     lm.entries = (int **) malloc(sizeof(int *) * lm.num_entries);
     for (int i = 0; i < lm.num_entries; i++) {
         lm.entries[i] = (int *) ((char *) big_map + CACHE_LINE_SIZE * i);
+        lm.entries[i][0] = AVAILABLE;
     }
 
     inited = 1;
@@ -94,7 +95,6 @@ void *log_malloc(size_t size) {
 
     if (unlikely(thread_log == NULL || thread_log->free_space < required_size)) {
         if (!log_new()) {
-            printf("wrong!\n");
             return NULL;
         }
     }
