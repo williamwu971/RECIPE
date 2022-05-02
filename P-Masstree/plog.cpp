@@ -111,7 +111,7 @@ int log_memalign(void **memptr, size_t alignment, size_t size) {
 
     size += ((size + sizeof(struct log_cell)) / alignment + 1) * alignment - size - sizeof(struct log_cell);
 
-    printf("size %lu\n",size+sizeof(struct log_cell));
+//    printf("size %lu\n",size+sizeof(struct log_cell));
     // todo: how to make sure memory is aligned
     *memptr = log_malloc(size);
 
