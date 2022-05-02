@@ -22,7 +22,7 @@
       exit(-1); \
    } while(0)
 
-void log_init(const char *fn, off_t size);
+void log_init(const char *fn, size_t size);
 
 void *log_malloc(size_t size);
 
