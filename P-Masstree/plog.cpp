@@ -71,6 +71,7 @@ int log_new() {
     }
     int success = 0;
     pthread_mutex_lock(&lm_lock);
+    printf("num of entries:%d\n",lm.num_entries);
     for (int i = 0; i < lm.num_entries; i++) {
         printf("entry %d is %d\n",i,lm.entries[i][0]);
         if (lm.entries[i][0] == AVAILABLE) {
