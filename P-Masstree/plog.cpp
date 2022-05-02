@@ -41,25 +41,25 @@ pthread_mutex_t lm_lock = PTHREAD_MUTEX_INITIALIZER;
 // every thread hold its own log
 __thread struct log *thread_log = NULL;
 
-void log_init(const char *fn, size_t size) {
+void log_init(const char *fn, int num_logs) {
 
     assert(size >= 2 * LOG_SIZE);
+    size_t file_size = (num_logs+1)*LOG_SIZE;
 
     int fd = open(fn, O_RDWR | O_CREAT | O_EXCL, 00777);
     if(fd < 0)die("fd error: %d",fd);
-    posix_fallocate(fd, 0, size);
+    posix_fallocate(fd, 0, file_size);
 
-    big_map = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    big_map = mmap(NULL, file_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if(big_map == MAP_FAILED)die("map error");
 
-    lm.num_entries = (int) (size - LOG_SIZE) / LOG_SIZE;
+    lm.num_entries = num_logs;
     lm.entries = (int **) malloc(sizeof(int *) * lm.num_entries);
     for (int i = 0; i < lm.num_entries; i++) {
         lm.entries[i] = (int *) ((char *) big_map + CACHE_LINE_SIZE * i);
         lm.entries[i][0] = AVAILABLE;
     }
 
-    if(lm.num_entries==0)die("num entries: %d %ld %d",lm.num_entries,size - LOG_SIZE,(int) (size - LOG_SIZE) / LOG_SIZE);
     inited = 1;
 }
 
