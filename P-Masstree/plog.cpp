@@ -41,7 +41,7 @@ pthread_mutex_t lm_lock = PTHREAD_MUTEX_INITIALIZER;
 // every thread hold its own log
 __thread struct log *thread_log = NULL;
 
-void log_init(const char *fn, int num_logs) {
+void log_init(const char *fn, u_int64_t num_logs) {
 
     assert(size >= 2 * LOG_SIZE);
     size_t file_size = (num_logs + 1) * LOG_SIZE;
