@@ -46,11 +46,11 @@ void log_init(const char *fn, off_t size) {
     assert(size >= 2 * LOG_SIZE);
 
     int fd = open(fn, O_RDWR | O_CREAT | O_EXCL, 00777);
-    assert(fd > 0);
+    if(fd < 0)die("fd error: %d",fd);
     posix_fallocate(fd, 0, size);
 
     big_map = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-    assert(big_map != MAP_FAILED);
+    if(big_map == MAP_FAILED)die("map error");
 
     lm.num_entries = (int) (size - LOG_SIZE) / LOG_SIZE;
     lm.entries = (int **) malloc(sizeof(int *) * lm.num_entries);
@@ -59,7 +59,7 @@ void log_init(const char *fn, off_t size) {
         lm.entries[i][0] = AVAILABLE;
     }
 
-    assert(lm.num_entries>0);
+    if(lm.num_entries==0)die("num entries: %d",lm.num_entries);
     inited = 1;
 }
 

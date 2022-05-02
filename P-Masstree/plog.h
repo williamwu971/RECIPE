@@ -15,6 +15,13 @@
 #define likely(x)       __builtin_expect((x),1)
 #define unlikely(x)     __builtin_expect((x),0)
 
+#define die(msg, args...) \
+   do {                         \
+      fprintf(stderr,"(%s,%d) " msg "\n", __FUNCTION__ , __LINE__, ##args); \
+      fflush(stdout); \
+      exit(-1); \
+   } while(0)
+
 void log_init(const char *fn, off_t size);
 
 void *log_malloc(size_t size);
