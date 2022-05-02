@@ -49,17 +49,14 @@ void log_init(const char *fn, int num_logs) {
     int fd = open(fn, O_RDWR | O_CREAT | O_EXCL, 00777);
     if (fd < 0)die("fd error: %d", fd);
     if (posix_fallocate(fd, 0, file_size)) die("fallocate error");
-    printf("file size %zu\n", file_size);
 
     big_map = mmap(NULL, file_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (big_map == MAP_FAILED)die("map error");
 
     lm.num_entries = num_logs;
-    printf("map at %p\n", big_map);
     lm.entries = (int **) malloc(sizeof(int *) * lm.num_entries);
     for (int i = 0; i < lm.num_entries; i++) {
         lm.entries[i] = (int *) ((char *) big_map + CACHE_LINE_SIZE * i);
-        printf("entries %d %p\n", i, lm.entries[i]);
         lm.entries[i][0] = AVAILABLE;
     }
 
