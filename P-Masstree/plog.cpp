@@ -94,6 +94,7 @@ void *log_malloc(size_t size) {
 
     if (unlikely(thread_log == NULL || thread_log->free_space < required_size)) {
         if (!log_new()) {
+            printf("wrong!\n");
             return NULL;
         }
     }
