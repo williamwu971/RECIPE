@@ -59,7 +59,7 @@ void log_init(const char *fn, off_t size) {
         lm.entries[i][0] = AVAILABLE;
     }
 
-    if(lm.num_entries==0)die("num entries: %d",lm.num_entries);
+    if(lm.num_entries==0)die("num entries: %d %ld",lm.num_entries,size - LOG_SIZE);
     inited = 1;
 }
 
