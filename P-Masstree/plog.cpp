@@ -16,8 +16,8 @@ struct log_map {
 // metadata for the current log, should be in DRAM
 struct log {
     size_t free_space;
-    void *base;
-    void *curr;
+    char *base;
+    char *curr;
 };
 
 // metadata for each cell in a log
@@ -28,7 +28,8 @@ struct log_cell {
 int inited = 0;
 
 // the absolute base address
-void *big_map;
+char *inodes;
+char *big_map;
 
 // log map and lock to protect the map
 struct log_map lm;
@@ -39,69 +40,91 @@ __thread struct log *thread_log = NULL;
 
 void log_init(const char *fn, uint64_t num_logs) {
 
-    assert(size >= 2 * LOG_SIZE);
-    size_t file_size = (num_logs + 1) * LOG_SIZE;
+    char buf[CACHE_LINE_SIZE];
+    int fd;
+    uint64_t file_size;
 
-    int fd = open(fn, O_RDWR | O_CREAT | O_EXCL, 00777);
+
+    if (sizeof(char) != 1) die("char size error: %lu", sizeof(char));
+
+    //todo: what happens when recovering?
+
+    sprintf(buf, "%s_inodes", fn);
+    file_size = num_logs * CACHE_LINE_SIZE;
+    fd = open(fn, O_RDWR | O_CREAT | O_EXCL, 00777);
     if (fd < 0)die("fd error: %d", fd);
     if (posix_fallocate(fd, 0, file_size)) die("fallocate error");
+    inodes = (char *) mmap(NULL, file_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    if (inodes == MAP_FAILED)die("map error");
+    close(fd);
 
-    big_map = mmap(NULL, file_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+
+    sprintf(buf, "%s_logs", fn);
+    file_size = num_logs * LOG_SIZE;
+    fd = open(fn, O_RDWR | O_CREAT | O_EXCL, 00777);
+    if (fd < 0)die("fd error: %d", fd);
+    if (posix_fallocate(fd, 0, file_size)) die("fallocate error");
+    big_map = (char *) mmap(NULL, file_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (big_map == MAP_FAILED)die("map error");
+    close(fd);
 
     lm.num_entries = num_logs;
     lm.entries = (int **) malloc(sizeof(int *) * lm.num_entries);
     for (uint64_t i = 0; i < lm.num_entries; i++) {
-        lm.entries[i] = (int *) ((char *) big_map + CACHE_LINE_SIZE * i);
+        lm.entries[i] = (int *) (inodes + CACHE_LINE_SIZE * i);
         lm.entries[i][0] = AVAILABLE;
     }
 
     inited = 1;
 }
 
-int log_new() {
+char *log_acquire() {
 
-    assert(inited);
+    char *log_address;
 
-    if (thread_log == NULL) {
-        posix_memalign((void **) &thread_log, CACHE_LINE_SIZE, sizeof(struct log));
-    }
-    int success = 0;
+    if (!inited)die("not inited");
+    log_address = NULL;
+
+    //todo: this logic can be optimize to be similar to allocator
     pthread_mutex_lock(&lm_lock);
     for (uint64_t i = 0; i < lm.num_entries; i++) {
         if (lm.entries[i][0] == AVAILABLE) {
             lm.entries[i][0] = OCCUPIED;
-            success = 1;
-
-            thread_log->free_space = LOG_SIZE;
-            thread_log->base = (char *) big_map + (i + 1) * LOG_SIZE;
-            thread_log->curr = thread_log->base;
-
+            log_address = big_map + i * LOG_SIZE;
             goto end;
         }
     }
-
     end:
     pthread_mutex_unlock(&lm_lock);
-    return success;
+    return log_address;
+
 }
 
 void *log_malloc(size_t size) {
 
-    size_t required_size = size + sizeof(struct log_cell);
+    size_t required_size;
+
+    required_size = size + sizeof(struct log_cell);
 
     if (unlikely(thread_log == NULL || thread_log->free_space < required_size)) {
-        if (!log_new()) {
-            return NULL;
-        }
+
+        posix_memalign((void **) &thread_log, CACHE_LINE_SIZE, sizeof(struct log));
+
+        char *log_base = log_acquire();
+        if (log_base == NULL)return NULL;
+
+        thread_log->free_space = LOG_SIZE;
+        thread_log->base = log_base;
+        thread_log->curr = thread_log->base;
+
     }
 
     // write and decrease size
     thread_log->free_space -= required_size;
     *((size_t *) thread_log->curr) = size;
-    void *to_return = (char *) thread_log->curr + sizeof(size_t);
+    void *to_return = thread_log->curr + sizeof(size_t);
 
-    thread_log->curr = (char *) thread_log->curr + required_size;
+    thread_log->curr = thread_log->curr + required_size;
 
     return to_return;
 }
@@ -124,4 +147,48 @@ void log_free(void *ptr) {
     // todo: how to mark entry as freed
     (void) ptr;
     return;
+}
+
+void *log_garbage_collection(void *arg) {
+
+    masstree::masstree *tree;
+    auto t = tree->getThreadInfo();
+    char *new_log;
+
+    // todo Question: do we need to lock the whole tree?
+
+    tree = (masstree::masstree *) arg;
+    new_log = log_acquire();
+
+    // todo: how to properly store metadata
+    for (int i = 0; i < 2; i++) {
+
+        char *current_ptr;
+        char *base_ptr;
+        while (current_ptr < base_ptr + LOG_SIZE) {
+
+            size_t size = *((size_t *) current_ptr);
+            current_ptr += sizeof(size_t);
+
+            // assume key is always 8 bytes and occupy the field following size
+            uint64_t key = *((uint64_t *) current_ptr);
+            void *value = current_ptr + sizeof(uint64_t);
+
+            // this step might be buggy if went out of bound of the new log
+            if (tree->get(key, t) == value) {
+                *((size_t *) new_log) = size;
+                new_log += sizeof(size_t);
+
+                memcpy(new_log, current_ptr, size);
+                new_log += size;
+            }
+
+            current_ptr += size;
+        }
+    }
+
+    // todo: commit the new log
+
+
+    return NULL;
 }

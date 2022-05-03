@@ -11,6 +11,9 @@
 #include <chrono>
 #include <random>
 #include "tbb/tbb.h"
+#include "masstree.h"
+#include <errno.h>
+#include <string.h>
 
 #define LOG_SIZE 4*1024*1024
 #define LOG_MERGE_THRESHOLD 2*1024*1024
@@ -21,7 +24,7 @@
 
 #define die(msg, args...) \
    do {                         \
-      fprintf(stderr,"(%s,%d) " msg "\n", __FUNCTION__ , __LINE__, ##args); \
+      fprintf(stderr,"(%s,%d,%s) " msg "\n", __FUNCTION__ , __LINE__,strerror(errno), ##args); \
       fflush(stdout); \
       exit(-1); \
    } while(0)
