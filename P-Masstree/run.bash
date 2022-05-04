@@ -39,6 +39,8 @@ cd $PREFIX/RECIPE/P-Masstree/build/ || exit
 
 index_location=("dram" "pmem")
 value_location=("pmem" "log")
+index_location=("dram")
+value_location=("log")
 num_threads=(16)
 
 workload=100000000
