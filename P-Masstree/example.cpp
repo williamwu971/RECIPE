@@ -318,11 +318,6 @@ void run(char **argv) {
         RP_init("masstree",64*1024*1024*1024ULL);
     }
 
-    if (require_log_init){
-        char const *fn = "/pmem0/masstree_log";
-        log_init(fn,10240);
-    }
-
     // todo: add latency tracker and perf
 
     // (TP dropped) shuffle the array todo: random keys (make it faster)
@@ -344,6 +339,12 @@ void run(char **argv) {
 
     printf("operation,n,ops/s\n");
     masstree::masstree *tree = new masstree::masstree();
+
+    if (require_log_init){
+        char const *fn = "/pmem0/masstree_log";
+        log_init(fn,10240);
+        log_start_gc(tree);
+    }
 
     {
         // Build tree

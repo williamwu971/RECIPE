@@ -39,6 +39,17 @@ pthread_mutex_t lm_lock = PTHREAD_MUTEX_INITIALIZER;
 char *log_meta;
 __thread struct log *thread_log = NULL;
 
+struct garbage_queue {
+    uint64_t indexes[7];
+    uint64_t num = 0;
+};
+
+struct garbage_queue gq;
+pthread_mutex_t gq_lock = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t gq_cond = PTHREAD_COND_INITIALIZER;
+int gc_stopped = 0;
+pthread_t gc;
+
 void log_init(const char *fn, uint64_t num_logs) {
 
     char buf[CACHE_LINE_SIZE];
@@ -125,7 +136,10 @@ void *log_malloc(size_t size) {
     }
 
     // write and decrease size
-    thread_log->free_space -= required_size;
+//    thread_log->free_space -= required_size;
+    atomic_fetch_sub(&thread_log->free_space, required_size); // todo: is this heavy?
+
+
     *((size_t *) thread_log->curr) = size;
     void *to_return = thread_log->curr + sizeof(size_t);
 
@@ -148,10 +162,28 @@ int log_memalign(void **memptr, size_t alignment, size_t size) {
 
 void log_free(void *ptr) {
 
-
     // todo: how to mark entry as freed
-    (void) ptr;
-    return;
+    char *char_ptr = (char *) ptr;
+    int idx = (char_ptr - big_map) / LOG_SIZE;
+
+    struct log *target_log = (struct log *) (log_meta + CACHE_LINE_SIZE * idx);
+
+    atomic_fetch_add(&target_log->free_space, *((size_t *) (char_ptr - sizeof(size_t))));
+    if (target_log->free_space >= LOG_MERGE_THRESHOLD) {
+        pthread_mutex_lock(&gq_lock);
+
+        gq.indexes[gq.num++] = idx;
+
+        // wake up garbage collection thread
+        if (gq.num == GAR_QUEUE_LENGTH) {
+            pthread_cond_signal(&gq_cond);
+        } else if (gq.num > GAR_QUEUE_LENGTH) {
+            die("gq length:%lu error", gq.num);
+        }
+
+        pthread_mutex_unlock(&gq_lock);
+    }
+
 }
 
 void *log_garbage_collection(void *arg) {
@@ -159,41 +191,61 @@ void *log_garbage_collection(void *arg) {
     masstree::masstree *tree;
     auto t = tree->getThreadInfo();
     char *new_log;
+    char *current_ptr;
+    char *base_ptr;
 
     // todo Question: do we need to lock the whole tree?
-
     tree = (masstree::masstree *) arg;
-    new_log = log_acquire(0);
 
-    // todo: how to properly store metadata
-    for (int i = 0; i < 2; i++) {
+    while (!gc_stopped) {
 
-        char *current_ptr;
-        char *base_ptr;
-        while (current_ptr < base_ptr + LOG_SIZE) {
+        pthread_mutex_lock(&gq_lock);
+        pthread_cond_wait(&gq_cond, &gq_lock);
 
-            size_t size = *((size_t *) current_ptr);
-            current_ptr += sizeof(size_t);
+        if (gq.num != GAR_QUEUE_LENGTH) die("gc detected gq length:%lu", gq.num);
+        printf("gc triggered!\n");
 
-            // assume key is always 8 bytes and occupy the field following size
-            uint64_t key = *((uint64_t *) current_ptr);
-            void *value = current_ptr + sizeof(uint64_t);
+        new_log = log_acquire(0);
 
-            // this step might be buggy if went out of bound of the new log
-            if (tree->get(key, t) == value) {
-                *((size_t *) new_log) = size;
-                new_log += sizeof(size_t);
+        // todo: how to properly store metadata
+        for (int i = 0; i < GAR_QUEUE_LENGTH; i++) {
 
-                memcpy(new_log, current_ptr, size);
-                new_log += size;
+            base_ptr = big_map + gq.indexes[i] * LOG_SIZE;
+            current_ptr = base_ptr;
+
+            while (current_ptr < base_ptr + LOG_SIZE) {
+
+                size_t size = *((size_t *) current_ptr);
+                current_ptr += sizeof(size_t);
+
+                // assume key is always 8 bytes and occupy the field following size
+                uint64_t key = *((uint64_t *) current_ptr);
+                void *value = current_ptr + sizeof(uint64_t);
+
+                // this step might be buggy if went out of bound of the new log
+                if (tree->get(key, t) == value) {
+                    *((size_t *) new_log) = size;
+                    new_log += sizeof(size_t);
+
+                    memcpy(new_log, current_ptr, size);
+                    new_log += size;
+                }
+
+                current_ptr += size;
             }
-
-            current_ptr += size;
         }
-    }
 
-    // todo: commit the new log
+        gq.num = 0;
+
+        pthread_mutex_unlock(&gq_lock);
+
+    }
 
 
     return NULL;
+}
+
+void log_start_gc(masstree::masstree *t) {
+    pthread_create(&gc, NULL, log_garbage_collection, t);
+    pthread_detach(gc);
 }

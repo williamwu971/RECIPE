@@ -14,10 +14,12 @@
 #include "masstree.h"
 #include <errno.h>
 #include <string.h>
+#include <stdatomic.h>
 
 #define LOG_SIZE 4*1024*1024
 #define LOG_MERGE_THRESHOLD 2*1024*1024
 #define CACHE_LINE_SIZE 64
+#define GAR_QUEUE_LENGTH 2
 
 #define likely(x)       __builtin_expect((x),1)
 #define unlikely(x)     __builtin_expect((x),0)
@@ -34,5 +36,7 @@ void log_init(const char *fn, uint64_t num_logs);
 void *log_malloc(size_t size);
 
 void log_free(void *ptr);
+
+void log_start_gc(masstree::masstree *);
 
 #endif
