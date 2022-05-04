@@ -62,7 +62,7 @@ void log_init(const char *fn, uint64_t num_logs) {
 
     sprintf(buf, "%s_logs", fn);
     file_size = num_logs * LOG_SIZE;
-    fd = open(fn, O_RDWR | O_CREAT | O_EXCL, 00777);
+    fd = open(buf, O_RDWR | O_CREAT | O_EXCL, 00777);
     if (fd < 0)die("fd error: %d", fd);
     if (posix_fallocate(fd, 0, file_size)) die("fallocate error");
     big_map = (char *) mmap(NULL, file_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
