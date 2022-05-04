@@ -52,7 +52,7 @@ void log_init(const char *fn, uint64_t num_logs) {
 
     sprintf(buf, "%s_inodes", fn);
     file_size = num_logs * CACHE_LINE_SIZE;
-    fd = open(fn, O_RDWR | O_CREAT | O_EXCL, 00777);
+    fd = open(buf, O_RDWR | O_CREAT | O_EXCL, 00777);
     if (fd < 0)die("fd error: %d", fd);
     if (posix_fallocate(fd, 0, file_size)) die("fallocate error");
     inodes = (char *) mmap(NULL, file_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
