@@ -36,6 +36,7 @@ struct log_map lm;
 pthread_mutex_t lm_lock = PTHREAD_MUTEX_INITIALIZER;
 
 // every thread hold its own log
+char *log_meta;
 __thread struct log *thread_log = NULL;
 
 void log_init(const char *fn, uint64_t num_logs) {
@@ -68,6 +69,7 @@ void log_init(const char *fn, uint64_t num_logs) {
     if (big_map == MAP_FAILED)die("map error");
     close(fd);
 
+    // inodes
     lm.num_entries = num_logs;
     lm.entries = (int **) malloc(sizeof(int *) * lm.num_entries);
     for (uint64_t i = 0; i < lm.num_entries; i++) {
@@ -75,10 +77,14 @@ void log_init(const char *fn, uint64_t num_logs) {
         lm.entries[i][0] = AVAILABLE;
     }
 
+    // usage
+    if (sizeof(struct log) > CACHE_LINE_SIZE) die("struct log size %lu too big", sizeof(struct log));
+    log_meta = (char *) malloc(CACHE_LINE_SIZE * num_logs);
+
     inited = 1;
 }
 
-char *log_acquire() {
+char *log_acquire(int write_thread_log) {
 
     char *log_address;
 
@@ -91,6 +97,13 @@ char *log_acquire() {
         if (lm.entries[i][0] == AVAILABLE) {
             lm.entries[i][0] = OCCUPIED;
             log_address = big_map + i * LOG_SIZE;
+
+            if (write_thread_log) {
+                thread_log = (struct log *) (log_meta + CACHE_LINE_SIZE * i);
+                thread_log->free_space = LOG_SIZE;
+                thread_log->base = log_address;
+                thread_log->curr = thread_log->base;
+            }
             goto end;
         }
     }
@@ -108,15 +121,7 @@ void *log_malloc(size_t size) {
 
     if (unlikely(thread_log == NULL || thread_log->free_space < required_size)) {
 
-        posix_memalign((void **) &thread_log, CACHE_LINE_SIZE, sizeof(struct log));
-
-        char *log_base = log_acquire();
-        if (log_base == NULL)return NULL;
-
-        thread_log->free_space = LOG_SIZE;
-        thread_log->base = log_base;
-        thread_log->curr = thread_log->base;
-
+        if (log_acquire(1) == NULL)die("cannot acquire new log");
     }
 
     // write and decrease size
@@ -158,7 +163,7 @@ void *log_garbage_collection(void *arg) {
     // todo Question: do we need to lock the whole tree?
 
     tree = (masstree::masstree *) arg;
-    new_log = log_acquire();
+    new_log = log_acquire(0);
 
     // todo: how to properly store metadata
     for (int i = 0; i < 2; i++) {
