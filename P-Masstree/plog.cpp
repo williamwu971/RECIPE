@@ -202,7 +202,7 @@ void log_free(void *ptr) {
 
     size_t fs = target_log->free_space;
     if (fs >= LOG_MERGE_THRESHOLD) {
-//        printf("adding %lu %p free %lu to gq\n", idx, target_log, fs);
+        printf("adding %lu %p free %lu to gq\n", idx, target_log, fs);
 
 
 //        if (thread_log->base==target_log->base)log_acquire(1);
