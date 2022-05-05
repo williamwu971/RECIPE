@@ -316,7 +316,7 @@ void *log_garbage_collection(void *arg) {
 
 
             memset(base_ptr, 0, LOG_SIZE);
-//            log_release(gq.indexes[i]);
+            log_release(gq.indexes[i]);
 
 //            printf("used %lu in one go\n", thread_log->curr - thread_log->base);
 //            printf("distance %lu\n",current_ptr-base_ptr);
