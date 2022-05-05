@@ -283,7 +283,7 @@ void *log_garbage_collection(void *arg) {
 
                     thread_log->curr += size;
 
-                    collected += sizeof(size_t) + size;
+                    if (res)collected += sizeof(size_t) + size;
                 }
 
                 current_ptr += size;
