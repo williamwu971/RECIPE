@@ -298,7 +298,7 @@ void *log_garbage_collection(void *arg) {
 
         }
 
-        printf("new log %fpc free",(double)thread_log->free_space/(double)LOG_SIZE);
+        printf("new log %fpc free\n",(double)thread_log->free_space/(double)LOG_SIZE);
 
 //        printf("success:%.0f failed:%.0f rate:%.2f\n", success, fail, success / (success + fail));
         if (thread_log->curr > thread_log->base + LOG_SIZE)
