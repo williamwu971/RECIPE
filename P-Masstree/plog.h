@@ -14,7 +14,8 @@
 #include "masstree.h"
 #include <errno.h>
 #include <string.h>
-#include <stdatomic.h>
+//#include <stdatomic.h>
+#include <atomic>
 
 #define LOG_SIZE 4*1024*1024
 #define LOG_MERGE_THRESHOLD 2*1024*1024

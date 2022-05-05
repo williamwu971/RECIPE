@@ -15,9 +15,11 @@ struct log_map {
 
 // metadata for the current log, should be in DRAM
 struct log {
-    size_t free_space;
+    std::atomic<size_t> free_space;
+//    size_t free_space;
     char *base;
     char *curr;
+    char padding[40];
 };
 
 // metadata for each cell in a log
@@ -50,7 +52,19 @@ pthread_cond_t gq_cond = PTHREAD_COND_INITIALIZER;
 int gc_stopped = 0;
 pthread_t gc;
 
+
+void log_structs_size_check() {
+
+    // some structs are required to occupy a cache line
+    if (sizeof(struct log) != CACHE_LINE_SIZE) die("struct log size %ld", sizeof(struct log));
+    if (sizeof(struct garbage_queue) != CACHE_LINE_SIZE)
+        die("struct garbage_queue size %ld", sizeof(struct garbage_queue));
+
+}
+
 void log_init(const char *fn, uint64_t num_logs) {
+
+    log_structs_size_check();
 
     char buf[CACHE_LINE_SIZE];
     int fd;
@@ -169,6 +183,7 @@ void log_free(void *ptr) {
     struct log *target_log = (struct log *) (log_meta + CACHE_LINE_SIZE * idx);
 
     atomic_fetch_add(&target_log->free_space, *((size_t *) (char_ptr - sizeof(size_t))));
+
     if (target_log->free_space >= LOG_MERGE_THRESHOLD) {
         pthread_mutex_lock(&gq_lock);
 
