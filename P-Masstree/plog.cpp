@@ -185,18 +185,27 @@ void log_free(void *ptr) {
     atomic_fetch_add(&target_log->free_space, *((size_t *) (char_ptr - sizeof(size_t))));
 
     if (target_log->free_space >= LOG_MERGE_THRESHOLD) {
-        pthread_mutex_lock(&gq_lock);
 
-        gq.indexes[gq.num++] = idx;
+        while (1) {
+            pthread_mutex_lock(&gq_lock);
 
-        // wake up garbage collection thread
-        if (gq.num == GAR_QUEUE_LENGTH) {
-            pthread_cond_signal(&gq_cond);
-        } else if (gq.num > GAR_QUEUE_LENGTH) {
-            die("gq length:%lu error", gq.num);
+            //abort if the queue is already full
+            if (gq.num == GAR_QUEUE_LENGTH) {
+                pthread_mutex_unlock(&gq_lock);
+                continue;
+            }
+
+            gq.indexes[gq.num++] = idx;
+
+            // wake up garbage collection thread
+            if (gq.num == GAR_QUEUE_LENGTH) {
+                pthread_cond_signal(&gq_cond);
+            } else if (gq.num > GAR_QUEUE_LENGTH) {
+                die("gq length:%lu error", gq.num);
+            }
+            pthread_mutex_unlock(&gq_lock);
+            break;
         }
-
-        pthread_mutex_unlock(&gq_lock);
     }
 
 }
