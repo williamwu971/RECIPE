@@ -123,6 +123,8 @@ char *log_acquire(int write_thread_log) {
             lm.entries[i][0] = OCCUPIED;
             log_address = big_map + i * LOG_SIZE;
 
+            printf("log %lu is claimed by %ld\n",i,syscall(__NR_gettid));
+
             if (write_thread_log) {
                 thread_log = (struct log *) (log_meta + CACHE_LINE_SIZE * i);
                 thread_log->free_space = LOG_SIZE;
