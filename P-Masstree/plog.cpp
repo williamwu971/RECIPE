@@ -198,7 +198,7 @@ void log_free(void *ptr) {
 //    target_log->free_space.fetch_add(*((size_t *) (char_ptr - sizeof(size_t))) + sizeof(size_t));
 //    atomic_fetch_add(&target_log->free_space, *((size_t *) (char_ptr - sizeof(size_t))) + sizeof(size_t));
     uint64_t *key_ptr = (uint64_t*)(char_ptr-sizeof(uint64_t));
-//    printf("freed key %lu\n",*key_ptr);
+    printf("freed key %lu\n",*key_ptr);
 
     if (target_log->free_space >= LOG_MERGE_THRESHOLD) {
 
@@ -299,7 +299,7 @@ void *log_garbage_collection(void *arg) {
 
                     // the log acquired by gc thread shouldn't need atomic ops
                     if (res) {
-//                        printf("inserted key %lu\n",key);
+                        printf("inserted key %lu\n",key);
                         thread_log->free_space -= (sizeof(size_t) + size);
                         thread_log->curr += size;
                     } else {
@@ -316,8 +316,8 @@ void *log_garbage_collection(void *arg) {
             memset(base_ptr, 0, LOG_SIZE);
             log_release(gq.indexes[i]);
 
-//            printf("used %lu in one go\n", thread_log->curr - thread_log->base);
-//            printf("distance %lu\n",current_ptr-base_ptr);
+            printf("used %lu in one go\n", thread_log->curr - thread_log->base);
+            printf("distance %lu\n",current_ptr-base_ptr);
             if (thread_log->curr > thread_log->base + (LOG_SIZE / GAR_QUEUE_LENGTH) * i) die("incorrect volume used");
 
         }
