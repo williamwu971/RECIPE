@@ -162,7 +162,8 @@ void *log_malloc(size_t size) {
 
     // write and decrease size
 //    thread_log->free_space -= required_size;
-    atomic_fetch_sub(&thread_log->free_space, required_size); // todo: is this heavy?
+//    atomic_fetch_sub(&thread_log->free_space, required_size); // todo: is this heavy?
+    thread_log->free_space.fetch_sub(required_size);
 
 
     *((size_t *) thread_log->curr) = size;
@@ -193,7 +194,8 @@ void log_free(void *ptr) {
 
     struct log *target_log = (struct log *) (log_meta + CACHE_LINE_SIZE * idx);
 
-    atomic_fetch_add(&target_log->free_space, *((size_t *) (char_ptr - sizeof(size_t))) + sizeof(size_t));
+    target_log->free_space.fetch_add(*((size_t *) (char_ptr - sizeof(size_t))) + sizeof(size_t));
+//    atomic_fetch_add(&target_log->free_space, *((size_t *) (char_ptr - sizeof(size_t))) + sizeof(size_t));
 
     if (target_log->free_space < LOG_MERGE_THRESHOLD_DOWN && target_log->free_space >= LOG_MERGE_THRESHOLD_UP) {
 
@@ -210,7 +212,7 @@ void log_free(void *ptr) {
                 continue;
             }
 
-            size_t fs = target_log->free_space;
+            size_t fs = target_log->free_space.load(std::memory_order_seq_cst);
 
             for (uint64_t n = 0; n < gq.num; n++) {
                 if (gq.indexes[n] == idx) {
