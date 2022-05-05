@@ -16,7 +16,7 @@ struct log_map {
 // metadata for the current log, should be in DRAM
 struct log {
 //    std::atomic<size_t> free_space;
-    size_t free_space;
+    uint64_t free_space;
     char *base;
     char *curr;
     char padding[40];
@@ -151,7 +151,7 @@ void log_release(uint64_t idx) {
 
 void *log_malloc(size_t size) {
 
-    size_t required_size;
+    uint64_t required_size;
 
     required_size = size + sizeof(struct log_cell);
 
