@@ -358,13 +358,17 @@ void run(char **argv) {
 //                int size = rand()%2048+sizeof(uint64_t);
                 int size = sizeof(uint64_t);
 
+                uint64_t *key = (uint64_t *)which_malloc(sizeof(uint64_t));
+                uint64_t *value=key+1;
+                *key=keys[i];
 
-                uint64_t * value = (uint64_t *)which_malloc(size);
+//                uint64_t * value = (uint64_t *)which_malloc(size);
 
                 // flush value before inserting todo: should this exist for DRAM+DRAM?
                 *value=keys[i];
                 if (require_flush) clflush((char*)value,size,true,true);
-                tree->put(keys[i], value, t);
+//                tree->put(keys[i], value, t);
+                tree->put(*key, value, t);
             }
         });
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
