@@ -138,6 +138,14 @@ char *log_acquire(int write_thread_log) {
 
 }
 
+void log_release(uint64_t idx) {
+    pthread_mutex_lock(&lm_lock);
+
+    lm.entries[idx][0] = AVAILABLE;
+
+    pthread_mutex_unlock(&lm_lock);
+}
+
 void *log_malloc(size_t size) {
 
     size_t required_size;
@@ -229,10 +237,10 @@ void *log_garbage_collection(void *arg) {
 
         if (log_acquire(1) == NULL)die("cannot acquire new log");
 
-        // todo: remove this
-        double success = 0;
-        double fail = 0;
-        printf("starting gc\n");
+//         todo: remove this
+//        double success = 0;
+//        double fail = 0;
+//        printf("starting gc\n");
 
         // todo: how to properly store metadata
         for (int i = 0; i < GAR_QUEUE_LENGTH; i++) {
@@ -258,7 +266,7 @@ void *log_garbage_collection(void *arg) {
 
 
                     // try to commit this entry
-                    printf("putting %lu from %lu to be %lu\n",key,*(uint64_t*)value,*(uint64_t*)(thread_log->curr + sizeof(uint64_t)));
+//                    printf("putting %lu from %lu to be %lu\n",key,*(uint64_t*)value,*(uint64_t*)(thread_log->curr + sizeof(uint64_t)));
                     int res = tree->put_if_match(key, value, thread_log->curr + sizeof(uint64_t), t);
 
                     // the log acquired by gc thread shouldn't need atomic ops
@@ -266,19 +274,22 @@ void *log_garbage_collection(void *arg) {
 
                     thread_log->curr += size;
 
-                    // todo: remove this
-                    if (res) {
-                        success++;
-                    } else {
-                        fail++;
-                    }
+//                    // todo: remove this
+//                    if (res) {
+//                        success++;
+//                    } else {
+//                        fail++;
+//                    }
                 }
 
                 current_ptr += size;
             }
+
+            log_release(gq.indexes[i]);
+
         }
 
-        printf("success:%.0f failed:%.0f rate:%.2f\n", success, fail, success / (success + fail));
+//        printf("success:%.0f failed:%.0f rate:%.2f\n", success, fail, success / (success + fail));
         if (thread_log->curr > thread_log->base + LOG_SIZE) die("log overflow detected");
 
         gq.num = 0;
