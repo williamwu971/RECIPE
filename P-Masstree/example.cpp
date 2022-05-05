@@ -393,9 +393,9 @@ void run(char **argv) {
                 // (TP dropped) todo: free memory, is this correct?
                 // todo: it should be freed in update() ALSO modify update() in masstree
                 tree->del(keys[i],t);
-                ret = reinterpret_cast<uint64_t *> (tree->get(keys[i], t));
-                if (ret != NULL) {
-                    std::cout << "wrong value NULL: " << ret << " expected:" << keys[i] << std::endl;
+                void*rett = (tree->get(keys[i], t));
+                if (rett != NULL) {
+                    std::cout << "wrong value NULL: " << rett << " expected:" << keys[i] << std::endl;
                     throw;
                 }
                 which_free(ret);
