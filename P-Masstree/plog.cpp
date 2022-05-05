@@ -293,6 +293,7 @@ void *log_garbage_collection(void *arg) {
 
                     // try to commit this entry
                     int res = tree->put_if_match(key, value, thread_log->curr + sizeof(uint64_t), t);
+                    printf("res %d\n",res);
 
                     // the log acquired by gc thread shouldn't need atomic ops
                     if (res) {
