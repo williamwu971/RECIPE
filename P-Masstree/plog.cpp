@@ -290,7 +290,7 @@ void *log_garbage_collection(void *arg) {
         }
 
 //        printf("success:%.0f failed:%.0f rate:%.2f\n", success, fail, success / (success + fail));
-        if (thread_log->curr > thread_log->base + LOG_SIZE) die("log overflow detected");
+        if (thread_log->curr > thread_log->base + LOG_SIZE) die("log overflow detected used:%ld",thread_log->curr-thread_log->base);
 
         gq.num = 0;
 
