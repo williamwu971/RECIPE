@@ -197,12 +197,12 @@ void log_free(void *ptr) {
     target_log->free_space += *((size_t *) (char_ptr - sizeof(size_t)-sizeof(uint64_t))) + sizeof(size_t);
 //    target_log->free_space.fetch_add(*((size_t *) (char_ptr - sizeof(size_t))) + sizeof(size_t));
 //    atomic_fetch_add(&target_log->free_space, *((size_t *) (char_ptr - sizeof(size_t))) + sizeof(size_t));
-    uint64_t *key_ptr = (uint64_t*)(char_ptr-sizeof(uint64_t));
+//    uint64_t *key_ptr = (uint64_t*)(char_ptr-sizeof(uint64_t));
 //    printf("freed key %lu\n",*key_ptr);
 
     size_t fs = target_log->free_space;
     if (fs >= LOG_MERGE_THRESHOLD) {
-        printf("adding %lu %p free %lu to gq\n", idx, target_log, fs);
+//        printf("adding %lu %p free %lu to gq\n", idx, target_log, fs);
 
 
 //        if (thread_log->base==target_log->base)log_acquire(1);
@@ -270,11 +270,11 @@ void *log_garbage_collection(void *arg) {
             base_ptr = big_map + gq.indexes[i] * LOG_SIZE;
             current_ptr = base_ptr;
 
-            struct log *target_log = (struct log *) (log_meta + CACHE_LINE_SIZE * gq.indexes[i]);
+//            struct log *target_log = (struct log *) (log_meta + CACHE_LINE_SIZE * gq.indexes[i]);
 //            size_t frees = target_log->free_space.load(std::memory_order_seq_cst);
-            size_t frees = target_log->free_space;
+//            size_t frees = target_log->free_space;
 
-            printf("log %lu %p free space %lu\n", gq.indexes[i], target_log, frees);
+//            printf("log %lu %p free space %lu\n", gq.indexes[i], target_log, frees);
 
 //            if (target_log->free_space<LOG_MERGE_THRESHOLD) die("merging incorrect log");
 
@@ -318,8 +318,8 @@ void *log_garbage_collection(void *arg) {
             memset(base_ptr, 0, LOG_SIZE);
 //            log_release(gq.indexes[i]);
 
-            printf("used %lu in one go\n", thread_log->curr - thread_log->base);
-            printf("distance %lu\n",current_ptr-base_ptr);
+//            printf("used %lu in one go\n", thread_log->curr - thread_log->base);
+//            printf("distance %lu\n",current_ptr-base_ptr);
 //            if (thread_log->curr > thread_log->base + (LOG_SIZE / GAR_QUEUE_LENGTH) * i) die("incorrect volume used");
 
         }
