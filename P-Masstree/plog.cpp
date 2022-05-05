@@ -221,7 +221,7 @@ void log_free(void *ptr) {
             }
 
 
-            printf("adding %lu free %zu to gq\n", idx, fs);
+            printf("adding %lu %p free %zu to gq\n", idx,target_log, fs);
 
             gq.indexes[gq.num++] = idx;
 
@@ -268,7 +268,7 @@ void *log_garbage_collection(void *arg) {
             struct log *target_log = (struct log *) (log_meta + CACHE_LINE_SIZE * gq.indexes[i]);
             size_t frees = target_log->free_space.load(std::memory_order_seq_cst);
 
-            printf("log %lu free space %lu\n", gq.indexes[i], frees);
+            printf("log %lu %p free space %lu\n", gq.indexes[i],target_log, frees);
 
             while (current_ptr < base_ptr + LOG_SIZE) {
 
