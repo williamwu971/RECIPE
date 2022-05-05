@@ -255,7 +255,7 @@ void *log_garbage_collection(void *arg) {
                     thread_log->curr += sizeof(size_t);
 
                     memcpy(thread_log->curr, current_ptr, size);
-                    thread_log->curr += size;
+
 
                     // try to commit this entry
                     printf("putting %lu from %lu to be %lu\n",key,*(uint64_t*)value,*(uint64_t*)(thread_log->curr + sizeof(uint64_t)));
@@ -263,6 +263,8 @@ void *log_garbage_collection(void *arg) {
 
                     // the log acquired by gc thread shouldn't need atomic ops
                     if (res)thread_log->free_space -= (sizeof(size_t) + size);
+
+                    thread_log->curr += size;
 
                     // todo: remove this
                     if (res) {
