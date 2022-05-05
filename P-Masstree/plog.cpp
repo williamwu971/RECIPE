@@ -220,16 +220,18 @@ void *log_garbage_collection(void *arg) {
     tree = (masstree::masstree *) arg;
     auto t = tree->getThreadInfo();
 
-    int debug = 0;
     while (!gc_stopped) {
 
         pthread_mutex_lock(&gq_lock);
         pthread_cond_wait(&gq_cond, &gq_lock);
 
         if (gq.num != GAR_QUEUE_LENGTH) die("gc detected gq length:%lu", gq.num);
-        printf("gc triggered! %d\n", debug++);
 
         if (log_acquire(1) == NULL)die("cannot acquire new log");
+
+        // todo: remove this
+        double success = 0;
+        double fail = 0;
 
         // todo: how to properly store metadata
         for (int i = 0; i < GAR_QUEUE_LENGTH; i++) {
@@ -259,13 +261,20 @@ void *log_garbage_collection(void *arg) {
 
                     // the log acquired by gc thread shouldn't need atomic ops
                     if (res)thread_log->free_space -= (sizeof(size_t) + size);
+
+                    // todo: remove this
+                    if (res) {
+                        success++;
+                    } else {
+                        fail++;
+                    }
                 }
 
                 current_ptr += size;
             }
         }
 
-
+        printf("success:%.0f failed:%.0f rate:%.2f", success, fail, success / (success + fail));
         if (thread_log->curr > thread_log->base + LOG_SIZE) die("log overflow detected");
 
         gq.num = 0;

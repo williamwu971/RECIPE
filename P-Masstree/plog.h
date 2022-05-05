@@ -28,7 +28,7 @@
 #define die(msg, args...) \
    do {                         \
       fprintf(stderr,"(%s,%d,%s) " msg "\n", __FUNCTION__ , __LINE__,strerror(errno), ##args); \
-      fflush(stdout); \
+      fflush(stderr);fflush(stdout); \
       exit(-1); \
    } while(0)
 
