@@ -123,8 +123,8 @@ char *log_acquire(int write_thread_log) {
             lm.entries[i][0] = OCCUPIED;
             log_address = big_map + i * LOG_SIZE;
 
-            printf("log %lu is claimed by %ld\n", i, syscall(__NR_gettid));
-            fflush(stdout);
+//            printf("log %lu is claimed by %ld\n", i, syscall(__NR_gettid));
+//            fflush(stdout);
 
             if (write_thread_log) {
                 thread_log = (struct log *) (log_meta + CACHE_LINE_SIZE * i);
@@ -251,7 +251,7 @@ void *log_garbage_collection(void *arg) {
 //         todo: remove this
 //        double success = 0;
 //        double fail = 0;
-        printf("starting gc\n");
+//        printf("starting gc\n");
 
         // todo: how to properly store metadata
         for (int i = 0; i < GAR_QUEUE_LENGTH; i++) {
@@ -302,7 +302,7 @@ void *log_garbage_collection(void *arg) {
 
         }
 
-        printf("new log %fpc used\n", (double) (LOG_SIZE - thread_log->free_space) / (double) LOG_SIZE);
+//        printf("new log %fpc used\n", (double) (LOG_SIZE - thread_log->free_space) / (double) LOG_SIZE);
 
 //        printf("success:%.0f failed:%.0f rate:%.2f\n", success, fail, success / (success + fail));
         if (thread_log->curr > thread_log->base + LOG_SIZE)

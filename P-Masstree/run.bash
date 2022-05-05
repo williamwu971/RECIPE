@@ -43,7 +43,7 @@ index_location=("dram")
 value_location=("log")
 num_threads=(16)
 
-workload=1000000
+workload=100000000
 key_order="random"
 #key_order="seq"
 
