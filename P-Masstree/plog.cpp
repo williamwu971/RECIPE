@@ -17,9 +17,10 @@ struct log_map {
 struct log {
 //    std::atomic<size_t> free_space;
     uint64_t free_space;
+    uint64_t index;
     char *base;
     char *curr;
-    char padding[40];
+    char padding[32];
 };
 
 // metadata for each cell in a log
@@ -132,6 +133,7 @@ char *log_acquire(int write_thread_log) {
                 thread_log->free_space = LOG_SIZE;
                 thread_log->base = log_address;
                 thread_log->curr = thread_log->base;
+                thread_log->index=i;
             }
             goto end;
         }
@@ -273,6 +275,7 @@ void *log_garbage_collection(void *arg) {
 
         if (log_acquire(1) == NULL)die("cannot acquire new log");
 
+        printf("merge ");
 
         // todo: how to properly store metadata
         for (int i = 0; i < GAR_QUEUE_LENGTH; i++) {
@@ -280,11 +283,12 @@ void *log_garbage_collection(void *arg) {
             base_ptr = big_map + gq.indexes[i] * LOG_SIZE;
             current_ptr = base_ptr;
 
-            struct log *target_log = (struct log *) (log_meta + CACHE_LINE_SIZE * gq.indexes[i]);
+            printf("%lu ",gq.indexes[i]);
+//            struct log *target_log = (struct log *) (log_meta + CACHE_LINE_SIZE * gq.indexes[i]);
 //            size_t frees = target_log->free_space.load(std::memory_order_seq_cst);
-            uint64_t frees = target_log->free_space;
+//            uint64_t frees = target_log->free_space;
 
-            printf("log %lu %p free space %lu\n", gq.indexes[i], target_log, frees);
+//            printf("log %lu %p free space %lu\n", gq.indexes[i], target_log, frees);
 
 //            if (target_log->free_space<LOG_MERGE_THRESHOLD) die("merging incorrect log");
 
@@ -328,12 +332,13 @@ void *log_garbage_collection(void *arg) {
 //            memset(base_ptr, 0, LOG_SIZE);
             log_release(gq.indexes[i]);
 
-            printf("used %lu in one go\n", thread_log->curr - thread_log->base);
+//            printf("used %lu in one go\n", thread_log->curr - thread_log->base);
 //            printf("distance %lu\n",current_ptr-base_ptr);
 //            if (thread_log->curr > thread_log->base + (LOG_SIZE / GAR_QUEUE_LENGTH) * i) die("incorrect volume used");
 
         }
 
+        printf("to %lu\n",thread_log->index);
         if (thread_log->curr > thread_log->base + LOG_SIZE)
             die("log overflow detected used:%ld", thread_log->curr - thread_log->base);
 
