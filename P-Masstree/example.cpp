@@ -392,6 +392,7 @@ void run(char **argv) {
 
                 // (TP dropped) todo: free memory, is this correct?
                 // todo: it should be freed in update() ALSO modify update() in masstree
+                tree->del(keys[i],t);
                 which_free(ret);
             }
         });

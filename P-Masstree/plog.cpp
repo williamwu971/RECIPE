@@ -273,7 +273,7 @@ void *log_garbage_collection(void *arg) {
 
             printf("log %lu %p free space %zu\n", gq.indexes[i], target_log, frees);
 
-            while (current_ptr < base_ptr + LOG_MERGE_THRESHOLD) {
+            while (current_ptr < base_ptr + LOG_SIZE) {
 
                 size_t size = *((size_t *) current_ptr);
                 current_ptr += sizeof(size_t);
@@ -309,7 +309,7 @@ void *log_garbage_collection(void *arg) {
 
 
             memset(base_ptr, 0, LOG_SIZE);
-//            log_release(gq.indexes[i]);
+            log_release(gq.indexes[i]);
 
             printf("used %lu in one go\n", thread_log->curr - thread_log->base);
             if (thread_log->curr > thread_log->base + (LOG_SIZE / GAR_QUEUE_LENGTH) * i) die("incorrect volume used");
