@@ -257,7 +257,7 @@ void *log_garbage_collection(void *arg) {
             current_ptr = base_ptr;
 
             uint64_t collected = 0;//todo: remove me
-            printf("collecting log idx %lu %.2fpc free\n", gq.indexes[i],(double)((struct log*)log_meta+CACHE_LINE_SIZE*gq.indexes[i])->free_space/(double)LOG_SIZE);
+            printf("collecting log idx %lu %.2fpc used\n", gq.indexes[i],(double)(LOG_SIZE-((struct log*)log_meta+CACHE_LINE_SIZE*gq.indexes[i])->free_space)/(double)LOG_SIZE);
 
             while (current_ptr < base_ptr + LOG_SIZE) {
 
@@ -298,7 +298,7 @@ void *log_garbage_collection(void *arg) {
 
         }
 
-        printf("new log %fpc free\n",(double)thread_log->free_space/(double)LOG_SIZE);
+        printf("new log %fpc used\n",(double)(LOG_SIZE-thread_log->free_space)/(double)LOG_SIZE);
 
 //        printf("success:%.0f failed:%.0f rate:%.2f\n", success, fail, success / (success + fail));
         if (thread_log->curr > thread_log->base + LOG_SIZE)
