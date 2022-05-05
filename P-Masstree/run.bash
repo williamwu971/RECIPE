@@ -5,19 +5,19 @@ PREFIX="/mnt/sda/xiaoxiang"
 for var in "$@"; do
   if [ "$var" = "build" ]; then
 
-    apt-get update
-    apt-get install -y build-essential cmake libboost-all-dev libpapi-dev default-jdk
-    apt-get install -y libtbb-dev libjemalloc-dev libpmem-dev
+#    apt-get update
+#    apt-get install -y build-essential cmake libboost-all-dev libpapi-dev default-jdk
+#    apt-get install -y libtbb-dev libjemalloc-dev libpmem-dev
 
     # build ralloc
-    cd $PREFIX/ralloc/test/ || exit
-    git pull
-    make clean
-    make libralloc.a
-    if [ ! -f libralloc.a ]; then
-      echo "Failed to build ralloc!"
-      exit
-    fi
+#    cd $PREFIX/ralloc/test/ || exit
+#    git pull
+#    make clean
+#    make libralloc.a
+#    if [ ! -f libralloc.a ]; then
+#      echo "Failed to build ralloc!"
+#      exit
+#    fi
 
     # build P-Masstree
     cd $PREFIX/RECIPE/P-Masstree/ || exit
