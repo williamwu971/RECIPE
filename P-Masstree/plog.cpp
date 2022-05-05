@@ -201,7 +201,7 @@ void log_free(void *ptr) {
 
 
 
-        if (thread_log->base==target_log->base)log_acquire(1);
+//        if (thread_log->base==target_log->base)log_acquire(1);
 
         while (1) {
             pthread_mutex_lock(&gq_lock);
