@@ -293,6 +293,7 @@ void *log_garbage_collection(void *arg) {
             printf("collected %lu\n", collected);
 
 
+            memset(base_ptr,0,LOG_SIZE);
             log_release(gq.indexes[i]);
 
         }
