@@ -124,6 +124,7 @@ char *log_acquire(int write_thread_log) {
             log_address = big_map + i * LOG_SIZE;
 
             printf("log %lu is claimed by %ld\n", i, syscall(__NR_gettid));
+            fflush(stdout);
 
             if (write_thread_log) {
                 thread_log = (struct log *) (log_meta + CACHE_LINE_SIZE * i);
