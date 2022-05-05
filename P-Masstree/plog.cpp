@@ -274,5 +274,5 @@ void *log_garbage_collection(void *arg) {
 
 void log_start_gc(masstree::masstree *t) {
     pthread_create(&gc, NULL, log_garbage_collection, t);
-    pthread_detach(gc);
+//    pthread_detach(gc);
 }
