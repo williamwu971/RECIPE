@@ -20,6 +20,7 @@ struct log {
     uint64_t index;
     char *base;
     char *curr;
+    int merged=0;
     char padding[32];
 };
 
@@ -233,12 +234,13 @@ void log_free(void *ptr) {
 
 //            size_t fs = target_log->free_space.load(std::memory_order_seq_cst);
 
+            if (target_log->merged)goto end;
+
             for (uint64_t n = 0; n < gq.num; n++) {
                 if (gq.indexes[n] == idx) {
                     goto end;
                 }
             }
-
 
             gq.indexes[gq.num++] = idx;
 
@@ -284,7 +286,7 @@ void *log_garbage_collection(void *arg) {
             current_ptr = base_ptr;
 
             printf("%lu ",gq.indexes[i]);
-//            struct log *target_log = (struct log *) (log_meta + CACHE_LINE_SIZE * gq.indexes[i]);
+            struct log *target_log = (struct log *) (log_meta + CACHE_LINE_SIZE * gq.indexes[i]);
 //            size_t frees = target_log->free_space.load(std::memory_order_seq_cst);
 //            uint64_t frees = target_log->free_space;
 
@@ -331,6 +333,7 @@ void *log_garbage_collection(void *arg) {
 
 //            memset(base_ptr, 0, LOG_SIZE);
 //            log_release(gq.indexes[i]);
+            target_log->merged=1;
 
 //            printf("used %lu in one go\n", thread_log->curr - thread_log->base);
 //            printf("distance %lu\n",current_ptr-base_ptr);
