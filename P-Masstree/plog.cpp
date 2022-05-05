@@ -224,13 +224,14 @@ void *log_garbage_collection(void *arg) {
     tree = (masstree::masstree *) arg;
     auto t = tree->getThreadInfo();
 
+    int debug=0;
     while (!gc_stopped) {
 
         pthread_mutex_lock(&gq_lock);
         pthread_cond_wait(&gq_cond, &gq_lock);
 
         if (gq.num != GAR_QUEUE_LENGTH) die("gc detected gq length:%lu", gq.num);
-        printf("gc triggered!\n");
+        printf("gc triggered! %d\n",debug++);
 
         new_log = log_acquire(0);
 
