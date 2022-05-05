@@ -200,8 +200,9 @@ void log_free(void *ptr) {
     uint64_t *key_ptr = (uint64_t*)(char_ptr-sizeof(uint64_t));
 //    printf("freed key %lu\n",*key_ptr);
 
-    if (target_log->free_space >= LOG_MERGE_THRESHOLD) {
-
+    size_t fs = target_log->free_space;
+    if (fs >= LOG_MERGE_THRESHOLD) {
+        printf("adding %lu %p free %lu to gq\n", idx, target_log, fs);
 
 
 //        if (thread_log->base==target_log->base)log_acquire(1);
@@ -216,7 +217,8 @@ void log_free(void *ptr) {
             }
 
 //            size_t fs = target_log->free_space.load(std::memory_order_seq_cst);
-            size_t fs = target_log->free_space;
+
+
 
             for (uint64_t n = 0; n < gq.num; n++) {
                 if (gq.indexes[n] == idx) {
@@ -224,7 +226,7 @@ void log_free(void *ptr) {
                 }
             }
 
-            printf("adding %lu %p free %lu to gq\n", idx, target_log, fs);
+
 
             gq.indexes[gq.num++] = idx;
 
@@ -314,7 +316,7 @@ void *log_garbage_collection(void *arg) {
 
 
             memset(base_ptr, 0, LOG_SIZE);
-            log_release(gq.indexes[i]);
+//            log_release(gq.indexes[i]);
 
             printf("used %lu in one go\n", thread_log->curr - thread_log->base);
             printf("distance %lu\n",current_ptr-base_ptr);
