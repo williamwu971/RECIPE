@@ -505,6 +505,107 @@ leaf_retry:
     }
 }
 
+int masstree::put_if_match(uint64_t key, void* match, void *value, ThreadInfo &threadEpocheInfo)
+{
+    EpocheGuard epocheGuard(threadEpocheInfo);
+    key_indexed_position kx_;
+    leafnode *next = NULL, *p = NULL;
+    void *snapshot_v = NULL;
+
+    int needRestart;
+    uint64_t v;
+
+    from_root:
+    p = reinterpret_cast<leafnode *> (this->root_.load(std::memory_order_acquire));
+    while (p->level() != 0) {
+        inter_retry:
+        next = p->advance_to_key(key);
+        if (next != p) {
+            // check for recovery
+            if (p->tryLock(needRestart)) {
+                if (next->tryLock(needRestart))
+                    p->check_for_recovery(this, p, next, NULL, 0, NULL);
+                else
+                    p->writeUnlock(false);
+            }
+            p = next;
+            goto inter_retry;
+        }
+
+        v = p->readLockOrRestart(needRestart);
+        if (needRestart) {
+            if (needRestart == LOCKED)
+                goto inter_retry;
+            else
+                goto from_root;
+        }
+
+        p->prefetch();
+        fence();
+
+        kx_ = p->key_lower_bound(key);
+
+        if (kx_.i >= 0)
+            snapshot_v = p->value(kx_.p);
+        else
+            snapshot_v = p->leftmost();
+
+        p->checkOrRestart(v, needRestart);
+        if (needRestart)
+            goto inter_retry;
+        else
+            p = reinterpret_cast<leafnode *> (snapshot_v);
+    }
+
+    leafnode *l = reinterpret_cast<leafnode *> (p);
+    leaf_retry:
+    next = l->advance_to_key(key);
+    if (next != l) {
+        //check for recovery
+        if (l->tryLock(needRestart)) {
+            if (next->tryLock(needRestart))
+                l->check_for_recovery(this, l, next, NULL, 0, NULL);
+            else
+                l->writeUnlock(false);
+        }
+
+        l = next;
+        goto leaf_retry;
+    }
+
+    l->writeLockOrRestart(needRestart);
+    if (needRestart) {
+        if (needRestart == LOCKED)
+            goto leaf_retry;
+        else // needRestart == OBSOLETE
+            goto from_root;
+    }
+
+    next = l->advance_to_key(key);
+    if (next != l) {
+        l->writeUnlock(false);
+        l = next;
+        goto leaf_retry;
+    }
+
+    l->prefetch();
+    fence();
+
+    kx_ = l->key_lower_bound_by(key);
+    if (kx_.p >= 0 && l->key(kx_.p) == key) {
+        int res = l->assign_value_if_match(kx_.p, match,value);
+        l->writeUnlock(false);
+        return res;
+    } else {
+
+        return 0;
+
+        if (!(l->leaf_insert(this, NULL, 0, NULL, key, value, kx_))) {
+            put(key, value, threadEpocheInfo);
+        }
+    }
+}
+
 void masstree::put(char *key, uint64_t value, ThreadInfo &threadEpocheInfo)
 {
     EpocheGuard epocheGuard(threadEpocheInfo);
@@ -934,6 +1035,14 @@ void leafnode::assign_value(int p, void *value)
     clflush((char *)&entry[p].value, sizeof(void *), false, true);
 }
 
+int leafnode::assign_value_if_match(int p, void* match,void *value)
+{
+    if (entry[p].value!=match) return 0;
+    entry[p].value = value;
+    clflush((char *)&entry[p].value, sizeof(void *), false, true);
+    return 1;
+}
+
 void *leafnode::entry_addr(int p)
 {
     return &entry[p];
@@ -957,11 +1066,11 @@ leaf_retry:
         p = oldp;
         goto leaf_retry;
     }
-    
+
     p->writeLockOrRestart(needRestart);
     if (needRestart)
         goto leaf_retry;
-    
+
     oldp = p->advance_to_key(lv->fkey[depth - 1]);
     if (oldp != p) {
         p->writeUnlock(false);
@@ -1270,7 +1379,7 @@ void *leafnode::leaf_delete(masstree *t, void *root, uint32_t depth, leafvalue *
     return ret;
 }
 
-void *leafnode::inter_insert(masstree *t, void *root, uint32_t depth, leafvalue *lv, 
+void *leafnode::inter_insert(masstree *t, void *root, uint32_t depth, leafvalue *lv,
         uint64_t key, void *value, key_indexed_position &kx_, leafnode *child, bool child_isOverWrite)
 {
     bool isOverWrite = false;
@@ -1583,7 +1692,7 @@ leaf_retry:
         return;
     }
 
-    if (!p->inter_insert(this, root, depth, lv, key, right, kx_, 
+    if (!p->inter_insert(this, root, depth, lv, key, right, kx_,
                 reinterpret_cast<leafnode *> (child), isOverWrite)) {
         split(left, root, depth, lv, key, right, level, child, isOverWrite);
     }

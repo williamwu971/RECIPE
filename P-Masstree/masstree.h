@@ -83,6 +83,8 @@ class masstree {
 
         void put(uint64_t key, void *value, MASS::ThreadInfo &threadEpocheInfo);
 
+        int put_if_match(uint64_t key, void* match, void *value, MASS::ThreadInfo &threadEpocheInfo); // todo: new, for gc
+
         void put(char *key, uint64_t value, MASS::ThreadInfo &threadEpocheInfo);
 
         void del(uint64_t key, MASS::ThreadInfo &threadEpocheInfo);
@@ -398,6 +400,8 @@ class leafnode {
         void assign(int p, const uint64_t& key, void *value);
 
         void assign_value(int p, void *value);
+
+        int assign_value_if_match(int p, void* match, void *value);
 
         inline void assign_initialize(int p, const uint64_t& key, void *value);
 
