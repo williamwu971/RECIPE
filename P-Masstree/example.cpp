@@ -395,7 +395,7 @@ void run(char **argv) {
                 tree->del(keys[i],t);
                 ret = reinterpret_cast<uint64_t *> (tree->get(keys[i], t));
                 if (ret != NULL) {
-                    std::cout << "wrong value NULL: " << *ret << " expected:" << keys[i] << std::endl;
+                    std::cout << "wrong value NULL: " << ret << " expected:" << keys[i] << std::endl;
                     throw;
                 }
                 which_free(ret);
