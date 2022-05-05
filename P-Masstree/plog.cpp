@@ -198,7 +198,7 @@ void log_free(void *ptr) {
 //    target_log->free_space.fetch_add(*((size_t *) (char_ptr - sizeof(size_t))) + sizeof(size_t));
 //    atomic_fetch_add(&target_log->free_space, *((size_t *) (char_ptr - sizeof(size_t))) + sizeof(size_t));
 
-    if (target_log->free_space < LOG_MERGE_THRESHOLD_DOWN && target_log->free_space >= LOG_MERGE_THRESHOLD_UP) {
+    if (target_log->free_space >= LOG_MERGE_THRESHOLD) {
 
 
 
@@ -273,7 +273,7 @@ void *log_garbage_collection(void *arg) {
 
             printf("log %lu %p free space %zu\n", gq.indexes[i], target_log, frees);
 
-            while (current_ptr < base_ptr + LOG_SIZE) {
+            while (current_ptr < base_ptr + LOG_MERGE_THRESHOLD) {
 
                 size_t size = *((size_t *) current_ptr);
                 current_ptr += sizeof(size_t);
