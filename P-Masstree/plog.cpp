@@ -210,13 +210,15 @@ void log_free(void *ptr) {
                 continue;
             }
 
+            size_t fs = target_log->free_space;
+
             for (uint64_t n = 0; n < gq.num; n++) {
                 if (gq.indexes[n] == idx) {
                     goto end;
                 }
             }
 
-            size_t fs = target_log->free_space;
+
             printf("adding %lu free %zu to gq\n", idx, fs);
 
             gq.indexes[gq.num++] = idx;
