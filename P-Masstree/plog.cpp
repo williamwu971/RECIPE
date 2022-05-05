@@ -197,6 +197,9 @@ void log_free(void *ptr) {
 
     if (target_log->free_space < LOG_MERGE_THRESHOLD_DOWN && target_log->free_space >= LOG_MERGE_THRESHOLD_UP) {
 
+        size_t fs = target_log->free_space;
+        printf("adding %lu free %zu to gq\n", idx, fs);
+
         log_acquire(1);
 
         while (1) {
