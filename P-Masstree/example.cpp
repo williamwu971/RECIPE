@@ -384,7 +384,9 @@ void run(char **argv) {
         tbb::parallel_for(tbb::blocked_range<uint64_t>(0, n), [&](const tbb::blocked_range<uint64_t> &range) {
             auto t = tree->getThreadInfo();
             for (uint64_t i = range.begin(); i != range.end(); i++) {
-                uint64_t *ret = reinterpret_cast<uint64_t *> (tree->get(keys[i], t));
+                void* raw = tree->get(keys[i], t);
+                uint64_t *ret = reinterpret_cast<uint64_t *> (raw);
+//                uint64_t *ret = reinterpret_cast<uint64_t *> (tree->get(keys[i], t));
                 if (*ret != keys[i]) {
                     std::cout << "wrong value read: " << *ret << " expected:" << keys[i] << std::endl;
                     throw;
@@ -398,7 +400,7 @@ void run(char **argv) {
                     std::cout << "wrong value NULL: " << rett << " expected:" << keys[i] << std::endl;
                     throw;
                 }
-                which_free(ret);
+                which_free(raw);
             }
         });
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(

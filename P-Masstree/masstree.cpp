@@ -1038,7 +1038,6 @@ void leafnode::assign_value(int p, void *value)
 int leafnode::assign_value_if_match(int p, void* match,void *value)
 {
     if (entry[p].value!=match) return 0;
-    printf("match\n");
     entry[p].value = value;
     clflush((char *)&entry[p].value, sizeof(void *), false, true);
     return 1;
