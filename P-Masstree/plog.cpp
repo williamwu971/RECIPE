@@ -274,7 +274,7 @@ void *log_garbage_collection(void *arg) {
             }
         }
 
-        printf("success:%.0f failed:%.0f rate:%.2f", success, fail, success / (success + fail));
+        printf("success:%.0f failed:%.0f rate:%.2f\n", success, fail, success / (success + fail));
         if (thread_log->curr > thread_log->base + LOG_SIZE) die("log overflow detected");
 
         gq.num = 0;
