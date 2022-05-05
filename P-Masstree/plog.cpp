@@ -24,7 +24,7 @@ struct log {
 
 // metadata for each cell in a log
 struct log_cell {
-    size_t size;
+    uint64_t size;
 };
 
 int inited = 0;
@@ -59,6 +59,7 @@ void log_structs_size_check() {
     if (sizeof(struct log) != CACHE_LINE_SIZE) die("struct log size %ld", sizeof(struct log));
     if (sizeof(struct garbage_queue) != CACHE_LINE_SIZE)
         die("struct garbage_queue size %ld", sizeof(struct garbage_queue));
+//    if (sizeof(struct log_cell) == sizeof(uint64_t)) die("log cell size");
 
 }
 
@@ -149,6 +150,16 @@ void log_release(uint64_t idx) {
     pthread_mutex_unlock(&lm_lock);
 }
 
+uint64_t log_get_key_and_value_size_from_value_ptr(char *value_ptr) {
+    uint64_t *size_ptr = (uint64_t *) (value_ptr - sizeof(uint64_t) * 2);
+    return *size_ptr;
+}
+
+uint64_t log_get_key_from_value_ptr(char *value_ptr) {
+    uint64_t *key = (uint64_t *) (value_ptr - sizeof(uint64_t));
+    return *key;
+}
+
 void *log_malloc(size_t size) {
 
     uint64_t required_size;
@@ -166,8 +177,8 @@ void *log_malloc(size_t size) {
 //    thread_log->free_space.fetch_sub(required_size);
 
 
-    *((size_t *) thread_log->curr) = size;
-    void *to_return = thread_log->curr + sizeof(size_t);
+    *((uint64_t *) thread_log->curr) = size;
+    void *to_return = thread_log->curr + sizeof(uint64_t);
 
     thread_log->curr = thread_log->curr + required_size;
 
@@ -194,13 +205,15 @@ void log_free(void *ptr) {
 
     struct log *target_log = (struct log *) (log_meta + CACHE_LINE_SIZE * idx);
 
-    target_log->free_space += *((size_t *) (char_ptr - sizeof(size_t)-sizeof(uint64_t))) + sizeof(size_t);
+    uint64_t new_space = *((uint64_t *) (char_ptr - sizeof(uint64_t) - sizeof(uint64_t))) + sizeof(uint64_t);
+    if (new_space!=24) die("error, new space %lu",new_space);
+    target_log->free_space += new_space;
 //    target_log->free_space.fetch_add(*((size_t *) (char_ptr - sizeof(size_t))) + sizeof(size_t));
 //    atomic_fetch_add(&target_log->free_space, *((size_t *) (char_ptr - sizeof(size_t))) + sizeof(size_t));
 //    uint64_t *key_ptr = (uint64_t*)(char_ptr-sizeof(uint64_t));
 //    printf("freed key %lu\n",*key_ptr);
 
-    size_t fs = target_log->free_space;
+    uint64_t fs = target_log->free_space;
     if (fs >= LOG_MERGE_THRESHOLD) {
 //        printf("adding %lu %p free %lu to gq\n", idx, target_log, fs);
 
@@ -269,7 +282,7 @@ void *log_garbage_collection(void *arg) {
 
             struct log *target_log = (struct log *) (log_meta + CACHE_LINE_SIZE * gq.indexes[i]);
 //            size_t frees = target_log->free_space.load(std::memory_order_seq_cst);
-            size_t frees = target_log->free_space;
+            uint64_t frees = target_log->free_space;
 
             printf("log %lu %p free space %lu\n", gq.indexes[i], target_log, frees);
 
@@ -277,8 +290,8 @@ void *log_garbage_collection(void *arg) {
 
             while (current_ptr < base_ptr + LOG_SIZE) {
 
-                size_t size = *((size_t *) current_ptr);
-                current_ptr += sizeof(size_t);
+                uint64_t size = *((uint64_t *) current_ptr);
+                current_ptr += sizeof(uint64_t);
 
                 // assume key is always 8 bytes and occupy the field following size
                 uint64_t key = *((uint64_t *) current_ptr);
@@ -286,8 +299,8 @@ void *log_garbage_collection(void *arg) {
 
                 // this step might be buggy if went out of bound of the new log
                 if (value != NULL && tree->get(key, t) == value) {
-                    *((size_t *) thread_log->curr) = size;
-                    thread_log->curr += sizeof(size_t);
+                    *((uint64_t *) thread_log->curr) = size;
+                    thread_log->curr += sizeof(uint64_t);
 
                     memcpy(thread_log->curr, current_ptr, size);
 
@@ -299,10 +312,10 @@ void *log_garbage_collection(void *arg) {
                     // the log acquired by gc thread shouldn't need atomic ops
                     if (res) {
 //                        printf("inserted key %lu\n",key);
-                        thread_log->free_space -= (sizeof(size_t) + size);
+                        thread_log->free_space -= (sizeof(uint64_t) + size);
                         thread_log->curr += size;
                     } else {
-                        thread_log->curr -= sizeof(size_t);
+                        thread_log->curr -= sizeof(uint64_t);
                     }
 
 
