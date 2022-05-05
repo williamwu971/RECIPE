@@ -333,3 +333,9 @@ void log_start_gc(masstree::masstree *t) {
     pthread_create(&gc, NULL, log_garbage_collection, t);
     pthread_detach(gc);
 }
+
+void log_debug_print(uint64_t bound) {
+    for (uint64_t i = 0; i < bound; i++) {
+        printf("log %lu free %lu\n", i, ((struct log *) log_meta + CACHE_LINE_SIZE * i)->free_space);
+    }
+}

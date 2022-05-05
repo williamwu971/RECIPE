@@ -40,4 +40,6 @@ void log_free(void *ptr);
 
 void log_start_gc(masstree::masstree *);
 
+void log_debug_print();
+
 #endif
