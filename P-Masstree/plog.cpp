@@ -197,10 +197,9 @@ void log_free(void *ptr) {
 
     if (target_log->free_space < LOG_MERGE_THRESHOLD_DOWN && target_log->free_space >= LOG_MERGE_THRESHOLD_UP) {
 
-        size_t fs = target_log->free_space;
-        printf("adding %lu free %zu to gq\n", idx, fs);
 
-        log_acquire(1);
+
+        if (thread_log->base==target_log->base)log_acquire(1);
 
         while (1) {
             pthread_mutex_lock(&gq_lock);
@@ -216,6 +215,10 @@ void log_free(void *ptr) {
                     goto end;
                 }
             }
+
+            size_t fs = target_log->free_space;
+            printf("adding %lu free %zu to gq\n", idx, fs);
+
             gq.indexes[gq.num++] = idx;
 
             // wake up garbage collection thread
