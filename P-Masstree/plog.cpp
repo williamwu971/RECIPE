@@ -294,9 +294,14 @@ void *log_garbage_collection(void *arg) {
                     int res = tree->put_if_match(key, value, thread_log->curr + sizeof(uint64_t), t);
 
                     // the log acquired by gc thread shouldn't need atomic ops
-                    if (res)thread_log->free_space -= (sizeof(size_t) + size);
+                    if (res) {
+                        thread_log->free_space -= (sizeof(size_t) + size);
+                        thread_log->curr += size;
+                    } else {
+                        thread_log->curr -= sizeof(size_t);
+                    }
 
-                    thread_log->curr += size;
+
                 }
 
                 current_ptr += size;
@@ -306,7 +311,7 @@ void *log_garbage_collection(void *arg) {
             memset(base_ptr, 0, LOG_SIZE);
             log_release(gq.indexes[i]);
 
-            printf("used %lu in one go\n",thread_log->curr-thread_log->base);
+            printf("used %lu in one go\n", thread_log->curr - thread_log->base);
             if (thread_log->curr > thread_log->base + (LOG_SIZE / GAR_QUEUE_LENGTH) * i) die("incorrect volume used");
 
         }
