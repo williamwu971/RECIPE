@@ -218,14 +218,11 @@ void log_free(void *ptr) {
 
 //            size_t fs = target_log->free_space.load(std::memory_order_seq_cst);
 
-
-
             for (uint64_t n = 0; n < gq.num; n++) {
                 if (gq.indexes[n] == idx) {
                     goto end;
                 }
             }
-
 
 
             gq.indexes[gq.num++] = idx;
@@ -270,11 +267,11 @@ void *log_garbage_collection(void *arg) {
             base_ptr = big_map + gq.indexes[i] * LOG_SIZE;
             current_ptr = base_ptr;
 
-//            struct log *target_log = (struct log *) (log_meta + CACHE_LINE_SIZE * gq.indexes[i]);
+            struct log *target_log = (struct log *) (log_meta + CACHE_LINE_SIZE * gq.indexes[i]);
 //            size_t frees = target_log->free_space.load(std::memory_order_seq_cst);
-//            size_t frees = target_log->free_space;
+            size_t frees = target_log->free_space;
 
-//            printf("log %lu %p free space %lu\n", gq.indexes[i], target_log, frees);
+            printf("log %lu %p free space %lu\n", gq.indexes[i], target_log, frees);
 
 //            if (target_log->free_space<LOG_MERGE_THRESHOLD) die("merging incorrect log");
 
