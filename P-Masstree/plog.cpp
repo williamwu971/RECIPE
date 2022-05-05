@@ -195,7 +195,7 @@ void log_free(void *ptr) {
 
     atomic_fetch_add(&target_log->free_space, *((size_t *) (char_ptr - sizeof(size_t))) + sizeof(size_t));
 
-    if (target_log->free_space<LOG_MERGE_THRESHOLD_DOWN && target_log->free_space >= LOG_MERGE_THRESHOLD_UP) {
+    if (target_log->free_space < LOG_MERGE_THRESHOLD_DOWN && target_log->free_space >= LOG_MERGE_THRESHOLD_UP) {
 
         log_acquire(1);
 
@@ -259,10 +259,6 @@ void *log_garbage_collection(void *arg) {
             base_ptr = big_map + gq.indexes[i] * LOG_SIZE;
             current_ptr = base_ptr;
 
-            uint64_t collected = 0;//todo: remove me
-            uint64_t free;
-//            printf("collecting log idx %lu %.2fpc used\n", gq.indexes[i],((struct log*)(log_meta + CACHE_LINE_SIZE * gq.indexes[i]))->free_space);
-
             while (current_ptr < base_ptr + LOG_SIZE) {
 
                 size_t size = *((size_t *) current_ptr);
@@ -273,7 +269,7 @@ void *log_garbage_collection(void *arg) {
                 void *value = current_ptr + sizeof(uint64_t);
 
                 // this step might be buggy if went out of bound of the new log
-                if (value!=NULL&&tree->get(key, t) == value) {
+                if (value != NULL && tree->get(key, t) == value) {
                     *((size_t *) thread_log->curr) = size;
                     thread_log->curr += sizeof(size_t);
 
@@ -281,30 +277,25 @@ void *log_garbage_collection(void *arg) {
 
 
                     // try to commit this entry
-//                    printf("putting %lu from %lu to be %lu\n",key,*(uint64_t*)value,*(uint64_t*)(thread_log->curr + sizeof(uint64_t)));
                     int res = tree->put_if_match(key, value, thread_log->curr + sizeof(uint64_t), t);
 
                     // the log acquired by gc thread shouldn't need atomic ops
                     if (res)thread_log->free_space -= (sizeof(size_t) + size);
 
                     thread_log->curr += size;
-
-                    if (res)collected += sizeof(size_t) + size;
                 }
 
                 current_ptr += size;
             }
-//            printf("collected %lu\n", collected);
 
 
             memset(base_ptr, 0, LOG_SIZE);
             log_release(gq.indexes[i]);
 
+            if (thread_log->curr > thread_log->base + (LOG_SIZE / GAR_QUEUE_LENGTH) * i) die("incorrect volume used");
+
         }
 
-//        printf("new log %fpc used\n", (double) (LOG_SIZE - thread_log->free_space) / (double) LOG_SIZE);
-
-//        printf("success:%.0f failed:%.0f rate:%.2f\n", success, fail, success / (success + fail));
         if (thread_log->curr > thread_log->base + LOG_SIZE)
             die("log overflow detected used:%ld", thread_log->curr - thread_log->base);
 
