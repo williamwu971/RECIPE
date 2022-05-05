@@ -274,7 +274,7 @@ void *log_garbage_collection(void *arg) {
 
             printf("log %lu %p free space %lu\n", gq.indexes[i], target_log, frees);
 
-            if (target_log->free_space<LOG_MERGE_THRESHOLD) die("merging incorrect log");
+//            if (target_log->free_space<LOG_MERGE_THRESHOLD) die("merging incorrect log");
 
             while (current_ptr < base_ptr + LOG_SIZE) {
 
