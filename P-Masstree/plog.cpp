@@ -248,16 +248,17 @@ void *log_garbage_collection(void *arg) {
 
         if (log_acquire(1) == NULL)die("cannot acquire new log");
 
-//         todo: remove this
-//        double success = 0;
-//        double fail = 0;
-//        printf("starting gc\n");
 
         // todo: how to properly store metadata
         for (int i = 0; i < GAR_QUEUE_LENGTH; i++) {
 
             base_ptr = big_map + gq.indexes[i] * LOG_SIZE;
             current_ptr = base_ptr;
+
+            struct log *target_log = (struct log *) log_meta + CACHE_LINE_SIZE * gq.indexes[i];
+            size_t frees = target_log->free_space;
+
+            printf("log %d free space %lu\n", i, frees);
 
             while (current_ptr < base_ptr + LOG_SIZE) {
 
