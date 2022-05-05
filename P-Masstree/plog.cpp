@@ -203,6 +203,11 @@ void log_free(void *ptr) {
                 continue;
             }
 
+            for (uint64_t n = 0; n < gq.num; n++) {
+                if (gq.indexes[n] == idx) {
+                    goto end;
+                }
+            }
             gq.indexes[gq.num++] = idx;
 
             // wake up garbage collection thread
@@ -211,6 +216,7 @@ void log_free(void *ptr) {
             } else if (gq.num > GAR_QUEUE_LENGTH) {
                 die("gq length:%lu error", gq.num);
             }
+            end:
             pthread_mutex_unlock(&gq_lock);
             break;
         }
@@ -248,8 +254,8 @@ void *log_garbage_collection(void *arg) {
             base_ptr = big_map + gq.indexes[i] * LOG_SIZE;
             current_ptr = base_ptr;
 
-            uint64_t collected=0;//todo: remove me
-            printf("collecting log idx %lu\n",gq.indexes[i]);
+            uint64_t collected = 0;//todo: remove me
+            printf("collecting log idx %lu\n", gq.indexes[i]);
 
             while (current_ptr < base_ptr + LOG_SIZE) {
 
@@ -277,12 +283,12 @@ void *log_garbage_collection(void *arg) {
 
                     thread_log->curr += size;
 
-                    collected+=sizeof(size_t)+size;
+                    collected += sizeof(size_t) + size;
                 }
 
                 current_ptr += size;
             }
-            printf("collected %lu\n",collected);
+            printf("collected %lu\n", collected);
 
 
             log_release(gq.indexes[i]);
