@@ -190,7 +190,7 @@ void log_free(void *ptr) {
 
     struct log *target_log = (struct log *) (log_meta + CACHE_LINE_SIZE * idx);
 
-    atomic_fetch_add(&target_log->free_space, *((size_t *) (char_ptr - sizeof(size_t))));
+    atomic_fetch_add(&target_log->free_space, *((size_t *) (char_ptr - sizeof(size_t))) + sizeof(size_t));
 
     if (target_log->free_space >= LOG_MERGE_THRESHOLD) {
 
@@ -248,6 +248,8 @@ void *log_garbage_collection(void *arg) {
             base_ptr = big_map + gq.indexes[i] * LOG_SIZE;
             current_ptr = base_ptr;
 
+            uint64_t collected=0;//todo: remove me
+
             while (current_ptr < base_ptr + LOG_SIZE) {
 
                 size_t size = *((size_t *) current_ptr);
@@ -274,23 +276,21 @@ void *log_garbage_collection(void *arg) {
 
                     thread_log->curr += size;
 
-//                    // todo: remove this
-//                    if (res) {
-//                        success++;
-//                    } else {
-//                        fail++;
-//                    }
+                    collected+=sizeof(size_t)+size;
                 }
 
                 current_ptr += size;
             }
+            printf("collected %lu\n",collected);
+
 
             log_release(gq.indexes[i]);
 
         }
 
 //        printf("success:%.0f failed:%.0f rate:%.2f\n", success, fail, success / (success + fail));
-        if (thread_log->curr > thread_log->base + LOG_SIZE) die("log overflow detected used:%ld",thread_log->curr-thread_log->base);
+        if (thread_log->curr > thread_log->base + LOG_SIZE)
+            die("log overflow detected used:%ld", thread_log->curr - thread_log->base);
 
         gq.num = 0;
 
