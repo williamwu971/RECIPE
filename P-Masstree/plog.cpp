@@ -260,9 +260,8 @@ void *log_garbage_collection(void *arg) {
             current_ptr = base_ptr;
 
             uint64_t collected = 0;//todo: remove me
-            printf("collecting log idx %lu %.2fpc used\n", gq.indexes[i],
-                   (double) (LOG_SIZE - ((struct log *) log_meta + CACHE_LINE_SIZE * gq.indexes[i])->free_space) /
-                   (double) LOG_SIZE);
+            uint64_t free;
+//            printf("collecting log idx %lu %.2fpc used\n", gq.indexes[i],((struct log*)(log_meta + CACHE_LINE_SIZE * gq.indexes[i]))->free_space);
 
             while (current_ptr < base_ptr + LOG_SIZE) {
 
