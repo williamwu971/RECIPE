@@ -21,7 +21,7 @@ struct log {
     char *base;
     char *curr;
     int merged=0;
-    char padding[32];
+    char padding[24];
 };
 
 // metadata for each cell in a log
