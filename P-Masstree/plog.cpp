@@ -123,7 +123,7 @@ char *log_acquire(int write_thread_log) {
             lm.entries[i][0] = OCCUPIED;
             log_address = big_map + i * LOG_SIZE;
 
-            printf("log %lu is claimed by %ld\n",i,syscall(__NR_gettid));
+            printf("log %lu is claimed by %ld\n", i, syscall(__NR_gettid));
 
             if (write_thread_log) {
                 thread_log = (struct log *) (log_meta + CACHE_LINE_SIZE * i);
@@ -196,6 +196,8 @@ void log_free(void *ptr) {
 
     if (target_log->free_space >= LOG_MERGE_THRESHOLD) {
 
+        log_acquire(1);
+
         while (1) {
             pthread_mutex_lock(&gq_lock);
 
@@ -257,7 +259,9 @@ void *log_garbage_collection(void *arg) {
             current_ptr = base_ptr;
 
             uint64_t collected = 0;//todo: remove me
-            printf("collecting log idx %lu %.2fpc used\n", gq.indexes[i],(double)(LOG_SIZE-((struct log*)log_meta+CACHE_LINE_SIZE*gq.indexes[i])->free_space)/(double)LOG_SIZE);
+            printf("collecting log idx %lu %.2fpc used\n", gq.indexes[i],
+                   (double) (LOG_SIZE - ((struct log *) log_meta + CACHE_LINE_SIZE * gq.indexes[i])->free_space) /
+                   (double) LOG_SIZE);
 
             while (current_ptr < base_ptr + LOG_SIZE) {
 
@@ -293,12 +297,12 @@ void *log_garbage_collection(void *arg) {
 //            printf("collected %lu\n", collected);
 
 
-            memset(base_ptr,0,LOG_SIZE);
+            memset(base_ptr, 0, LOG_SIZE);
             log_release(gq.indexes[i]);
 
         }
 
-        printf("new log %fpc used\n",(double)(LOG_SIZE-thread_log->free_space)/(double)LOG_SIZE);
+        printf("new log %fpc used\n", (double) (LOG_SIZE - thread_log->free_space) / (double) LOG_SIZE);
 
 //        printf("success:%.0f failed:%.0f rate:%.2f\n", success, fail, success / (success + fail));
         if (thread_log->curr > thread_log->base + LOG_SIZE)
