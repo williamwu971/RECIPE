@@ -266,7 +266,7 @@ void *log_garbage_collection(void *arg) {
             struct log *target_log = (struct log *) log_meta + CACHE_LINE_SIZE * gq.indexes[i];
             size_t frees = target_log->free_space;
 
-            printf("log %d free space %lu\n", i, frees);
+            printf("log %lu free space %lu\n", gq.indexes[i], frees);
 
             while (current_ptr < base_ptr + LOG_SIZE) {
 
