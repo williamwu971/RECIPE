@@ -258,6 +258,7 @@ void *log_garbage_collection(void *arg) {
                     thread_log->curr += size;
 
                     // try to commit this entry
+                    printf("putting %lu from %lu to be %lu\n",key,*(uint64_t*)value,*(uint64_t*)(thread_log->curr + sizeof(uint64_t)));
                     int res = tree->put_if_match(key, value, thread_log->curr + sizeof(uint64_t), t);
 
                     // the log acquired by gc thread shouldn't need atomic ops
