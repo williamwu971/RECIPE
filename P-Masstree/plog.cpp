@@ -178,7 +178,7 @@ void log_free(void *ptr) {
 
     // todo: how to mark entry as freed
     char *char_ptr = (char *) ptr;
-    uint64_t idx = (uint64_t)(char_ptr - big_map) / LOG_SIZE;
+    uint64_t idx = (uint64_t) (char_ptr - big_map) / LOG_SIZE;
 
     struct log *target_log = (struct log *) (log_meta + CACHE_LINE_SIZE * idx);
 
@@ -213,7 +213,6 @@ void log_free(void *ptr) {
 void *log_garbage_collection(void *arg) {
 
     masstree::masstree *tree;
-    char *new_log;
     char *current_ptr;
     char *base_ptr;
 
@@ -221,16 +220,16 @@ void *log_garbage_collection(void *arg) {
     tree = (masstree::masstree *) arg;
     auto t = tree->getThreadInfo();
 
-    int debug=0;
+    int debug = 0;
     while (!gc_stopped) {
 
         pthread_mutex_lock(&gq_lock);
         pthread_cond_wait(&gq_cond, &gq_lock);
 
         if (gq.num != GAR_QUEUE_LENGTH) die("gc detected gq length:%lu", gq.num);
-        printf("gc triggered! %d\n",debug++);
+        printf("gc triggered! %d\n", debug++);
 
-        new_log = log_acquire(0);
+        if (log_acquire(1) == NULL)die("cannot acquire new log");
 
         // todo: how to properly store metadata
         for (int i = 0; i < GAR_QUEUE_LENGTH; i++) {
@@ -249,16 +248,25 @@ void *log_garbage_collection(void *arg) {
 
                 // this step might be buggy if went out of bound of the new log
                 if (tree->get(key, t) == value) {
-                    *((size_t *) new_log) = size;
-                    new_log += sizeof(size_t);
+                    *((size_t *) thread_log->curr) = size;
+                    thread_log->curr += sizeof(size_t);
 
-                    memcpy(new_log, current_ptr, size);
-                    new_log += size;
+                    memcpy(thread_log->curr, current_ptr, size);
+                    thread_log->curr += size;
+
+                    // try to commit this entry
+                    int res = tree->put_if_match(key, value, thread_log->curr + sizeof(uint64_t), t);
+
+                    // the log acquired by gc thread shouldn't need atomic ops
+                    if (res)thread_log->free_space -= (sizeof(size_t) + size);
                 }
 
                 current_ptr += size;
             }
         }
+
+
+        if (thread_log->curr > thread_log->base + LOG_SIZE) die("log overflow detected");
 
         gq.num = 0;
 
