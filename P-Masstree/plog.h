@@ -15,7 +15,7 @@
 #include <errno.h>
 #include <string.h>
 //#include <stdatomic.h>
-#include <atomic>
+//#include <atomic>
 
 #define LOG_SIZE (4*1024*1024)
 #define LOG_MERGE_THRESHOLD_DOWN (3*1024*1024)
