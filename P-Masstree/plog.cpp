@@ -194,7 +194,7 @@ void log_free(void *ptr) {
 
     atomic_fetch_add(&target_log->free_space, *((size_t *) (char_ptr - sizeof(size_t))) + sizeof(size_t));
 
-    if (target_log->free_space >= LOG_MERGE_THRESHOLD) {
+    if (target_log->free_space<LOG_MERGE_THRESHOLD_DOWN && target_log->free_space >= LOG_MERGE_THRESHOLD_UP) {
 
         log_acquire(1);
 
