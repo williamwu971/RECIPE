@@ -232,6 +232,7 @@ void *log_garbage_collection(void *arg) {
         // todo: remove this
         double success = 0;
         double fail = 0;
+        printf("starting gc\n");
 
         // todo: how to properly store metadata
         for (int i = 0; i < GAR_QUEUE_LENGTH; i++) {
