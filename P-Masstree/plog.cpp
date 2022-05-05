@@ -178,10 +178,7 @@ void log_free(void *ptr) {
 
     // todo: how to mark entry as freed
     char *char_ptr = (char *) ptr;
-//    printf("%p %p %lu %lu\n",char_ptr,big_map,(uint64_t)(char_ptr - big_map),(uint64_t)(char_ptr - big_map) / LOG_SIZE);
     uint64_t idx = (uint64_t)(char_ptr - big_map) / LOG_SIZE;
-//    printf("idx is %lu\n",idx);
-//    die("debug");
 
     struct log *target_log = (struct log *) (log_meta + CACHE_LINE_SIZE * idx);
 
@@ -275,5 +272,5 @@ void *log_garbage_collection(void *arg) {
 
 void log_start_gc(masstree::masstree *t) {
     pthread_create(&gc, NULL, log_garbage_collection, t);
-//    pthread_detach(gc);
+    pthread_detach(gc);
 }
