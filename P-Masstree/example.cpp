@@ -377,7 +377,7 @@ void run(char **argv) {
         printf("Elapsed time: insert,%ld,%f sec\n", n, duration.count() / 1000000.0);
         insert_throughput=(n * 1.0) / duration.count();
     }
-        log_debug_print(100);
+//        log_debug_print(100);
     {
         // Lookup
         auto starttime = std::chrono::system_clock::now();
@@ -393,6 +393,11 @@ void run(char **argv) {
                 // (TP dropped) todo: free memory, is this correct?
                 // todo: it should be freed in update() ALSO modify update() in masstree
                 tree->del(keys[i],t);
+                ret = reinterpret_cast<uint64_t *> (tree->get(keys[i], t));
+                if (ret != NULL) {
+                    std::cout << "wrong value NULL: " << *ret << " expected:" << keys[i] << std::endl;
+                    throw;
+                }
                 which_free(ret);
             }
         });
