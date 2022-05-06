@@ -396,11 +396,11 @@ void run(char **argv) {
                 // (TP dropped) todo: free memory, is this correct?
                 // todo: it should be freed in update() ALSO modify update() in masstree
 //                tree->put(keys[i],NULL,t);
-                void*rett = (tree->get(keys[i], t));
-                if (rett != NULL) {
-                    std::cout << "wrong value NULL: " << rett << " expected:" << keys[i] << std::endl;
-                    throw;
-                }
+//                void*rett = (tree->get(keys[i], t));
+//                if (rett != NULL) {
+//                    std::cout << "wrong value NULL: " << rett << " expected:" << keys[i] << std::endl;
+//                    throw;
+//                }
                 which_free(raw-sizeof(uint64_t));
             }
         });
