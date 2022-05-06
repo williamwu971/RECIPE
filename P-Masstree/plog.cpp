@@ -253,7 +253,6 @@ void *log_garbage_collection(void *arg) {
         // wait for other threads to wait me up
         pthread_mutex_lock(&gq.lock);
         pthread_cond_wait(&gq.cond, &gq.lock);
-        printf("gc start!\n");
 
         // gc takes the entire queue and release the lock instantly
         struct garbage_queue_node *queue = gq.head;

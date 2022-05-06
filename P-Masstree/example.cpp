@@ -401,7 +401,7 @@ void run(char **argv) {
 //                    std::cout << "wrong value NULL: " << rett << " expected:" << keys[i] << std::endl;
 //                    throw;
 //                }
-                which_free(raw-sizeof(uint64_t));
+//                which_free(raw-sizeof(uint64_t));
 //                printf("deleted %lu\n",keys[i]);
             }
         });
