@@ -384,7 +384,8 @@ void run(char **argv) {
         tbb::parallel_for(tbb::blocked_range<uint64_t>(0, n), [&](const tbb::blocked_range<uint64_t> &range) {
             auto t = tree->getThreadInfo();
             for (uint64_t i = range.begin(); i != range.end(); i++) {
-                char* raw =(char*) tree->get(keys[i], t);
+//                char* raw =(char*) tree->get(keys[i], t);
+                char* raw = (char*)tree->del_and_return(keys[i],t);
                 uint64_t *ret = reinterpret_cast<uint64_t *> (raw);
 //                uint64_t *ret = reinterpret_cast<uint64_t *> (tree->get(keys[i], t));
                 if (*ret != keys[i]) {
@@ -394,12 +395,12 @@ void run(char **argv) {
 
                 // (TP dropped) todo: free memory, is this correct?
                 // todo: it should be freed in update() ALSO modify update() in masstree
-                tree->put(keys[i],NULL,t);
-//                void*rett = (tree->get(keys[i], t));
-//                if (rett != NULL) {
-//                    std::cout << "wrong value NULL: " << rett << " expected:" << keys[i] << std::endl;
-//                    throw;
-//                }
+//                tree->put(keys[i],NULL,t);
+                void*rett = (tree->get(keys[i], t));
+                if (rett != NULL) {
+                    std::cout << "wrong value NULL: " << rett << " expected:" << keys[i] << std::endl;
+                    throw;
+                }
                 which_free(raw-sizeof(uint64_t));
             }
         });

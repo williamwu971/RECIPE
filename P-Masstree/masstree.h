@@ -89,6 +89,8 @@ class masstree {
 
         void del(uint64_t key, MASS::ThreadInfo &threadEpocheInfo);
 
+        void* del_and_return(uint64_t key, MASS::ThreadInfo &threadEpocheInfo);
+
         void del(char *key, MASS::ThreadInfo &threadEpocheInfo);
 
         void *get(uint64_t key, MASS::ThreadInfo &threadEpocheInfo);

@@ -827,6 +827,108 @@ leaf_retry:
     }
 }
 
+void* masstree::del_and_return(uint64_t key, ThreadInfo &threadEpocheInfo)
+{
+    EpocheGuard epocheGuard(threadEpocheInfo);
+    void *root = NULL;
+    key_indexed_position kx_;
+    leafnode *next = NULL;
+    void *snapshot_v = NULL;
+
+    int needRestart;
+    uint64_t v;
+
+    restart:
+    root = this->root_.load(std::memory_order_acquire);
+    leafnode *p = reinterpret_cast<leafnode *> (root);
+    while (p->level() != 0) {
+        inter_retry:
+        next = p->advance_to_key(key);
+        if (next != p) {
+            // check for recovery
+            if (p->tryLock(needRestart)) {
+                if (next->tryLock(needRestart)) {
+                    p->check_for_recovery(this, p, next, NULL, 0, NULL);
+                } else
+                    p->writeUnlock(false);
+            }
+            p = next;
+            goto inter_retry;
+        }
+
+        v = p->readLockOrRestart(needRestart);
+        if (needRestart) {
+            if (needRestart == LOCKED)
+                goto inter_retry;
+            else
+                goto restart;
+        }
+
+        p->prefetch();
+        fence();
+
+        kx_ = p->key_lower_bound(key);
+
+        if (kx_.i >= 0)
+            snapshot_v = p->value(kx_.p);
+        else
+            snapshot_v = p->leftmost();
+
+        p->checkOrRestart(v, needRestart);
+        if (needRestart)
+            goto inter_retry;
+        else
+            p = reinterpret_cast<leafnode *> (snapshot_v);
+    }
+
+    leafnode *l = reinterpret_cast<leafnode *> (p);
+    leaf_retry:
+    next = l->advance_to_key(key);
+    if (next != l) {
+        // check for recovery
+        if (l->tryLock(needRestart)) {
+            if (next->tryLock(needRestart)) {
+                l->check_for_recovery(this, l, next, NULL, 0, NULL);
+            } else
+                l->writeUnlock(false);
+        }
+
+        l = next;
+        goto leaf_retry;
+    }
+
+    l->writeLockOrRestart(needRestart);
+    if (needRestart) {
+        if (needRestart == LOCKED)
+            goto leaf_retry;
+        else
+            goto restart;
+    }
+
+    next = l->advance_to_key(key);
+    if (next != l) {
+        l->writeUnlock(false);
+        l = next;
+        goto leaf_retry;
+    }
+
+    l->prefetch();
+    fence();
+
+    kx_ = l->key_lower_bound_by(key);
+    if (kx_.p < 0) {
+        l->writeUnlock(false);
+        return NULL;
+    }
+    void* to_return = l->value(kx_.p);
+
+    if (!(l->leaf_delete(this, NULL, 0, NULL, kx_, threadEpocheInfo))) {
+        del(key, threadEpocheInfo);
+    }
+
+    return to_return;
+}
+
 void masstree::del(char *key, ThreadInfo &threadEpocheInfo)
 {
     EpocheGuard epocheGuard(threadEpocheInfo);
