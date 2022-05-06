@@ -916,6 +916,12 @@ void* masstree::del_and_return(uint64_t key, ThreadInfo &threadEpocheInfo)
     fence();
 
     kx_ = l->key_lower_bound_by(key);
+
+    if (kx_.p >= 0)
+        snapshot_v = l->value(kx_.p);
+    else
+        snapshot_v = NULL;
+
     if (kx_.p < 0) {
         l->writeUnlock(false);
         return snapshot_v;
