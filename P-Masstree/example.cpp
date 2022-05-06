@@ -402,6 +402,7 @@ void run(char **argv) {
 //                    throw;
 //                }
                 which_free(raw-sizeof(uint64_t));
+                printf("deleted %lu\n",keys[i]);
             }
         });
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
