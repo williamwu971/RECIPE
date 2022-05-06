@@ -26,8 +26,8 @@ void log_structs_size_check() {
     // some structs are required to occupy a cache line
     if (sizeof(char) != 1) die("char size error: %lu", sizeof(char));
     if (sizeof(struct log) != CACHE_LINE_SIZE) die("struct log size %ld", sizeof(struct log));
-    if (sizeof(struct garbage_queue) != CACHE_LINE_SIZE)
-        die("struct garbage_queue size %ld", sizeof(struct garbage_queue));
+//    if (sizeof(struct garbage_queue) != CACHE_LINE_SIZE)
+//        die("struct garbage_queue size %ld", sizeof(struct garbage_queue));
 //    if (sizeof(struct log_cell) == sizeof(uint64_t)) die("log cell size");
 
 }
