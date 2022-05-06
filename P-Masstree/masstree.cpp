@@ -598,6 +598,7 @@ int masstree::put_if_match(uint64_t key, void* match, void *value, ThreadInfo &t
         return res;
     } else {
 
+        l->writeUnlock(false);
         return 0;
 
         if (!(l->leaf_insert(this, NULL, 0, NULL, key, value, kx_))) {
