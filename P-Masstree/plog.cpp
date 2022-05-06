@@ -330,6 +330,7 @@ void *log_garbage_collection(void *arg) {
         }
 
         printf("\n");
+        fflush(stdout);
     }
 
     return NULL;
