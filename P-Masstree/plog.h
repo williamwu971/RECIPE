@@ -59,6 +59,18 @@ struct log {
     char padding[16];
 };
 
+struct garbage_queue_node {
+    uint64_t index;
+    struct garbage_queue_node *next;
+};
+
+struct garbage_queue {
+    pthread_mutex_t lock;
+    pthread_cond_t cond;
+    struct garbage_queue_node *head;
+    uint64_t num;
+};
+
 // metadata for each cell in a log
 //struct log_cell {
 //    uint64_t size;

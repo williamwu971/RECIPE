@@ -15,14 +15,8 @@ pthread_mutex_t lm_lock = PTHREAD_MUTEX_INITIALIZER;
 char *log_meta;
 __thread struct log *thread_log = NULL;
 
-struct garbage_queue {
-    uint64_t indexes[7];
-    uint64_t num = 0;
-};
 
 struct garbage_queue gq;
-pthread_mutex_t gq_lock = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t gq_cond = PTHREAD_COND_INITIALIZER;
 int gc_stopped = 0;
 pthread_t gc;
 
@@ -78,6 +72,12 @@ void log_init(const char *fn, uint64_t num_logs) {
 
     // usage
     log_meta = (char *) malloc(CACHE_LINE_SIZE * num_logs);
+
+    // gc
+    pthread_mutex_init(&gq.lock, NULL);
+    pthread_cond_init(&gq.cond, NULL);
+    gq.head = NULL;
+    gq.num = 0;
 
     inited = 1;
 }
@@ -171,6 +171,27 @@ int log_memalign(void **memptr, size_t alignment, size_t size) {
     return 0;
 }
 
+void log_gq_add(uint64_t idx) {
+    struct garbage_queue_node *node = (struct garbage_queue_node *) malloc(sizeof(struct garbage_queue_node));
+    node->index = idx;
+    node->next = NULL;
+
+    pthread_mutex_lock(&gq.lock);
+
+    // add the node to the queue
+    if (gq.head != NULL) { node->next = gq.head; }
+    gq.head = node;
+    gq.num++;
+
+
+    // wake up garbage collector if queue is long enough
+    if (gq.num >= GAR_QUEUE_LENGTH) {
+        pthread_cond_signal(&gq.cond);
+    }
+
+    pthread_mutex_unlock(&gq.lock);
+}
+
 void log_free(void *ptr) {
 
     // todo: how to mark entry as freed
@@ -186,34 +207,36 @@ void log_free(void *ptr) {
     if (can_collect && target_log->freed >= LOG_MERGE_THRESHOLD &&
         target_log->full.compare_exchange_strong(can_collect, 0)) {
 
-        while (1) {
-            pthread_mutex_lock(&gq_lock);
+        log_gq_add(idx);
 
-            //abort if the queue is already full
-            if (gq.num == GAR_QUEUE_LENGTH) {
-                pthread_mutex_unlock(&gq_lock);
-                continue;
-            }
-
-            // if the log is already in the queue, don't add it
-            for (uint64_t n = 0; n < gq.num; n++) {
-                if (gq.indexes[n] == idx) {
-                    goto end;
-                }
-            }
-
-            gq.indexes[gq.num++] = idx;
-
-            // wake up garbage collection thread
-            if (gq.num == GAR_QUEUE_LENGTH) {
-                pthread_cond_signal(&gq_cond);
-            } else if (gq.num > GAR_QUEUE_LENGTH) {
-                die("gq length:%lu error", gq.num);
-            }
-            end:
-            pthread_mutex_unlock(&gq_lock);
-            break;
-        }
+//        while (1) {
+//            pthread_mutex_lock(&gq_lock);
+//
+//            //abort if the queue is already full
+//            if (gq.num == GAR_QUEUE_LENGTH) {
+//                pthread_mutex_unlock(&gq_lock);
+//                continue;
+//            }
+//
+//            // if the log is already in the queue, don't add it
+//            for (uint64_t n = 0; n < gq.num; n++) {
+//                if (gq.indexes[n] == idx) {
+//                    goto end;
+//                }
+//            }
+//
+//            gq.indexes[gq.num++] = idx;
+//
+//            // wake up garbage collection thread
+//            if (gq.num == GAR_QUEUE_LENGTH) {
+//                pthread_cond_signal(&gq_cond);
+//            } else if (gq.num > GAR_QUEUE_LENGTH) {
+//                die("gq length:%lu error", gq.num);
+//            }
+//            end:
+//            pthread_mutex_unlock(&gq_lock);
+//            break;
+//        }
     }
 
 }
@@ -228,25 +251,38 @@ void *log_garbage_collection(void *arg) {
     while (!gc_stopped) {
 
         // wait for other threads to wait me up
-        pthread_mutex_lock(&gq_lock);
-        pthread_cond_wait(&gq_cond, &gq_lock);
+        pthread_mutex_lock(&gq.lock);
+        pthread_cond_wait(&gq.cond, &gq.lock);
 
-        if (gq.num != GAR_QUEUE_LENGTH) die("gc detected gq length:%lu", gq.num);
+        // gc takes the entire queue and release the lock instantly
+        struct garbage_queue_node *queue = gq.head;
+        uint64_t queue_length = gq.num;
 
-        // acquire a new log
-        if (log_acquire(1) == NULL)die("cannot acquire new log");
+        gq.head = NULL;
+        gq.num = 0;
 
+        pthread_mutex_unlock(&gq.lock);
+
+//        if (gq.num != GAR_QUEUE_LENGTH) die("gc detected gq length:%lu", gq.num);
+        if (queue_length < GAR_QUEUE_LENGTH) die("gc detected gq length:%lu", queue_length);
+
+        uint64_t counter = 0;
         printf("merge ");
 
         // todo: how to properly store metadata
-        for (int i = 0; i < GAR_QUEUE_LENGTH; i++) {
+        while (queue != NULL) {
 
-            struct log *target_log = (struct log *) (log_meta + CACHE_LINE_SIZE * gq.indexes[i]);
+            // acquire a new log, it is poss
+            if (counter == 0) {
+                if (log_acquire(1) == NULL)die("cannot acquire new log");
+            }
+
+
+            struct log *target_log = (struct log *) (log_meta + CACHE_LINE_SIZE * queue->index);
             char *current_ptr = target_log->base;
             char *end_ptr = target_log->curr;
 
-            printf("%lu ", gq.indexes[i]);
-
+            printf("%lu->%lu ", queue->index, thread_log->index);
 
             while (current_ptr < end_ptr) {
 
@@ -283,17 +319,17 @@ void *log_garbage_collection(void *arg) {
             }
 
 
-            log_release(gq.indexes[i]);
+            log_release(queue->index);
 
+            queue = queue->next;
+            counter++;
+            if (counter == GAR_QUEUE_LENGTH) counter = 0;
+
+            if (thread_log->curr > thread_log->base + LOG_SIZE)
+                die("log overflow detected used:%ld", thread_log->curr - thread_log->base);
         }
 
-        printf("to %lu\n", thread_log->index);
-        if (thread_log->curr > thread_log->base + LOG_SIZE)
-            die("log overflow detected used:%ld", thread_log->curr - thread_log->base);
-
-        gq.num = 0;
-        pthread_mutex_unlock(&gq_lock);
-
+        printf("\n");
     }
 
     return NULL;
