@@ -41,6 +41,7 @@ index_location=("dram" "pmem")
 value_location=("pmem" "log")
 index_location=("dram")
 value_location=("log")
+value_location=("pmem")
 num_threads=(16)
 
 workload=100000000
