@@ -259,7 +259,7 @@ void *log_garbage_collection(void *arg) {
                 void *value = current_ptr + sizeof(uint64_t);
 
                 // this step might be buggy if went out of bound of the new log
-                if (value != NULL && tree->get(key, t) == value) {
+                if (value != NULL) {
                     *((uint64_t *) thread_log->curr) = size;
                     thread_log->curr += sizeof(uint64_t);
 
