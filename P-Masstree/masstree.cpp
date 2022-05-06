@@ -601,7 +601,7 @@ int masstree::put_if_match(uint64_t key, void* match, void *value, ThreadInfo &t
 //        return 0;
 
         if (!(l->leaf_insert(this, NULL, 0, NULL, key, value, kx_))) {
-            return put_if_match(key, value, threadEpocheInfo);
+            return put_if_match(key,match, value, threadEpocheInfo);
         }
     }
 }
