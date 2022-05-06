@@ -70,8 +70,8 @@ for i in "${index_location[@]}"; do
     for n in "${num_threads[@]}"; do
       rm -rf /pmem0/*
       echo "$workload" "$n" index="$i" value="$v" key="$key_order"
-      /home/blepers/linux/tools/perf/perf record -g ./example "$workload" "$n" index="$i" value="$v" key="$key_order"
-#      ./example "$workload" "$n" index="$i" value="$v" key="$key_order"
+#      /home/blepers/linux/tools/perf/perf record -g ./example "$workload" "$n" index="$i" value="$v" key="$key_order"
+      ./example "$workload" "$n" index="$i" value="$v" key="$key_order"
       #      ./example 100 "$n" index="$i" value="$v"
     done
 
