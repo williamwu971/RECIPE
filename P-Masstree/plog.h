@@ -34,6 +34,17 @@
       exit(-1); \
    } while(0)
 
+#ifdef __x86_64__
+#define rdtscll(val) {                                           \
+       unsigned int __a,__d;                                        \
+       asm volatile("rdtsc" : "=a" (__a), "=d" (__d));              \
+       (val) = ((unsigned long)__a) | (((unsigned long)__d)<<32);\
+       asm volatile("sfence":::"memory");\
+}
+#else
+#define rdtscll(val) __asm__ __volatile__("rdtsc" : "=A" (val))
+#endif
+
 enum {
     AVAILABLE,
     OCCUPIED,

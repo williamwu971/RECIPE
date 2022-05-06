@@ -335,7 +335,7 @@ void run(char **argv) {
 
     double insert_throughput;
     double lookup_throughput;
-
+    u_int64_t* latencies=(u_int64_t*)malloc(sizeof(u_int64_t)*n);
 
     printf("operation,n,ops/s\n");
     masstree::masstree *tree = new masstree::masstree();
@@ -384,6 +384,10 @@ void run(char **argv) {
         tbb::parallel_for(tbb::blocked_range<uint64_t>(0, n), [&](const tbb::blocked_range<uint64_t> &range) {
             auto t = tree->getThreadInfo();
             for (uint64_t i = range.begin(); i != range.end(); i++) {
+
+                u_int64_t a,b;
+                rdtscll(a);
+
 //                char* raw =(char*) tree->get(keys[i], t);
                 char* raw = (char*)tree->del_and_return(keys[i],t);
                 uint64_t *ret = reinterpret_cast<uint64_t *> (raw);
@@ -403,6 +407,8 @@ void run(char **argv) {
 //                }
                 which_free(raw-sizeof(uint64_t));
 //                printf("deleted %lu\n",keys[i]);
+                rdtscll(b);
+                latencies[i]=b - a;
             }
         });
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
@@ -416,12 +422,17 @@ void run(char **argv) {
 
     FILE* insert_throughput_file=fopen("insert.csv","a");
     FILE* lookup_throughput_file=fopen("lookup.csv","a");
+    FILE* latency_file=fopen("latency.csv","w");
 
     fprintf(insert_throughput_file,"%.2f,", insert_throughput);
     fprintf(lookup_throughput_file,"%.2f,", lookup_throughput);
+    for (uint64_t idx = 0;idx<n;idx++){
+        fprintf(latency_file,"%lu\n",latencies[idx]);
+    }
 
     fclose(insert_throughput_file);
     fclose(lookup_throughput_file);
+    fclose(latency_file);
 
 
     delete[] keys;
