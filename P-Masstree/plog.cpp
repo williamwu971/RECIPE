@@ -314,7 +314,7 @@ void *log_garbage_collection(void *arg) {
                         thread_log->curr -= sizeof(uint64_t);
                     }
                 }
-                printf("insert complete %p\n",current_ptr);
+                printf("insert complete %ld\n",current_ptr-target_log->base);
                 current_ptr += size;
             }
 
