@@ -181,7 +181,7 @@ void log_free(void *ptr) {
 
     uint64_t new_space = *((uint64_t *) (char_ptr - sizeof(uint64_t))) + sizeof(uint64_t);
     target_log->freed += new_space;
-    uint64_t can_collect = target_log->full.load();
+    std::atomic<uint64_t> can_collect = target_log->full.load();
 
     if (can_collect && target_log->freed >= LOG_MERGE_THRESHOLD &&
         target_log->full.compare_exchange_strong(&can_collect, 0)) {
