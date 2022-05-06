@@ -184,7 +184,7 @@ void log_free(void *ptr) {
     uint64_t can_collect = target_log->full.load();
 
     if (can_collect && target_log->freed >= LOG_MERGE_THRESHOLD &&
-        target_log->full.compare_exchange_strong(&can_collect,(uint64_t)0)) {
+        target_log->full.compare_exchange_strong(can_collect, 0)) {
 
         while (1) {
             pthread_mutex_lock(&gq_lock);
