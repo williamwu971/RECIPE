@@ -56,7 +56,7 @@ struct log {
     uint64_t full;
     char *base;
     char *curr;
-    char padding[24];
+    char padding[16];
 };
 
 // metadata for each cell in a log
