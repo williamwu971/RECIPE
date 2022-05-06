@@ -1,33 +1,5 @@
 #include "plog.h"
 
-enum {
-    AVAILABLE,
-    OCCUPIED,
-};
-
-// occupy the first 4m of log file
-struct log_map {
-    uint64_t num_entries;
-
-    // aligned to CACHELINE size
-    int **entries;
-};
-
-// metadata for the current log, should be in DRAM
-struct log {
-//    std::atomic<size_t> free_space;
-    uint64_t free_space;
-    uint64_t index;
-    char *base;
-    char *curr;
-    int merged=0;
-    char padding[24];
-};
-
-// metadata for each cell in a log
-struct log_cell {
-    uint64_t size;
-};
 
 int inited = 0;
 
@@ -58,6 +30,7 @@ pthread_t gc;
 void log_structs_size_check() {
 
     // some structs are required to occupy a cache line
+    if (sizeof(char) != 1) die("char size error: %lu", sizeof(char));
     if (sizeof(struct log) != CACHE_LINE_SIZE) die("struct log size %ld", sizeof(struct log));
     if (sizeof(struct garbage_queue) != CACHE_LINE_SIZE)
         die("struct garbage_queue size %ld", sizeof(struct garbage_queue));
@@ -73,8 +46,6 @@ void log_init(const char *fn, uint64_t num_logs) {
     int fd;
     uint64_t file_size;
 
-
-    if (sizeof(char) != 1) die("char size error: %lu", sizeof(char));
 
     //todo: what happens when recovering?
 
@@ -106,7 +77,6 @@ void log_init(const char *fn, uint64_t num_logs) {
     }
 
     // usage
-    if (sizeof(struct log) > CACHE_LINE_SIZE) die("struct log size %lu too big", sizeof(struct log));
     log_meta = (char *) malloc(CACHE_LINE_SIZE * num_logs);
 
     inited = 1;
@@ -126,15 +96,20 @@ char *log_acquire(int write_thread_log) {
             lm.entries[i][0] = OCCUPIED;
             log_address = big_map + i * LOG_SIZE;
 
-//            printf("log %lu is claimed by %ld\n", i, syscall(__NR_gettid));
-//            fflush(stdout);
-
             if (write_thread_log) {
+
+                // retire and mark the old log for collection
+                if (thread_log != NULL) {
+                    thread_log->full = 1;
+                }
+
                 thread_log = (struct log *) (log_meta + CACHE_LINE_SIZE * i);
-                thread_log->free_space = LOG_SIZE;
+                thread_log->freed = 0;
+                thread_log->available = LOG_SIZE;
+                thread_log->index = i;
+                thread_log->full = 0;
                 thread_log->base = log_address;
                 thread_log->curr = thread_log->base;
-                thread_log->index=i;
             }
             goto end;
         }
@@ -165,19 +140,15 @@ uint64_t log_get_key_from_value_ptr(char *value_ptr) {
 
 void *log_malloc(size_t size) {
 
-    uint64_t required_size;
+    uint64_t required_size = size + sizeof(uint64_t);
 
-    required_size = size + sizeof(struct log_cell);
-
-    if (unlikely(thread_log == NULL || thread_log->free_space < required_size)) {
-
+    // the "freed" space should be strictly increasing
+    if (unlikely(thread_log == NULL || thread_log->available < required_size)) {
         if (log_acquire(1) == NULL)die("cannot acquire new log");
     }
 
     // write and decrease size
-    thread_log->free_space -= required_size;
-//    atomic_fetch_sub(&thread_log->free_space, required_size); // todo: is this heavy?
-//    thread_log->free_space.fetch_sub(required_size);
+    thread_log->available -= required_size;
 
 
     *((uint64_t *) thread_log->curr) = size;
@@ -191,7 +162,7 @@ void *log_malloc(size_t size) {
 
 int log_memalign(void **memptr, size_t alignment, size_t size) {
 
-    size += ((size + sizeof(struct log_cell)) / alignment + 1) * alignment - size - sizeof(struct log_cell);
+    size += ((size + sizeof(uint64_t)) / alignment + 1) * alignment - size - sizeof(uint64_t);
 
 //    printf("size %lu\n",size+sizeof(struct log_cell));
     // todo: how to make sure memory is aligned
@@ -208,20 +179,10 @@ void log_free(void *ptr) {
 
     struct log *target_log = (struct log *) (log_meta + CACHE_LINE_SIZE * idx);
 
-    uint64_t new_space = *((uint64_t *) (char_ptr - sizeof(uint64_t) - sizeof(uint64_t))) + sizeof(uint64_t);
-    if (new_space!=24) die("error, new space %lu",new_space);
-    target_log->free_space += new_space;
-//    target_log->free_space.fetch_add(*((size_t *) (char_ptr - sizeof(size_t))) + sizeof(size_t));
-//    atomic_fetch_add(&target_log->free_space, *((size_t *) (char_ptr - sizeof(size_t))) + sizeof(size_t));
-//    uint64_t *key_ptr = (uint64_t*)(char_ptr-sizeof(uint64_t));
-//    printf("freed key %lu\n",*key_ptr);
+    uint64_t new_space = *((uint64_t *) (char_ptr - sizeof(uint64_t))) + sizeof(uint64_t);
+    target_log->freed += new_space;
 
-    uint64_t fs = target_log->free_space;
-    if (fs >= LOG_MERGE_THRESHOLD) {
-//        printf("adding %lu %p free %lu to gq\n", idx, target_log, fs);
-
-
-//        if (thread_log->base==target_log->base)log_acquire(1);
+    if (target_log->full && target_log->freed >= LOG_MERGE_THRESHOLD) {
 
         while (1) {
             pthread_mutex_lock(&gq_lock);
@@ -232,10 +193,7 @@ void log_free(void *ptr) {
                 continue;
             }
 
-//            size_t fs = target_log->free_space.load(std::memory_order_seq_cst);
-
-            if (target_log->merged)goto end;
-
+            // if the log is already in the queue, don't add it
             for (uint64_t n = 0; n < gq.num; n++) {
                 if (gq.indexes[n] == idx) {
                     goto end;
@@ -260,21 +218,20 @@ void log_free(void *ptr) {
 
 void *log_garbage_collection(void *arg) {
 
-    masstree::masstree *tree;
-    char *current_ptr;
-    char *base_ptr;
-
     // todo Question: do we need to lock the whole tree?
-    tree = (masstree::masstree *) arg;
+    masstree::masstree *tree = (masstree::masstree *) arg;
     auto t = tree->getThreadInfo();
+
 
     while (!gc_stopped) {
 
+        // wait for other threads to wait me up
         pthread_mutex_lock(&gq_lock);
         pthread_cond_wait(&gq_cond, &gq_lock);
 
         if (gq.num != GAR_QUEUE_LENGTH) die("gc detected gq length:%lu", gq.num);
 
+        // acquire a new log
         if (log_acquire(1) == NULL)die("cannot acquire new log");
 
         printf("merge ");
@@ -282,24 +239,20 @@ void *log_garbage_collection(void *arg) {
         // todo: how to properly store metadata
         for (int i = 0; i < GAR_QUEUE_LENGTH; i++) {
 
-            base_ptr = big_map + gq.indexes[i] * LOG_SIZE;
-            current_ptr = base_ptr;
-
-            printf("%lu ",gq.indexes[i]);
             struct log *target_log = (struct log *) (log_meta + CACHE_LINE_SIZE * gq.indexes[i]);
-//            size_t frees = target_log->free_space.load(std::memory_order_seq_cst);
-//            uint64_t frees = target_log->free_space;
+            char *current_ptr = target_log->base;
+            char *end_ptr = target_log->curr;
 
-//            printf("log %lu %p free space %lu\n", gq.indexes[i], target_log, frees);
+            printf("%lu ", gq.indexes[i]);
 
-//            if (target_log->free_space<LOG_MERGE_THRESHOLD) die("merging incorrect log");
 
-            while (current_ptr < base_ptr + LOG_SIZE) {
+            while (current_ptr < end_ptr) {
 
+                // read and advance the pointer
                 uint64_t size = *((uint64_t *) current_ptr);
                 current_ptr += sizeof(uint64_t);
 
-                // assume key is always 8 bytes and occupy the field following size
+                // todo: assume key is always 8 bytes and occupy the field following size
                 uint64_t key = *((uint64_t *) current_ptr);
                 void *value = current_ptr + sizeof(uint64_t);
 
@@ -308,49 +261,38 @@ void *log_garbage_collection(void *arg) {
                     *((uint64_t *) thread_log->curr) = size;
                     thread_log->curr += sizeof(uint64_t);
 
+                    // thread log curr now points to key
                     memcpy(thread_log->curr, current_ptr, size);
 
 
                     // try to commit this entry
                     int res = tree->put_if_match(key, value, thread_log->curr + sizeof(uint64_t), t);
-//                    printf("res %d\n",res);
 
                     // the log acquired by gc thread shouldn't need atomic ops
                     if (res) {
-//                        printf("inserted key %lu\n",key);
-                        thread_log->free_space -= (sizeof(uint64_t) + size);
+                        thread_log->available -= (sizeof(uint64_t) + size);
                         thread_log->curr += size;
                     } else {
                         thread_log->curr -= sizeof(uint64_t);
                     }
-
-
                 }
 
                 current_ptr += size;
             }
 
 
-//            memset(base_ptr, 0, LOG_SIZE);
-//            log_release(gq.indexes[i]);
-            target_log->merged=1;
-
-//            printf("used %lu in one go\n", thread_log->curr - thread_log->base);
-//            printf("distance %lu\n",current_ptr-base_ptr);
-//            if (thread_log->curr > thread_log->base + (LOG_SIZE / GAR_QUEUE_LENGTH) * i) die("incorrect volume used");
+            log_release(gq.indexes[i]);
 
         }
 
-        printf("to %lu\n",thread_log->index);
+        printf("to %lu\n", thread_log->index);
         if (thread_log->curr > thread_log->base + LOG_SIZE)
             die("log overflow detected used:%ld", thread_log->curr - thread_log->base);
 
         gq.num = 0;
-
         pthread_mutex_unlock(&gq_lock);
 
     }
-
 
     return NULL;
 }
@@ -360,8 +302,13 @@ void log_start_gc(masstree::masstree *t) {
     pthread_detach(gc);
 }
 
+void log_end_gc() {
+    gc_stopped = 1;
+    pthread_cancel(gc);
+}
+
 void log_debug_print(uint64_t bound) {
     for (uint64_t i = 0; i < bound; i++) {
-        printf("log %lu free %lu\n", i, ((struct log *) log_meta + CACHE_LINE_SIZE * i)->free_space);
+//        printf("log %lu free %lu\n", i, ((struct log *) log_meta + CACHE_LINE_SIZE * i)->free_space);
     }
 }
