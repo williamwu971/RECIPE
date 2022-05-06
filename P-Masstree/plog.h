@@ -17,7 +17,7 @@
 #include <stddef.h>
 #include <cstdint>
 //#include <stdatomic.h>
-//#include <atomic>
+#include <atomic>
 
 #define LOG_SIZE (4*1024*1024)
 #define LOG_MERGE_THRESHOLD (2*1024*1024)
@@ -53,7 +53,7 @@ struct log {
     uint64_t freed;
     uint64_t available;
     uint64_t index;
-    uint64_t full;
+    std::atomic<uint64_t> full;
     char *base;
     char *curr;
     char padding[16];

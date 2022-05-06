@@ -100,14 +100,14 @@ char *log_acquire(int write_thread_log) {
 
                 // retire and mark the old log for collection
                 if (thread_log != NULL) {
-                    thread_log->full = 1;
+                    thread_log->full.store(1);
                 }
 
                 thread_log = (struct log *) (log_meta + CACHE_LINE_SIZE * i);
                 thread_log->freed = 0;
                 thread_log->available = LOG_SIZE;
                 thread_log->index = i;
-                thread_log->full = 0;
+                thread_log->full.store(0);
                 thread_log->base = log_address;
                 thread_log->curr = thread_log->base;
             }
@@ -181,8 +181,10 @@ void log_free(void *ptr) {
 
     uint64_t new_space = *((uint64_t *) (char_ptr - sizeof(uint64_t))) + sizeof(uint64_t);
     target_log->freed += new_space;
+    uint64_t can_collect = target_log->full.load();
 
-    if (target_log->full && target_log->freed >= LOG_MERGE_THRESHOLD) {
+    if (can_collect && target_log->freed >= LOG_MERGE_THRESHOLD &&
+        target_log->full.compare_exchange_strong(&can_collect, 0)) {
 
         while (1) {
             pthread_mutex_lock(&gq_lock);
