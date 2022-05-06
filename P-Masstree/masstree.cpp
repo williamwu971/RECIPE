@@ -918,15 +918,14 @@ void* masstree::del_and_return(uint64_t key, ThreadInfo &threadEpocheInfo)
     kx_ = l->key_lower_bound_by(key);
     if (kx_.p < 0) {
         l->writeUnlock(false);
-        return NULL;
+        return snapshot_v;
     }
-    void* to_return = l->value(kx_.p);
 
     if (!(l->leaf_delete(this, NULL, 0, NULL, kx_, threadEpocheInfo))) {
-        del(key, threadEpocheInfo);
+        return del_and_return(key, threadEpocheInfo);
     }
 
-    return to_return;
+    return snapshot_v;
 }
 
 void masstree::del(char *key, ThreadInfo &threadEpocheInfo)
