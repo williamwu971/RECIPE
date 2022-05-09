@@ -91,7 +91,7 @@ struct garbage_queue {
 struct log_cell {
     uint64_t value_size;
     uint64_t is_delete;
-    uint64_t version;
+    int64_t version;
     uint64_t key;
 };
 
