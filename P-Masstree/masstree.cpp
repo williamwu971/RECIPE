@@ -603,6 +603,8 @@ int masstree::put_if_newer(uint64_t key, void *value, ThreadInfo &threadEpocheIn
     } else {
 
         // todo: modification of version requires another flush
+        l->writeUnlock(false);
+        return 0;
 
         if (lc->version==-1){
             lc->version=0;
