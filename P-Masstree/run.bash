@@ -44,7 +44,7 @@ value_location=("log")
 #value_location=("pmem")
 num_threads=(16)
 
-workload=100
+workload=100000000
 key_order="random"
 #key_order="seq"
 
