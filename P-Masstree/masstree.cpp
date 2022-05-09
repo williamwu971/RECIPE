@@ -600,16 +600,16 @@ int masstree::put_if_newer(uint64_t key, void *value, ThreadInfo &threadEpocheIn
     } else {
 
         // todo: modification of version requires another flush
-//        struct log_cell* lc = (struct log_cell*)value;
-//        if (lc->version==-1){
-//            lc->version=0;
+        struct log_cell* lc = (struct log_cell*)value;
+        if (lc->version==-1){
+            lc->version=0;
             if (!(l->leaf_insert(this, NULL, 0, NULL, key, value, kx_))) {
                 return put_if_newer(key, value, threadEpocheInfo);
             }
-//        }else{
-//            l->writeUnlock(false);
-//            return 0;
-//        }
+        }else{
+            l->writeUnlock(false);
+            return 0;
+        }
     }
 }
 
@@ -1164,11 +1164,15 @@ int leafnode::assign_value_if_newer(int p,void *value)
 
     // todo: modification in version number will need another flush. How to avoid?
     if (new_lc->version==-1){
-        new_lc->version=old_lc->version+1;
+        if (old_lc==NULL){
+            new_lc->version=0;
+        }else{
+            if (new_lc->version<=old_lc->version) return 0;
+            new_lc->version=old_lc->version+1;
+        }
         goto assign;
     }
 
-    if (new_lc->version<=old_lc->version) return 0;
 
     assign:
     entry[p].value = value;
