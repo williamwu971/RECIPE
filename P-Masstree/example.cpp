@@ -358,7 +358,10 @@ void run(char **argv) {
 //                int size = rand()%2048+sizeof(uint64_t);
                 int size = sizeof(uint64_t);
 
-                uint64_t *key = (uint64_t *)which_malloc(sizeof(uint64_t)*2);
+                char* raw = (char*)which_malloc(sizeof(struct log_cell)+sizeof(uint64_t));
+
+                struct log_cell* lc = (struct log_cell*)raw;
+
                 uint64_t *value=key+1;
                 *key=keys[i];
 

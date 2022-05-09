@@ -237,22 +237,23 @@ uint64_t log_get_key_from_value_ptr(char *value_ptr) {
 
 void *log_malloc(size_t size) {
 
-    uint64_t required_size = sizeof(struct log_cell) + size;
+//    uint64_t required_size = sizeof(struct log_cell) + size;
+    if (size < sizeof(struct log_cell)) die("size too small %zu", size);
 
     // the "freed" space should be strictly increasing
-    if (unlikely(thread_log == NULL || thread_log->available < required_size)) {
+    if (unlikely(thread_log == NULL || thread_log->available < size)) {
         if (log_acquire(1) == NULL)die("cannot acquire new log");
     }
 
     // write and decrease size
-    thread_log->available -= required_size;
+    thread_log->available -= size;
 
     struct log_cell *lc = (struct log_cell *) thread_log->curr;
     lc->value_size = size;
 
 
-    thread_log->curr += required_size;
-    return thread_log->curr - required_size;
+    thread_log->curr += size;
+    return thread_log->curr - size;
 }
 
 
@@ -367,6 +368,7 @@ void *log_garbage_collection(void *arg) {
 
 
                 // persist this entry to the new log first
+                // todo: two flushes are required here
                 new_lc->key = old_lc->key;
                 new_lc->is_delete = old_lc->is_delete;
                 new_lc->value_size = old_lc->value_size;
@@ -383,7 +385,7 @@ void *log_garbage_collection(void *arg) {
                 if (!new_lc->is_delete) {
 
                     // try to commit this entry
-                    int res = tree->put_if_match(new_lc->key, old_lc, new_lc, t);
+                    int res = tree->put_if_newer(new_lc->key, new_lc, t);
 
                     // the log acquired by gc thread shouldn't need atomic ops
                     if (res) {
