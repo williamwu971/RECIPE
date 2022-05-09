@@ -285,10 +285,10 @@ void log_free(void *ptr) {
     char *char_ptr = (char *) ptr;
 
     // commit a dummy log to represent that this entry has been freed
-//    uint64_t *uint_ptr = (uint64_t *) ptr;
-//    uint64_t *new_entry = (uint64_t *) log_malloc(16);
-//    *new_entry = *uint_ptr;
-//    *(new_entry + 1) = 0;
+    uint64_t *uint_ptr = (uint64_t *) ptr;
+    uint64_t *new_entry = (uint64_t *) log_malloc(16);
+    *new_entry = *uint_ptr;
+    *(new_entry + 1) = 0;
     // todo: persist here
 
     uint64_t idx = (uint64_t) (char_ptr - big_map) / LOG_SIZE;
