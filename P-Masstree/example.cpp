@@ -359,7 +359,7 @@ void run(char **argv) {
                 char* raw = (char*)which_malloc(sizeof(struct log_cell)+size);
 
                 struct log_cell* lc = (struct log_cell*)raw;
-                lc->version=-1;
+                lc->version=0;
                 lc->is_delete=0;
                 lc->key=keys[i];
 
