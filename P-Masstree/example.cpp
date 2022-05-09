@@ -379,7 +379,7 @@ void run(char **argv) {
     }
 //        log_debug_print(100);
     {
-        // Lookup
+        // Delete
         auto starttime = std::chrono::system_clock::now();
         tbb::parallel_for(tbb::blocked_range<uint64_t>(0, n), [&](const tbb::blocked_range<uint64_t> &range) {
             auto t = tree->getThreadInfo();
@@ -413,9 +413,30 @@ void run(char **argv) {
         });
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
                 std::chrono::system_clock::now() - starttime);
+        printf("Throughput: delete,%ld,%f ops/us\n", n, (n * 1.0) / duration.count());
+        printf("Elapsed time: delete,%ld,%f sec\n", n, duration.count() / 1000000.0);
+        lookup_throughput=(n * 1.0) / duration.count();
+    }
+
+    {
+        // Lookup
+        auto starttime = std::chrono::system_clock::now();
+        tbb::parallel_for(tbb::blocked_range<uint64_t>(0, n), [&](const tbb::blocked_range<uint64_t> &range) {
+            auto t = tree->getThreadInfo();
+            for (uint64_t i = range.begin(); i != range.end(); i++) {
+
+
+                char* raw =(char*) tree->get(keys[i], t);
+                if (raw != NULL) {
+                    std::cout << "wrong value read: " << raw << " expected:" << NULL << std::endl;
+                    throw;
+                }
+            }
+        });
+        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
+                std::chrono::system_clock::now() - starttime);
         printf("Throughput: lookup,%ld,%f ops/us\n", n, (n * 1.0) / duration.count());
         printf("Elapsed time: lookup,%ld,%f sec\n", n, duration.count() / 1000000.0);
-        lookup_throughput=(n * 1.0) / duration.count();
     }
 
     // logging throughput to files
