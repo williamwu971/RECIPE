@@ -508,6 +508,7 @@ leaf_retry:
 
 int masstree::put_if_newer(uint64_t key, void *value, ThreadInfo &threadEpocheInfo)
 {
+    printf("received %lu %p\n",key,value);
     EpocheGuard epocheGuard(threadEpocheInfo);
     key_indexed_position kx_;
     leafnode *next = NULL, *p = NULL;
