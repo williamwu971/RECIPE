@@ -18,6 +18,7 @@
 #include <cstdint>
 //#include <stdatomic.h>
 #include <atomic>
+#include <libpmem.h>
 
 #define LOG_SIZE (4*1024*1024)
 #define LOG_MERGE_THRESHOLD (2*1024*1024)

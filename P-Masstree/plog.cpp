@@ -194,8 +194,15 @@ void log_gq_add(uint64_t idx) {
 
 void log_free(void *ptr) {
 
-    // todo: how to mark entry as freed
     char *char_ptr = (char *) ptr;
+
+    // commit a dummy log to represent that this entry has been freed
+    uint64_t *uint_ptr = (uint64_t *) ptr;
+    uint64_t *new_entry = (uint64_t *) log_malloc(16);
+    *new_entry = *uint_ptr;
+    *(new_entry + 1) = 0;
+    // todo: persist here
+
     uint64_t idx = (uint64_t) (char_ptr - big_map) / LOG_SIZE;
 
     struct log *target_log = (struct log *) (log_meta + CACHE_LINE_SIZE * idx);
@@ -208,35 +215,6 @@ void log_free(void *ptr) {
         target_log->full.compare_exchange_strong(can_collect, 0)) {
 
         log_gq_add(idx);
-
-//        while (1) {
-//            pthread_mutex_lock(&gq_lock);
-//
-//            //abort if the queue is already full
-//            if (gq.num == GAR_QUEUE_LENGTH) {
-//                pthread_mutex_unlock(&gq_lock);
-//                continue;
-//            }
-//
-//            // if the log is already in the queue, don't add it
-//            for (uint64_t n = 0; n < gq.num; n++) {
-//                if (gq.indexes[n] == idx) {
-//                    goto end;
-//                }
-//            }
-//
-//            gq.indexes[gq.num++] = idx;
-//
-//            // wake up garbage collection thread
-//            if (gq.num == GAR_QUEUE_LENGTH) {
-//                pthread_cond_signal(&gq_cond);
-//            } else if (gq.num > GAR_QUEUE_LENGTH) {
-//                die("gq length:%lu error", gq.num);
-//            }
-//            end:
-//            pthread_mutex_unlock(&gq_lock);
-//            break;
-//        }
     }
 
 }
@@ -300,7 +278,7 @@ void *log_garbage_collection(void *arg) {
                     thread_log->curr += sizeof(uint64_t);
 
                     // thread log curr now points to key
-                    memcpy(thread_log->curr, current_ptr, size);
+                    pmem_memcpy_persist(thread_log->curr, current_ptr, size);
 
 
                     // try to commit this entry
@@ -314,7 +292,6 @@ void *log_garbage_collection(void *arg) {
                         thread_log->curr -= sizeof(uint64_t);
                     }
                 }
-//                printf("insert complete %ld\n",current_ptr-target_log->base);
                 current_ptr += size;
             }
 
@@ -328,9 +305,6 @@ void *log_garbage_collection(void *arg) {
             if (thread_log->curr > thread_log->base + LOG_SIZE)
                 die("log overflow detected used:%ld", thread_log->curr - thread_log->base);
         }
-
-//        printf("\n");
-//        fflush(stdout);
     }
 
     return NULL;
