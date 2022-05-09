@@ -370,6 +370,7 @@ void run(char **argv) {
 
                 if (require_flush) clflush((char*)value,size,true,true);
 //                tree->put(keys[i], value, t);
+                printf("insert %p\n",raw);
                 tree->put_if_newer(keys[i], raw, t);
             }
         });
