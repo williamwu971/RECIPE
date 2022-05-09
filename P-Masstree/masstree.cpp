@@ -592,12 +592,9 @@ int masstree::put_if_newer(uint64_t key, void *value, ThreadInfo &threadEpocheIn
     l->prefetch();
     fence();
 
-    struct log_cell* lc = (struct log_cell*)value;
-    printf("debug %ld %lu %lu %lu",lc->version,lc->key,lc->is_delete,lc->value_size);
 
     kx_ = l->key_lower_bound_by(key);
     if (kx_.p >= 0 && l->key(kx_.p) == key) {
-        l->assign_value(kx_.p, value);
         int res = l->assign_value_if_newer(kx_.p, value);
         l->writeUnlock(false);
         return res;
@@ -1159,18 +1156,8 @@ int leafnode::assign_value_if_newer(int p,void *value)
     struct log_cell* new_lc = (struct log_cell*)value;
 
     // todo: modification in version number will need another flush. How to avoid?
-    if (new_lc->version==-1){
-        if (old_lc==NULL){
-            new_lc->version=0;
-        }else{
-            if (new_lc->version<=old_lc->version) return 0;
-            new_lc->version=old_lc->version+1;
-        }
-        goto assign;
-    }
+    if (new_lc->version<=old_lc->version) return 0;
 
-
-    assign:
     entry[p].value = value;
     clflush((char *)&entry[p].value, sizeof(void *), false, true);
     return 1;
