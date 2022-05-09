@@ -598,24 +598,14 @@ int masstree::put_if_newer(uint64_t key, void *value, ThreadInfo &threadEpocheIn
     kx_ = l->key_lower_bound_by(key);
     if (kx_.p >= 0 && l->key(kx_.p) == key) {
         l->assign_value(kx_.p, value);
-//        int res = l->assign_value_if_newer(kx_.p, value);
+        int res = l->assign_value_if_newer(kx_.p, value);
         l->writeUnlock(false);
-        return 0;
+        return res;
     } else {
 
         // todo: modification of version requires another flush
-//        l->writeUnlock(false);
-//        return 0;
-
-//        if (lc->version==-1){
-//            lc->version=0;
-            if (!(l->leaf_insert(this, NULL, 0, NULL, key, value, kx_))) {
-                put_if_newer(key, value, threadEpocheInfo);
-            }
-//        }else{
-//            l->writeUnlock(false);
-//            return 0;
-//        }
+        l->writeUnlock(false);
+        return 0;
     }
 }
 
