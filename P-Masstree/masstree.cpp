@@ -606,12 +606,10 @@ int masstree::put_if_newer(uint64_t key, void *value, ThreadInfo &threadEpocheIn
             if (!(l->leaf_insert(this, NULL, 0, NULL, key, value, kx_))) {
                 return put_if_newer(key, value, threadEpocheInfo);
             }
+        }else{
+            l->writeUnlock(false);
+            return 0;
         }
-
-        l->writeUnlock(false);
-        return 0;
-
-
     }
 }
 
