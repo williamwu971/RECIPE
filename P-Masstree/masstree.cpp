@@ -1,3 +1,4 @@
+#include <plog.h>
 #include "masstree.h"
 #include "Epoche.cpp"
 
@@ -14,7 +15,7 @@ using namespace MASS;
 
 namespace masstree {
 
-static constexpr uint64_t CACHE_LINE_SIZE = 64;
+//static constexpr uint64_t CACHE_LINE_SIZE = 64;
 
 static inline void fence() {
     asm volatile("" : : : "memory");
@@ -505,7 +506,7 @@ leaf_retry:
     }
 }
 
-int masstree::put_if_match(uint64_t key, void* match, void *value, ThreadInfo &threadEpocheInfo)
+int masstree::put_if_newer(uint64_t key, void *value, ThreadInfo &threadEpocheInfo)
 {
     EpocheGuard epocheGuard(threadEpocheInfo);
     key_indexed_position kx_;
@@ -593,7 +594,7 @@ int masstree::put_if_match(uint64_t key, void* match, void *value, ThreadInfo &t
 
     kx_ = l->key_lower_bound_by(key);
     if (kx_.p >= 0 && l->key(kx_.p) == key) {
-        int res = l->assign_value_if_match(kx_.p, match,value);
+        int res = l->assign_value_if_newer(kx_.p, value);
         l->writeUnlock(false);
         return res;
     } else {
@@ -602,7 +603,7 @@ int masstree::put_if_match(uint64_t key, void* match, void *value, ThreadInfo &t
         return 0;
 
         if (!(l->leaf_insert(this, NULL, 0, NULL, key, value, kx_))) {
-            return put_if_match(key,match, value, threadEpocheInfo);
+            return put_if_newer(key, value, threadEpocheInfo);
         }
     }
 }
@@ -828,7 +829,7 @@ leaf_retry:
     }
 }
 
-void* masstree::del_and_return(uint64_t key, ThreadInfo &threadEpocheInfo)
+void* masstree::del_and_return(uint64_t key, int64_t version, ThreadInfo &threadEpocheInfo)
 {
     EpocheGuard epocheGuard(threadEpocheInfo);
     void *root = NULL;
@@ -918,10 +919,18 @@ void* masstree::del_and_return(uint64_t key, ThreadInfo &threadEpocheInfo)
 
     kx_ = l->key_lower_bound_by(key);
 
-    if (kx_.p >= 0)
+    if (kx_.p >= 0){
         snapshot_v = l->value(kx_.p);
-    else
+
+        struct log_cell* lc = (struct log_cell*)snapshot_v;
+        if (lc->version>=version){
+            return NULL;
+        }
+
+    }else{
         snapshot_v = NULL;
+    }
+
 
     if (kx_.p < 0) {
         l->writeUnlock(false);
@@ -929,7 +938,7 @@ void* masstree::del_and_return(uint64_t key, ThreadInfo &threadEpocheInfo)
     }
 
     if (!(l->leaf_delete(this, NULL, 0, NULL, kx_, threadEpocheInfo))) {
-        return del_and_return(key, threadEpocheInfo);
+        return del_and_return(key, version, threadEpocheInfo);
     }
 
     return snapshot_v;
@@ -1143,9 +1152,20 @@ void leafnode::assign_value(int p, void *value)
     clflush((char *)&entry[p].value, sizeof(void *), false, true);
 }
 
-int leafnode::assign_value_if_match(int p, void* match,void *value)
+int leafnode::assign_value_if_newer(int p,void *value)
 {
-    if (entry[p].value!=match) return 0;
+    struct log_cell* old_lc = (struct log_cell*)entry[p].value;
+    struct log_cell* new_lc = (struct log_cell*)value;
+
+    // todo: modification in version number will need another flush. How to avoid?
+    if (new_lc->version==-1){
+        new_lc->version=old_lc->version+1;
+        goto assign;
+    }
+
+    if (new_lc->version<=old_lc->version) return 0;
+
+    assign:
     entry[p].value = value;
     clflush((char *)&entry[p].value, sizeof(void *), false, true);
     return 1;
