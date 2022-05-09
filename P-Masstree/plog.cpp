@@ -165,20 +165,20 @@ char *log_acquire(int write_thread_log) {
     pthread_mutex_lock(&lm_lock);
 
 
-//    if (lm.next_available == -1) {
-//        i = lm.used;
-//        lm.used++;
-//    } else {
-//        i = lm.next_available;
-//        lm.next_available = lm.entries[i][0];
-//    }
-//    goto end;
-
-    for (i = 0; i < lm.num_entries; i++) {
-        if (lm.entries[i][0] == AVAILABLE) {
-            goto end;
-        }
+    if (lm.next_available == -1) {
+        i = lm.used;
+        lm.used++;
+    } else {
+        i = lm.next_available;
+        lm.next_available = lm.entries[i][0];
     }
+    goto end;
+
+//    for (i = 0; i < lm.num_entries; i++) {
+//        if (lm.entries[i][0] == AVAILABLE) {
+//            goto end;
+//        }
+//    }
 
 
     end:
@@ -207,10 +207,10 @@ char *log_acquire(int write_thread_log) {
 void log_release(uint64_t idx) {
     pthread_mutex_lock(&lm_lock);
 
-    lm.entries[idx][0] = AVAILABLE;
+//    lm.entries[idx][0] = AVAILABLE;
 
-//    lm.entries[idx][0] = lm.next_available;
-//    lm.next_available = idx;
+    lm.entries[idx][0] = lm.next_available;
+    lm.next_available = idx;
 
 
     pthread_mutex_unlock(&lm_lock);
@@ -285,10 +285,10 @@ void log_free(void *ptr) {
     char *char_ptr = (char *) ptr;
 
     // commit a dummy log to represent that this entry has been freed
-    uint64_t *uint_ptr = (uint64_t *) ptr;
-    uint64_t *new_entry = (uint64_t *) log_malloc(16);
-    *new_entry = *uint_ptr;
-    *(new_entry + 1) = 0;
+//    uint64_t *uint_ptr = (uint64_t *) ptr;
+//    uint64_t *new_entry = (uint64_t *) log_malloc(16);
+//    *new_entry = *uint_ptr;
+//    *(new_entry + 1) = 0;
     // todo: persist here
 
     uint64_t idx = (uint64_t) (char_ptr - big_map) / LOG_SIZE;
