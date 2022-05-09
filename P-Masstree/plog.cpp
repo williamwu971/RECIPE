@@ -37,6 +37,15 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads) {
 
     omp_set_num_threads(num_threads);
 
+    // process inserts first
+#pragma omp parallel for schedule(dynamic, 1)
+    for (uint64_t i = 0; i < lm.num_entries; i++) {
+        if (lm.entries[i][0] == OCCUPIED) {
+
+        }
+    }
+
+    // process deletes next
 #pragma omp parallel for schedule(dynamic, 1)
     for (uint64_t i = 0; i < lm.num_entries; i++) {
         if (lm.entries[i][0] == OCCUPIED) {
@@ -228,7 +237,7 @@ uint64_t log_get_key_from_value_ptr(char *value_ptr) {
 
 void *log_malloc(size_t size) {
 
-    uint64_t required_size = size + sizeof(uint64_t);
+    uint64_t required_size = sizeof(struct log_cell) + size;
 
     // the "freed" space should be strictly increasing
     if (unlikely(thread_log == NULL || thread_log->available < required_size)) {
@@ -238,13 +247,12 @@ void *log_malloc(size_t size) {
     // write and decrease size
     thread_log->available -= required_size;
 
+    struct log_cell *lc = (struct log_cell *) thread_log->curr;
+    lc->value_size = size;
 
-    *((uint64_t *) thread_log->curr) = size;
-    void *to_return = thread_log->curr + sizeof(uint64_t);
 
-    thread_log->curr = thread_log->curr + required_size;
-
-    return to_return;
+    thread_log->curr += required_size;
+    return thread_log->curr - required_size;
 }
 
 
@@ -285,18 +293,19 @@ void log_free(void *ptr) {
     char *char_ptr = (char *) ptr;
 
     // commit a dummy log to represent that this entry has been freed
-    uint64_t *uint_ptr = (uint64_t *) ptr;
-    uint64_t *new_entry = (uint64_t *) log_malloc(16);
-    *new_entry = *uint_ptr;
-    *(new_entry + 1) = 0;
+    struct log_cell *lc = (struct log_cell *) ptr;
+    struct log_cell *lc_mark_del = (struct log_cell *) log_malloc(0);
+
+    lc_mark_del->is_delete = 1;
+    lc_mark_del->key = lc->key;
+    lc_mark_del->version = lc->version + 1;
     // todo: persist here
 
     uint64_t idx = (uint64_t) (char_ptr - big_map) / LOG_SIZE;
 
     struct log *target_log = (struct log *) (log_meta + CACHE_LINE_SIZE * idx);
 
-    uint64_t new_space = *((uint64_t *) (char_ptr - sizeof(uint64_t))) + sizeof(uint64_t);
-    target_log->freed += new_space;
+    target_log->freed += sizeof(struct log_cell) + lc->value_size;
     uint64_t can_collect = target_log->full.load();
 
     if (can_collect && target_log->freed >= LOG_MERGE_THRESHOLD &&
@@ -353,34 +362,27 @@ void *log_garbage_collection(void *arg) {
             while (current_ptr < end_ptr) {
 
                 // read and advance the pointer
-                uint64_t size = *((uint64_t *) current_ptr);
-                current_ptr += sizeof(uint64_t);
+                struct log_cell *lc = (struct log_cell *) current_ptr;
+                uint64_t total_size = sizeof(struct log_cell) + lc->value_size;
 
-                // todo: assume key is always 8 bytes and occupy the field following size
-                uint64_t key = *((uint64_t *) current_ptr);
-                void *value = current_ptr + sizeof(uint64_t);
+                // persist this entry to the new log first
+                pmem_memcpy_persist(thread_log->curr, current_ptr, total_size);
 
                 // this step might be buggy if went out of bound of the new log
-                if (value != NULL) {
-                    *((uint64_t *) thread_log->curr) = size;
-                    thread_log->curr += sizeof(uint64_t);
+                // ignore a cell if it is delete
 
-                    // thread log curr now points to key
-                    pmem_memcpy_persist(thread_log->curr, current_ptr, size);
-
+                if (!lc->is_delete) {
 
                     // try to commit this entry
-                    int res = tree->put_if_match(key, value, thread_log->curr + sizeof(uint64_t), t);
+                    int res = tree->put_if_match(lc->key, current_ptr, lc, t);
 
                     // the log acquired by gc thread shouldn't need atomic ops
                     if (res) {
-                        thread_log->available -= (sizeof(uint64_t) + size);
-                        thread_log->curr += size;
-                    } else {
-                        thread_log->curr -= sizeof(uint64_t);
+                        thread_log->available -= total_size;
+                        thread_log->curr += total_size;
                     }
                 }
-                current_ptr += size;
+                current_ptr += total_size;
             }
 
 
