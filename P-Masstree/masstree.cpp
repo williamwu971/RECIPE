@@ -592,6 +592,9 @@ int masstree::put_if_newer(uint64_t key, void *value, ThreadInfo &threadEpocheIn
     l->prefetch();
     fence();
 
+    struct log_cell* lc = (struct log_cell*)value;
+    printf("debug %ld %lu %lu %lu",lc->version,lc->key,lc->is_delete,lc->value_size);
+
     kx_ = l->key_lower_bound_by(key);
     if (kx_.p >= 0 && l->key(kx_.p) == key) {
         int res = l->assign_value_if_newer(kx_.p, value);
@@ -600,7 +603,7 @@ int masstree::put_if_newer(uint64_t key, void *value, ThreadInfo &threadEpocheIn
     } else {
 
         // todo: modification of version requires another flush
-        struct log_cell* lc = (struct log_cell*)value;
+
         if (lc->version==-1){
             lc->version=0;
             if (!(l->leaf_insert(this, NULL, 0, NULL, key, value, kx_))) {
