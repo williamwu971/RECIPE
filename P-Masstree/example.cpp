@@ -372,7 +372,7 @@ void run(char **argv) {
 //                tree->put(keys[i], value, t);
                 printf("insert %p\n",raw);
                 fflush(stdout);
-                tree->put_if_newer(keys[i], raw, t);
+                tree->put(keys[i], raw, t);
             }
         });
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
