@@ -165,20 +165,20 @@ char *log_acquire(int write_thread_log) {
     pthread_mutex_lock(&lm_lock);
 
 
-    if (lm.next_available == -1) {
-        i = lm.used;
-        lm.used++;
-    } else {
-        i = lm.next_available;
-        lm.next_available = lm.entries[i][0];
-    }
-    goto end;
-
-//    for (; i < lm.num_entries; i++) {
-//        if (lm.entries[i][0] == AVAILABLE) {
-//            goto end;
-//        }
+//    if (lm.next_available == -1) {
+//        i = lm.used;
+//        lm.used++;
+//    } else {
+//        i = lm.next_available;
+//        lm.next_available = lm.entries[i][0];
 //    }
+//    goto end;
+
+    for (; i < lm.num_entries; i++) {
+        if (lm.entries[i][0] == AVAILABLE) {
+            goto end;
+        }
+    }
 
 
     end:
@@ -207,9 +207,10 @@ char *log_acquire(int write_thread_log) {
 void log_release(uint64_t idx) {
     pthread_mutex_lock(&lm_lock);
 
+    lm.entries[idx][0] = AVAILABLE;
 
-    lm.entries[idx][0] = lm.next_available;
-    lm.next_available = idx;
+//    lm.entries[idx][0] = lm.next_available;
+//    lm.next_available = idx;
 
 
     pthread_mutex_unlock(&lm_lock);
