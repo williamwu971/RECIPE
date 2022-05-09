@@ -600,7 +600,7 @@ int masstree::put_if_newer(uint64_t key, void *value, ThreadInfo &threadEpocheIn
         l->assign_value(kx_.p, value);
 //        int res = l->assign_value_if_newer(kx_.p, value);
         l->writeUnlock(false);
-//        return res;
+        return 0;
     } else {
 
         // todo: modification of version requires another flush
