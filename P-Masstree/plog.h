@@ -19,6 +19,7 @@
 //#include <stdatomic.h>
 #include <atomic>
 #include <libpmem.h>
+#include <omp.h>
 
 #define LOG_SIZE (4*1024*1024)
 #define LOG_MERGE_THRESHOLD (2*1024*1024)
@@ -55,6 +56,9 @@ enum {
 struct log_map {
     uint64_t num_entries;
 
+    int next_available;
+    int used;
+
     // aligned to CACHELINE size
     int **entries;
 };
@@ -87,6 +91,8 @@ struct garbage_queue {
 //struct log_cell {
 //    uint64_t size;
 //};
+
+int log_recover(const char *fn, masstree::masstree *tree);
 
 void log_init(const char *fn, uint64_t num_logs);
 

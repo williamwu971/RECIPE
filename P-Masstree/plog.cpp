@@ -32,6 +32,75 @@ void log_structs_size_check() {
 
 }
 
+
+void log_tree_rebuild(masstree::masstree *tree, int num_threads) {
+
+    omp_set_num_threads(num_threads);
+
+#pragma omp parallel for schedule(dynamic, 1)
+    for (uint64_t i = 0; i < lm.num_entries; i++) {
+        if (lm.entries[i][0] == OCCUPIED) {
+
+        }
+    }
+}
+
+int log_recover(const char *fn, masstree::masstree *tree, int num_threads) {
+    log_structs_size_check();
+
+
+    char buf[CACHE_LINE_SIZE];
+    int fd;
+    uint64_t file_size;
+    uint64_t num_logs;
+
+
+    //todo: what happens when recovering?
+
+    sprintf(buf, "%s_inodes", fn);
+    fd = open(buf, O_RDWR, 00777);
+    if (fd < 0)die("fd error: %d", fd);
+    file_size = lseek(fd, 0, SEEK_END);
+    lseek(fd, 0, SEEK_SET);
+    if (file_size % CACHE_LINE_SIZE != 0) die("inodes file size error %lu", file_size);
+    num_logs = file_size / CACHE_LINE_SIZE;
+    inodes = (char *) mmap(NULL, file_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    if (inodes == MAP_FAILED)die("map error");
+    close(fd);
+
+
+    sprintf(buf, "%s_logs", fn);
+    fd = open(buf, O_RDWR, 00777);
+    if (fd < 0)die("fd error: %d", fd);
+    file_size = lseek(fd, 0, SEEK_END);
+    lseek(fd, 0, SEEK_SET);
+    if (file_size != num_logs * LOG_SIZE) die("logs file size error %lu", file_size);
+    big_map = (char *) mmap(NULL, file_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    if (big_map == MAP_FAILED)die("map error");
+    close(fd);
+
+    // inodes
+    lm.num_entries = num_logs;
+    lm.entries = (int **) malloc(sizeof(int *) * lm.num_entries);
+    for (uint64_t i = 0; i < lm.num_entries; i++) {
+        lm.entries[i] = (int *) (inodes + CACHE_LINE_SIZE * i);
+    }
+
+    // usage
+    log_meta = (char *) malloc(CACHE_LINE_SIZE * num_logs);
+
+    // reconstruct tree
+    log_tree_rebuild(tree, num_threads);
+
+    // gc
+    pthread_mutex_init(&gq.lock, NULL);
+    pthread_cond_init(&gq.cond, NULL);
+    gq.head = NULL;
+    gq.num = 0;
+
+    inited = 1;
+}
+
 void log_init(const char *fn, uint64_t num_logs) {
 
     log_structs_size_check();
@@ -69,6 +138,8 @@ void log_init(const char *fn, uint64_t num_logs) {
         lm.entries[i] = (int *) (inodes + CACHE_LINE_SIZE * i);
         lm.entries[i][0] = AVAILABLE;
     }
+    lm.next_available = -1;
+    lm.used = 0;
 
     // usage
     log_meta = (char *) malloc(CACHE_LINE_SIZE * num_logs);
@@ -88,33 +159,46 @@ char *log_acquire(int write_thread_log) {
 
     if (!inited)die("not inited");
     log_address = NULL;
+    uint64_t i;
 
     //todo: this logic can be optimize to be similar to allocator
     pthread_mutex_lock(&lm_lock);
-    for (uint64_t i = 0; i < lm.num_entries; i++) {
-        if (lm.entries[i][0] == AVAILABLE) {
-            lm.entries[i][0] = OCCUPIED;
-            log_address = big_map + i * LOG_SIZE;
 
-            if (write_thread_log) {
 
-                // retire and mark the old log for collection
-                if (thread_log != NULL) {
-                    thread_log->full.store(1);
-                }
-
-                thread_log = (struct log *) (log_meta + CACHE_LINE_SIZE * i);
-                thread_log->freed = 0;
-                thread_log->available = LOG_SIZE;
-                thread_log->index = i;
-                thread_log->full.store(0);
-                thread_log->base = log_address;
-                thread_log->curr = thread_log->base;
-            }
-            goto end;
-        }
+    if (lm.next_available == -1) {
+        i = lm.used;
+        lm.used++;
+    } else {
+        i = lm.next_available;
+        lm.next_available = lm.entries[i][0];
     }
+    goto end;
+
+//    for (; i < lm.num_entries; i++) {
+//        if (lm.entries[i][0] == AVAILABLE) {
+//            goto end;
+//        }
+//    }
+
+
     end:
+    lm.entries[i][0] = OCCUPIED;
+    log_address = big_map + i * LOG_SIZE;
+    if (write_thread_log) {
+
+        // retire and mark the old log for collection
+        if (thread_log != NULL) {
+            thread_log->full.store(1);
+        }
+
+        thread_log = (struct log *) (log_meta + CACHE_LINE_SIZE * i);
+        thread_log->freed = 0;
+        thread_log->available = LOG_SIZE;
+        thread_log->index = i;
+        thread_log->full.store(0);
+        thread_log->base = log_address;
+        thread_log->curr = thread_log->base;
+    }
     pthread_mutex_unlock(&lm_lock);
     return log_address;
 
@@ -123,7 +207,10 @@ char *log_acquire(int write_thread_log) {
 void log_release(uint64_t idx) {
     pthread_mutex_lock(&lm_lock);
 
-    lm.entries[idx][0] = AVAILABLE;
+
+    lm.entries[idx][0] = lm.next_available;
+    lm.next_available = idx;
+
 
     pthread_mutex_unlock(&lm_lock);
 }
