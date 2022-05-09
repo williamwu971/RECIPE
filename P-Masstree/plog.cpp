@@ -174,7 +174,7 @@ char *log_acquire(int write_thread_log) {
 //    }
 //    goto end;
 
-    for (; i < lm.num_entries; i++) {
+    for (i = 0; i < lm.num_entries; i++) {
         if (lm.entries[i][0] == AVAILABLE) {
             goto end;
         }
