@@ -295,7 +295,7 @@ void log_free(void *ptr) {
 
     // commit a dummy log to represent that this entry has been freed
     struct log_cell *lc = (struct log_cell *) ptr;
-    struct log_cell *lc_mark_del = (struct log_cell *) log_malloc(0);
+    struct log_cell *lc_mark_del = (struct log_cell *) log_malloc(sizeof(struct log_cell));
 
     lc_mark_del->is_delete = 1;
     lc_mark_del->key = lc->key;
