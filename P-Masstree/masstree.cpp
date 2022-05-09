@@ -600,16 +600,16 @@ int masstree::put_if_newer(uint64_t key, void *value, ThreadInfo &threadEpocheIn
     } else {
 
         // todo: modification of version requires another flush
-        struct log_cell* lc = (struct log_cell*)value;
-        if (lc->version==-1){
-            lc->version=0;
+//        struct log_cell* lc = (struct log_cell*)value;
+//        if (lc->version==-1){
+//            lc->version=0;
             if (!(l->leaf_insert(this, NULL, 0, NULL, key, value, kx_))) {
                 return put_if_newer(key, value, threadEpocheInfo);
             }
-        }else{
-            l->writeUnlock(false);
-            return 0;
-        }
+//        }else{
+//            l->writeUnlock(false);
+//            return 0;
+//        }
     }
 }
 
