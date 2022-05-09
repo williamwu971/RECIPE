@@ -930,7 +930,7 @@ void* masstree::del_and_return(uint64_t key, int64_t version, ThreadInfo &thread
         snapshot_v = l->value(kx_.p);
 
         struct log_cell* lc = (struct log_cell*)snapshot_v;
-        if (lc->version>=version){
+        if (version!=-1 && lc->version>=version){
             return NULL;
         }
 

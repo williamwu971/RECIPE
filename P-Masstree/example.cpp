@@ -355,23 +355,22 @@ void run(char **argv) {
 //                tree->put(keys[i], &keys[i], t);
 
                 // todo: size randomize (YCSB/Facebook workload)
-//                int size = rand()%2048+sizeof(uint64_t);
                 int size = sizeof(uint64_t);
-
-                char* raw = (char*)which_malloc(sizeof(struct log_cell)+sizeof(uint64_t));
+                char* raw = (char*)which_malloc(sizeof(struct log_cell)+size);
 
                 struct log_cell* lc = (struct log_cell*)raw;
+                lc->version=-1;
+                lc->is_delete=0;
+                lc->key=keys[i];
 
-                uint64_t *value=key+1;
-                *key=keys[i];
-
-//                uint64_t * value = (uint64_t *)which_malloc(size);
+                uint64_t *value=(uint64_t*)(raw+sizeof(struct log_cell));
+                *value=keys[i];
 
                 // flush value before inserting todo: should this exist for DRAM+DRAM?
-                *value=keys[i];
+
                 if (require_flush) clflush((char*)value,size,true,true);
 //                tree->put(keys[i], value, t);
-                tree->put(*key, value, t);
+                tree->put_if_newer(keys[i], raw, t);
             }
         });
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
@@ -392,8 +391,8 @@ void run(char **argv) {
                 rdtscll(a);
 
 //                char* raw =(char*) tree->get(keys[i], t);
-                char* raw = (char*)tree->del_and_return(keys[i],t);
-                uint64_t *ret = reinterpret_cast<uint64_t *> (raw);
+                char* raw = (char*)tree->del_and_return(keys[i],-1,t);
+                uint64_t *ret = reinterpret_cast<uint64_t *> (raw+sizeof(struct log_cell));
 //                uint64_t *ret = reinterpret_cast<uint64_t *> (tree->get(keys[i], t));
                 if (*ret != keys[i]) {
                     std::cout << "wrong value read: " << *ret << " expected:" << keys[i] << std::endl;
@@ -408,7 +407,7 @@ void run(char **argv) {
 //                    std::cout << "wrong value NULL: " << rett << " expected:" << keys[i] << std::endl;
 //                    throw;
 //                }
-                which_free(raw-sizeof(uint64_t));
+                which_free(raw);
 //                printf("deleted %lu\n",keys[i]);
                 rdtscll(b);
                 latencies[i]=b - a;
