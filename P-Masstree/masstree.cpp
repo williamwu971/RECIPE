@@ -604,6 +604,7 @@ int masstree::put_if_newer(uint64_t key, void *value, int create, ThreadInfo &th
         printf("key %lu hit 1\n",key);
 
         if (!(l->leaf_insert(this, NULL, 0, NULL, key, value, kx_))) {
+            printf("failed\n");
             put(key, value, threadEpocheInfo);
         }
 
