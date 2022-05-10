@@ -595,24 +595,19 @@ int masstree::put_if_newer(uint64_t key, void *value, int create, ThreadInfo &th
 
     kx_ = l->key_lower_bound_by(key);
     if (kx_.p >= 0 && l->key(kx_.p) == key) {
-        printf("key %lu hit 0\n",key);
 
         int res = l->assign_value_if_newer(kx_.p, value);
         l->writeUnlock(false);
         return res;
     } else if (create){
-        printf("key %lu hit 1\n",key);
 
         if (!(l->leaf_insert(this, NULL, 0, NULL, key, value, kx_))) {
-            printf("failed\n");
-            put(key, value, threadEpocheInfo);
+            put_if_newer(key, value,create, threadEpocheInfo);
         }
 
-        printf("key %lu hit 1\n",key);
         return 1;
 
     }else{
-        printf("key %lu hit 2\n",key);
 
         l->writeUnlock(false);
         return 0;
