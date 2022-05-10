@@ -141,7 +141,7 @@ void log_init(const char *fn, uint64_t num_logs) {
                                      PMEM_FILE_CREATE | PMEM_FILE_EXCL, 00777,
                                      &mapped_len, &is_pmem);
     is_pmem = is_pmem && pmem_is_pmem(big_map, file_size);
-    if (inodes == NULL || mapped_len != file_size || !is_pmem) {
+    if (big_map == NULL || mapped_len != file_size || !is_pmem) {
         die("big_map:%p mapped_len:%zu is_pmem:%d", big_map, mapped_len, is_pmem);
     }
 
