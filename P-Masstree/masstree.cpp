@@ -506,7 +506,7 @@ leaf_retry:
     }
 }
 
-int masstree::put_if_newer(uint64_t key, void *value, ThreadInfo &threadEpocheInfo)
+int masstree::put_if_newer(uint64_t key, void *value, int create, ThreadInfo &threadEpocheInfo)
 {
     EpocheGuard epocheGuard(threadEpocheInfo);
     key_indexed_position kx_;
@@ -598,9 +598,13 @@ int masstree::put_if_newer(uint64_t key, void *value, ThreadInfo &threadEpocheIn
         int res = l->assign_value_if_newer(kx_.p, value);
         l->writeUnlock(false);
         return res;
-    } else {
+    } else if (create){
 
-        // todo: modification of version requires another flush
+        if (!(l->leaf_insert(this, NULL, 0, NULL, key, value, kx_))) {
+            put(key, value, threadEpocheInfo);
+        }
+
+    }else{
         l->writeUnlock(false);
         return 0;
     }

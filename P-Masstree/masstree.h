@@ -83,7 +83,7 @@ class masstree {
 
         void put(uint64_t key, void *value, MASS::ThreadInfo &threadEpocheInfo);
 
-        int put_if_newer(uint64_t key, void *value, MASS::ThreadInfo &threadEpocheInfo); // todo: new, for gc
+        int put_if_newer(uint64_t key, void *value, int create, MASS::ThreadInfo &threadEpocheInfo); // todo: new, for gc
 
         void put(char *key, uint64_t value, MASS::ThreadInfo &threadEpocheInfo);
 

@@ -374,7 +374,7 @@ void run(char **argv) {
                 // flush value before inserting todo: should this exist for DRAM+DRAM?
 
                 if (require_flush) clflush((char*)value,size,true,true);
-                tree->put(keys[i], raw, t);
+                tree->put_if_newer(keys[i], raw,1, t);
             }
         });
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(

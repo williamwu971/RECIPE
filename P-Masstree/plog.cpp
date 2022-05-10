@@ -408,7 +408,7 @@ void *log_garbage_collection(void *arg) {
                 if (!new_lc->is_delete) {
 
                     // try to commit this entry
-                    int res = tree->put_if_newer(new_lc->key, new_lc, t);
+                    int res = tree->put_if_newer(new_lc->key, new_lc, 0, t);
 
                     // the log acquired by gc thread shouldn't need atomic ops
                     if (res) {
