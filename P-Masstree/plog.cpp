@@ -265,7 +265,7 @@ void *log_malloc(size_t size) {
 
     struct log_cell *lc = (struct log_cell *) thread_log->curr;
     lc->value_size = size - sizeof(struct log_cell);
-//    rdtscll(lc->version);
+    rdtscll(lc->version);
 
     thread_log->curr += size;
     return thread_log->curr - size;
