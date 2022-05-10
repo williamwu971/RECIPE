@@ -42,7 +42,7 @@ index_location=("dram" "pmem")
 index_location=("dram")
 value_location=("log")
 #value_location=("pmem")
-num_threads=(16)
+num_threads=(1)
 
 workload=160
 key_order="random"
@@ -71,8 +71,8 @@ for i in "${index_location[@]}"; do
     for n in "${num_threads[@]}"; do
       rm -rf /pmem0/*
 #      echo "$workload" "$n" index="$i" value="$v" key="$key_order"
-      /home/blepers/linux/tools/perf/perf record -g ./example "$workload" "$n" index="$i" value="$v" key="$key_order"
-#      ./example "$workload" "$n" index="$i" value="$v" key="$key_order"
+#      /home/blepers/linux/tools/perf/perf record -g ./example "$workload" "$n" index="$i" value="$v" key="$key_order"
+      ./example "$workload" "$n" index="$i" value="$v" key="$key_order"
 #      python3 ../graph.py --r latency.csv --ylim 1000000
 #      mv out.png out_"$i"_"$v".png
       #      ./example 100 "$n" index="$i" value="$v"
