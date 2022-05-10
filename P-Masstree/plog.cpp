@@ -382,9 +382,9 @@ void *log_garbage_collection(void *arg) {
                 new_lc->version = old_lc->version + 1;
                 pmem_persist(new_lc, sizeof(struct log_cell));
 
-                pmem_memcpy_persist(thread_log->curr + sizeof(struct log_cell),
-                                    current_ptr + sizeof(struct log_cell),
-                                    new_lc->value_size);
+//                pmem_memcpy_persist(thread_log->curr + sizeof(struct log_cell),
+//                                    current_ptr + sizeof(struct log_cell),
+//                                    new_lc->value_size);
 
                 uint64_t total_size = sizeof(struct log_cell) + new_lc->value_size;
                 // this step might be buggy if went out of bound of the new log
