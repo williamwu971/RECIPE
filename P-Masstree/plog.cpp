@@ -118,7 +118,7 @@ void log_init(const char *fn, uint64_t num_logs) {
     log_structs_size_check();
 
     char buf[CACHE_LINE_SIZE];
-    int fd;
+//    int fd;
     uint64_t file_size;
     size_t mapped_len;
     int is_pmem;
