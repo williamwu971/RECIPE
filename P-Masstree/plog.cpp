@@ -213,6 +213,9 @@ char *log_acquire(int write_thread_log) {
 
 
     end:
+
+    if (i > lm.num_entries) die("all logs are occupied");
+
     lm.entries[i][0] = OCCUPIED;
     log_address = big_map + i * LOG_SIZE;
     if (write_thread_log) {
@@ -223,7 +226,7 @@ char *log_acquire(int write_thread_log) {
         }
 
         thread_log = (struct log *) (log_meta + CACHE_LINE_SIZE * i);
-        thread_log->freed = 0;
+        thread_log->freed.store(0);
         thread_log->available = LOG_SIZE;
         thread_log->index = i;
         thread_log->full.store(0);
@@ -247,20 +250,10 @@ void log_release(uint64_t idx) {
     pthread_mutex_unlock(&lm_lock);
 }
 
-uint64_t log_get_key_and_value_size_from_value_ptr(char *value_ptr) {
-    uint64_t *size_ptr = (uint64_t *) (value_ptr - sizeof(uint64_t) * 2);
-    return *size_ptr;
-}
-
-uint64_t log_get_key_from_value_ptr(char *value_ptr) {
-    uint64_t *key = (uint64_t *) (value_ptr - sizeof(uint64_t));
-    return *key;
-}
-
 void *log_malloc(size_t size) {
 
 //    uint64_t required_size = sizeof(struct log_cell) + size;
-    if (size < sizeof(struct log_cell)) die("size too small %zu", size);
+    if (unlikely(size < sizeof(struct log_cell))) die("size too small %zu", size);
 
     // the "freed" space should be strictly increasing
     if (unlikely(thread_log == NULL || thread_log->available < size)) {
@@ -272,7 +265,7 @@ void *log_malloc(size_t size) {
 
     struct log_cell *lc = (struct log_cell *) thread_log->curr;
     lc->value_size = size - sizeof(struct log_cell);
-
+    rdtscll(lc->version);
 
     thread_log->curr += size;
     return thread_log->curr - size;
@@ -317,21 +310,22 @@ void log_free(void *ptr) {
 
     // commit a dummy log to represent that this entry has been freed
     struct log_cell *lc = (struct log_cell *) ptr;
-    struct log_cell *lc_mark_del = (struct log_cell *) log_malloc(sizeof(struct log_cell));
+    struct log_cell *tombstone = (struct log_cell *) log_malloc(sizeof(struct log_cell));
 
-    lc_mark_del->is_delete = 1;
-    lc_mark_del->key = lc->key;
-    lc_mark_del->version = lc->version + 1;
-    // todo: persist here
+    tombstone->is_delete = 1;
+    tombstone->key = lc->key;
+    pmem_persist(tombstone, sizeof(struct log_cell)); // PERSIST
 
+
+    // locate the log and its metadata
     uint64_t idx = (uint64_t) (char_ptr - big_map) / LOG_SIZE;
-
     struct log *target_log = (struct log *) (log_meta + CACHE_LINE_SIZE * idx);
 
-    target_log->freed += sizeof(struct log_cell) + lc->value_size;
+    // update metadata and add the log to GC queue if suitable
+    uint64_t freed = target_log->freed.fetch_add(sizeof(struct log_cell) + lc->value_size);
     uint64_t can_collect = target_log->full.load();
 
-    if (can_collect && target_log->freed >= LOG_MERGE_THRESHOLD &&
+    if (can_collect && freed >= LOG_MERGE_THRESHOLD &&
         target_log->full.compare_exchange_strong(can_collect, 0)) {
 
         log_gq_add(idx);
@@ -401,7 +395,7 @@ void *log_garbage_collection(void *arg) {
                 new_lc->key = old_lc->key;
                 new_lc->is_delete = old_lc->is_delete;
                 new_lc->value_size = old_lc->value_size;
-                new_lc->version = old_lc->version + 1;
+                rdtscll(new_lc->version);
                 pmem_persist(new_lc, sizeof(struct log_cell));
 
                 pmem_memcpy_persist(thread_log->curr + sizeof(struct log_cell),

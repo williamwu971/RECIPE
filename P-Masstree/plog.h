@@ -66,7 +66,7 @@ struct log_map {
 // metadata for the current log, should be in DRAM
 struct log {
 //    std::atomic<size_t> free_space;
-    uint64_t freed;
+    std::atomic<uint64_t> freed;
     uint64_t available;
     uint64_t index;
     std::atomic<uint64_t> full;
@@ -91,7 +91,7 @@ struct garbage_queue {
 struct log_cell {
     uint64_t value_size;
     uint64_t is_delete;
-    int64_t version;
+    uint64_t version;
     uint64_t key;
 };
 
