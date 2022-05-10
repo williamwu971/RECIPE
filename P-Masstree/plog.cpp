@@ -62,34 +62,28 @@ int log_recover(const char *fn, masstree::masstree *tree, int num_threads) {
 
 
     char buf[CACHE_LINE_SIZE];
-    int fd;
-    uint64_t file_size;
-    uint64_t num_logs;
-
-
-    //todo: what happens when recovering?
+    size_t mapped_len;
+    int is_pmem;
 
     sprintf(buf, "%s_inodes", fn);
-    fd = open(buf, O_RDWR, 00777);
-    if (fd < 0)die("fd error: %d", fd);
-    file_size = lseek(fd, 0, SEEK_END);
-    lseek(fd, 0, SEEK_SET);
-    if (file_size % CACHE_LINE_SIZE != 0) die("inodes file size error %lu", file_size);
-    num_logs = file_size / CACHE_LINE_SIZE;
-    inodes = (char *) mmap(NULL, file_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-    if (inodes == MAP_FAILED)die("map error");
-    close(fd);
-
+    file_size = num_logs * CACHE_LINE_SIZE;
+    inodes = (char *) pmem_map_file(buf, file_size,
+                                    PMEM_FILE_CREATE | PMEM_FILE_EXCL, 00777,
+                                    &mapped_len, &is_pmem);
+    is_pmem = is_pmem && pmem_is_pmem(inodes, file_size);
+    if (inodes == NULL || mapped_len != file_size || !is_pmem) {
+        die("inodes:%p mapped_len:%zu is_pmem:%d", inodes, mapped_len, is_pmem);
+    }
 
     sprintf(buf, "%s_logs", fn);
-    fd = open(buf, O_RDWR, 00777);
-    if (fd < 0)die("fd error: %d", fd);
-    file_size = lseek(fd, 0, SEEK_END);
-    lseek(fd, 0, SEEK_SET);
-    if (file_size != num_logs * LOG_SIZE) die("logs file size error %lu", file_size);
-    big_map = (char *) mmap(NULL, file_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-    if (big_map == MAP_FAILED)die("map error");
-    close(fd);
+    file_size = num_logs * LOG_SIZE;
+    big_map = (char *) pmem_map_file(buf, file_size,
+                                     PMEM_FILE_CREATE | PMEM_FILE_EXCL, 00777,
+                                     &mapped_len, &is_pmem);
+    is_pmem = is_pmem && pmem_is_pmem(big_map, file_size);
+    if (big_map == NULL || mapped_len != file_size || !is_pmem) {
+        die("big_map:%p mapped_len:%zu is_pmem:%d", big_map, mapped_len, is_pmem);
+    }
 
     // inodes
     lm.num_entries = num_logs;
