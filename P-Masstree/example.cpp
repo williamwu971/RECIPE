@@ -281,7 +281,9 @@ void run(char **argv) {
     int require_flush=0;
     int shuffle_keys=0;
 
+    printf("argv: ");
     for (int ac=0;ac<6;ac++){
+        printf("%s ",argv[ac]);
         if (strcasestr(argv[ac],"index")){
             if (strcasestr(argv[ac],"pmem")){
                 which_memalign=RP_memalign;
@@ -313,8 +315,10 @@ void run(char **argv) {
             exit(0);
         }
     }
+    printf("\n");
 
     if (require_RP_init){
+        printf("init RP... ");
         RP_init("masstree",64*1024*1024*1024ULL);
     }
 
@@ -322,7 +326,7 @@ void run(char **argv) {
 
     // (TP dropped) shuffle the array todo: random keys (make it faster)
     if (shuffle_keys){
-
+        printf("shuffle keys... ");
         srand(time(NULL));
         for (uint64_t i = 0; i < n - 1; i++)
         {
@@ -341,10 +345,12 @@ void run(char **argv) {
     masstree::masstree *tree = new masstree::masstree();
 
     if (require_log_init){
+        printf("init log and GC... ");
         char const *fn = "/pmem0/masstree_log";
         log_init(fn,10240);
         log_start_gc(tree);
     }
+    printf("\n");
 
     {
         // Build tree
@@ -462,10 +468,28 @@ void run(char **argv) {
 
 int main(int argc, char **argv) {
     if (argc != 6) {
+        if (argc==3){
+
+            char** new_argv = (char**)malloc(sizeof(char*)*6);
+            new_argv[0]=argv[0];
+            new_argv[1]=argv[1];
+            new_argv[2]=argv[2];
+
+            new_argv[3]=(char*)malloc(sizeof(char)*64);
+            new_argv[4]=(char*)malloc(sizeof(char)*64);
+            new_argv[5]=(char*)malloc(sizeof(char)*64);
+
+            sprintf(new_argv[3],"index=dram");
+            sprintf(new_argv[4],"value=log");
+            sprintf(new_argv[5],"key=random");
+
+            goto start;
+        }
         printf("usage: %s [n] [nthreads]\nn: number of keys (integer)\nnthreads: number of threads (integer)\n", argv[0]);
         return 1;
     }
 
+    start:
     run(argv);
     return 0;
 }

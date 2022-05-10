@@ -317,6 +317,8 @@ void log_free(void *ptr) {
 
 }
 
+//#define GC_DEBUG_OUTPUT
+
 void *log_garbage_collection(void *arg) {
 
     // todo Question: do we need to lock the whole tree?
@@ -343,7 +345,10 @@ void *log_garbage_collection(void *arg) {
         if (queue_length < GAR_QUEUE_LENGTH) die("gc detected gq length:%lu", queue_length);
 
         uint64_t counter = 0;
+
+#ifdef GC_DEBUG_OUTPUT
         printf("merge ");
+#endif
 
         // todo: how to properly store metadata
         while (queue != NULL) {
@@ -358,7 +363,9 @@ void *log_garbage_collection(void *arg) {
             char *current_ptr = target_log->base;
             char *end_ptr = target_log->curr;
 
+#ifdef GC_DEBUG_OUTPUT
             printf("%lu->%lu ", queue->index, thread_log->index);
+#endif
 
             while (current_ptr < end_ptr) {
 
@@ -406,7 +413,10 @@ void *log_garbage_collection(void *arg) {
             if (thread_log->curr > thread_log->base + LOG_SIZE)
                 die("log overflow detected used:%ld", thread_log->curr - thread_log->base);
         }
+
+#ifdef GC_DEBUG_OUTPUT
         printf("\n");
+#endif
     }
 
     return NULL;
