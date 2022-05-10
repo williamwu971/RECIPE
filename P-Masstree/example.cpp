@@ -341,7 +341,6 @@ void run(char **argv) {
     double lookup_throughput;
     u_int64_t* latencies=(u_int64_t*)malloc(sizeof(u_int64_t)*n);
 
-    printf("operation,n,ops/s\n");
     masstree::masstree *tree = new masstree::masstree();
 
     if (require_log_init){
@@ -351,6 +350,7 @@ void run(char **argv) {
         log_start_gc(tree);
     }
     printf("\n");
+    printf("operation,n,ops/s\n");
 
     {
         // Build tree
