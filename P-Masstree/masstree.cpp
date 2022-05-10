@@ -594,6 +594,8 @@ int masstree::put_if_newer(uint64_t key, void *value, int create, ThreadInfo &th
 
 
     kx_ = l->key_lower_bound_by(key);
+
+    // return True if there is an insert, False otherwise
     if (kx_.p >= 0 && l->key(kx_.p) == key) {
 
         int res = l->assign_value_if_newer(kx_.p, value);
