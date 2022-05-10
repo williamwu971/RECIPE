@@ -35,6 +35,7 @@ void log_structs_size_check() {
 
 void log_tree_rebuild(masstree::masstree *tree, int num_threads) {
 
+    int old_num_threads = omp_get_num_threads();
     omp_set_num_threads(num_threads);
 
     // process inserts first
@@ -52,6 +53,8 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads) {
 
         }
     }
+
+    omp_set_num_threads(old_num_threads);
 }
 
 int log_recover(const char *fn, masstree::masstree *tree, int num_threads) {
