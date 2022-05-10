@@ -609,6 +609,7 @@ int masstree::put_if_newer(uint64_t key, void *value, int create, ThreadInfo &th
         }
 
         printf("key %lu hit 1\n",key);
+        return 1;
 
     }else{
         printf("key %lu hit 2\n",key);
