@@ -365,7 +365,6 @@ void run(char **argv) {
                 char* raw = (char*)which_malloc(sizeof(struct log_cell)+size);
 
                 struct log_cell* lc = (struct log_cell*)raw;
-                lc->version=0;
                 lc->is_delete=0;
                 lc->key=keys[i];
 
@@ -404,16 +403,7 @@ void run(char **argv) {
                     throw;
                 }
 
-                // (TP dropped) todo: free memory, is this correct?
-                // todo: it should be freed in update() ALSO modify update() in masstree
-//                tree->put(keys[i],NULL,t);
-//                void*rett = (tree->get(keys[i], t));
-//                if (rett != NULL) {
-//                    std::cout << "wrong value NULL: " << rett << " expected:" << keys[i] << std::endl;
-//                    throw;
-//                }
                 which_free(raw);
-//                printf("deleted %lu\n",keys[i]);
                 rdtscll(b);
                 latencies[i]=b - a;
             }
