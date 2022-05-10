@@ -123,8 +123,6 @@ void log_init(const char *fn, uint64_t num_logs) {
     size_t mapped_len;
     int is_pmem;
 
-
-    //todo: what happens when recovering?
     sprintf(buf, "%s_inodes", fn);
     file_size = num_logs * CACHE_LINE_SIZE;
     inodes = (char *) pmem_map_file(buf, file_size,
