@@ -381,7 +381,7 @@ void run(char **argv) {
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
                 std::chrono::system_clock::now() - starttime);
         printf("Throughput: insert,%ld,%f ops/us\n", n, (n * 1.0) / duration.count());
-        printf("Elapsed time: insert,%ld,%f sec\n", n, duration.count() / 1000000.0);
+//        printf("Elapsed time: insert,%ld,%f sec\n", n, duration.count() / 1000000.0);
         insert_throughput=(n * 1.0) / duration.count();
     }
 //        log_debug_print(100);
@@ -421,7 +421,7 @@ void run(char **argv) {
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
                 std::chrono::system_clock::now() - starttime);
         printf("Throughput: delete,%ld,%f ops/us\n", n, (n * 1.0) / duration.count());
-        printf("Elapsed time: delete,%ld,%f sec\n", n, duration.count() / 1000000.0);
+//        printf("Elapsed time: delete,%ld,%f sec\n", n, duration.count() / 1000000.0);
         lookup_throughput=(n * 1.0) / duration.count();
     }
 
@@ -443,7 +443,7 @@ void run(char **argv) {
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
                 std::chrono::system_clock::now() - starttime);
         printf("Throughput: lookup,%ld,%f ops/us\n", n, (n * 1.0) / duration.count());
-        printf("Elapsed time: lookup,%ld,%f sec\n", n, duration.count() / 1000000.0);
+//        printf("Elapsed time: lookup,%ld,%f sec\n", n, duration.count() / 1000000.0);
     }
 
     // logging throughput to files
