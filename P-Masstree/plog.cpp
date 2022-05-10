@@ -120,28 +120,49 @@ void log_init(const char *fn, uint64_t num_logs) {
     char buf[CACHE_LINE_SIZE];
     int fd;
     uint64_t file_size;
+    size_t mapped_len;
+    int is_pmem;
 
 
     //todo: what happens when recovering?
-
     sprintf(buf, "%s_inodes", fn);
     file_size = num_logs * CACHE_LINE_SIZE;
-    fd = open(buf, O_RDWR | O_CREAT | O_EXCL, 00777);
-    if (fd < 0)die("fd error: %d", fd);
-    if (posix_fallocate(fd, 0, file_size)) die("fallocate error");
-    inodes = (char *) mmap(NULL, file_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-    if (inodes == MAP_FAILED)die("map error");
-    close(fd);
-
+    inodes = (char *) pmem_map_file(buf, file_size,
+                                    PMEM_FILE_CREATE | PMEM_FILE_EXCL, 00777,
+                                    &mapped_len, &is_pmem);
+    is_pmem = is_pmem && pmem_is_pmem(inodes, file_size);
+    if (inodes == NULL || mapped_len != file_size || !is_pmem) {
+        die("inodes:%p mapped_len:%zu is_pmem:%d", inodes, mapped_len, is_pmem);
+    }
 
     sprintf(buf, "%s_logs", fn);
     file_size = num_logs * LOG_SIZE;
-    fd = open(buf, O_RDWR | O_CREAT | O_EXCL, 00777);
-    if (fd < 0)die("fd error: %d", fd);
-    if (posix_fallocate(fd, 0, file_size)) die("fallocate error");
-    big_map = (char *) mmap(NULL, file_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-    if (big_map == MAP_FAILED)die("map error");
-    close(fd);
+    big_map = (char *) pmem_map_file(buf, file_size,
+                                     PMEM_FILE_CREATE | PMEM_FILE_EXCL, 00777,
+                                     &mapped_len, &is_pmem);
+    is_pmem = is_pmem && pmem_is_pmem(big_map, file_size);
+    if (inodes == NULL || mapped_len != file_size || !is_pmem) {
+        die("big_map:%p mapped_len:%zu is_pmem:%d", big_map, mapped_len, is_pmem);
+    }
+
+//    sprintf(buf, "%s_inodes", fn);
+//    file_size = num_logs * CACHE_LINE_SIZE;
+//    fd = open(buf, O_RDWR | O_CREAT | O_EXCL, 00777);
+//    if (fd < 0)die("fd error: %d", fd);
+//    if (posix_fallocate(fd, 0, file_size)) die("fallocate error");
+//    inodes = (char *) mmap(NULL, file_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+//    if (inodes == MAP_FAILED)die("map error");
+//    close(fd);
+//
+//
+//    sprintf(buf, "%s_logs", fn);
+//    file_size = num_logs * LOG_SIZE;
+//    fd = open(buf, O_RDWR | O_CREAT | O_EXCL, 00777);
+//    if (fd < 0)die("fd error: %d", fd);
+//    if (posix_fallocate(fd, 0, file_size)) die("fallocate error");
+//    big_map = (char *) mmap(NULL, file_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+//    if (big_map == MAP_FAILED)die("map error");
+//    close(fd);
 
     // inodes
     lm.num_entries = num_logs;
