@@ -604,7 +604,7 @@ int masstree::put_if_newer(uint64_t key, void *value, int create, ThreadInfo &th
     } else if (create){
 
         if (!(l->leaf_insert(this, NULL, 0, NULL, key, value, kx_))) {
-            put_if_newer(key, value,create, threadEpocheInfo);
+            return put_if_newer(key, value,create, threadEpocheInfo);
         }
 
         return 1;
