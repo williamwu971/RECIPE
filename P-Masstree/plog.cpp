@@ -456,16 +456,21 @@ void log_end_gc() {
 void log_debug_print() {
 
     pthread_mutex_lock(&lm_lock);
+
+    uint64_t used = 0;
+
     for (uint64_t i = 0; i < lm.num_entries; i++) {
 
         if (lm.entries[i][0] == OCCUPIED) {
             printf("%5lu ", i);
+            used++;
         }
 
-        if (i > 0 && i % 100 == 0) {
+        if (used > 0 && used % 100 == 0) {
             printf("\n");
         }
 
     }
+    printf("total logs used:%lu\n", used);
     pthread_mutex_unlock(&lm_lock);
 }
