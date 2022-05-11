@@ -453,8 +453,19 @@ void log_end_gc() {
     pthread_cancel(gc);
 }
 
-void log_debug_print(uint64_t bound) {
-    for (uint64_t i = 0; i < bound; i++) {
-//        printf("log %lu free %lu\n", i, ((struct log *) log_meta + CACHE_LINE_SIZE * i)->free_space);
+void log_debug_print() {
+
+    pthread_mutex_lock(&lm_lock);
+    for (uint64_t i = 0; i < lm.num_entries; i++) {
+
+        if (lm.entries[i][0] == OCCUPIED) {
+            printf("%5lu ", i);
+        }
+
+        if (i > 0 && i % 100 == 0) {
+            printf("\n");
+        }
+
     }
+    pthread_mutex_unlock(&lm_lock);
 }
