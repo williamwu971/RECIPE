@@ -42,9 +42,9 @@ index_location=("dram" "pmem")
 index_location=("dram")
 value_location=("log")
 #value_location=("pmem")
-num_threads=(1)
+num_threads=(20)
 
-workload=100
+workload=100000000
 key_order="random"
 #key_order="seq"
 
