@@ -356,7 +356,7 @@ void *log_garbage_collection(void *arg) {
 
         // gc takes the entire queue and release the lock instantly
         struct garbage_queue_node *queue = gq.head;
-        uint64_t queue_length = gq.num;
+//        uint64_t queue_length = gq.num;
 
         gq.head = NULL;
         gq.num = 0;
@@ -364,7 +364,7 @@ void *log_garbage_collection(void *arg) {
         pthread_mutex_unlock(&gq.lock);
 
 //        if (gq.num != GAR_QUEUE_LENGTH) die("gc detected gq length:%lu", gq.num);
-        if (queue_length < GAR_QUEUE_LENGTH) die("gc detected gq length:%lu", queue_length);
+//        if (queue_length < GAR_QUEUE_LENGTH) die("gc detected gq length:%lu", queue_length);
 
         uint64_t counter = 0;
 
