@@ -19,7 +19,8 @@ __thread struct log *thread_log = NULL;
 
 struct garbage_queue gq;
 int gc_stopped = 0;
-pthread_t gc;
+pthread_t *gc_ids = NULL;
+int num_gcs;
 
 
 void log_structs_size_check() {
@@ -444,13 +445,19 @@ void *log_garbage_collection(void *arg) {
 }
 
 void log_start_gc(masstree::masstree *t) {
-    pthread_create(&gc, NULL, log_garbage_collection, t);
-    pthread_detach(gc);
+
+    gc_ids = (pthread_t *) realloc(gc_ids, sizeof(pthread_t) * (++num_gcs));
+
+    pthread_create(gc_ids + (num_gcs - 1), NULL, log_garbage_collection, t);
+    pthread_detach(gc_ids[num_gcs - 1]);
+
 }
 
 void log_end_gc() {
     gc_stopped = 1;
-    pthread_cancel(gc);
+
+    pthread_cancel(gc_ids[num_gcs - 1]);
+    gc_ids = (pthread_t *) realloc(gc_ids, sizeof(pthread_t) * (--num_gcs));
 }
 
 void log_debug_print() {

@@ -347,7 +347,11 @@ void run(char **argv) {
         printf("init log and GC... ");
         char const *fn = "/pmem0/masstree_log";
         log_init(fn,10240);
-        log_start_gc(tree);
+
+        for (int gcc=0;gcc<8;gcc++){
+            log_start_gc(tree);
+        }
+
     }
     printf("\n");
     printf("operation,n,ops/s\n");
