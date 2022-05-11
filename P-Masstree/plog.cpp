@@ -170,10 +170,10 @@ void log_init(const char *fn, uint64_t num_logs) {
     lm.num_entries = num_logs;
     lm.entries = (int **) malloc(sizeof(int *) * lm.num_entries);
     OCCUPIED = num_logs + 1;
-//    for (uint64_t i = 0; i < lm.num_entries; i++) {
-//        lm.entries[i] = (int *) (inodes + CACHE_LINE_SIZE * i);
+    for (uint64_t i = 0; i < lm.num_entries; i++) {
+        lm.entries[i] = (int *) (inodes + CACHE_LINE_SIZE * i);
 //        lm.entries[i][0] = AVAILABLE;
-//    }
+    }
     lm.next_available = -1;
     lm.used = 0;
 
