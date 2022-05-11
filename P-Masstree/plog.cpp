@@ -38,11 +38,15 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads) {
     int old_num_threads = omp_get_num_threads();
     omp_set_num_threads(num_threads);
 
-    // process inserts first
+    // process inserts first todo: OCCUPIED ENUM IS WRONG NOW
 #pragma omp parallel for schedule(dynamic, 1)
     for (uint64_t i = 0; i < lm.num_entries; i++) {
         if (lm.entries[i][0] == OCCUPIED) {
+		char* curr;
+		char* base;
 
+		//while (char*)
+		
         }
     }
 
@@ -66,22 +70,18 @@ int log_recover(const char *fn, masstree::masstree *tree, int num_threads) {
     int is_pmem;
 
     sprintf(buf, "%s_inodes", fn);
-    file_size = num_logs * CACHE_LINE_SIZE;
-    inodes = (char *) pmem_map_file(buf, file_size,
-                                    PMEM_FILE_CREATE | PMEM_FILE_EXCL, 00777,
-                                    &mapped_len, &is_pmem);
-    is_pmem = is_pmem && pmem_is_pmem(inodes, file_size);
-    if (inodes == NULL || mapped_len != file_size || !is_pmem) {
+    inodes = (char *) pmem_map_file(buf, 0,0, 0,&mapped_len, &is_pmem);
+    is_pmem = is_pmem && pmem_is_pmem(inodes, mapped_len);
+    if (inodes == NULL || mapped_len==0 || mapped_len%CACHE_LINE_SIZE!=0 || !is_pmem) {
         die("inodes:%p mapped_len:%zu is_pmem:%d", inodes, mapped_len, is_pmem);
     }
 
+    uint64_t num_logs = mapped_len / CACHE_LINE_SIZE;
+
     sprintf(buf, "%s_logs", fn);
-    file_size = num_logs * LOG_SIZE;
-    big_map = (char *) pmem_map_file(buf, file_size,
-                                     PMEM_FILE_CREATE | PMEM_FILE_EXCL, 00777,
-                                     &mapped_len, &is_pmem);
-    is_pmem = is_pmem && pmem_is_pmem(big_map, file_size);
-    if (big_map == NULL || mapped_len != file_size || !is_pmem) {
+    big_map = (char *) pmem_map_file(buf, 0,0, 0,&mapped_len, &is_pmem);
+    is_pmem = is_pmem && pmem_is_pmem(big_map, mapped_len);
+    if (big_map == NULL || mapped_len==0 || mapped_len%LOG_SIZE!=0 || !is_pmem) {
         die("big_map:%p mapped_len:%zu is_pmem:%d", big_map, mapped_len, is_pmem);
     }
 
