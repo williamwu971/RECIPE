@@ -438,6 +438,7 @@ void run(char **argv) {
 //        printf("Elapsed time: lookup,%ld,%f sec\n", n, duration.count() / 1000000.0);
     }
 
+    log_debug_print();
     // logging throughput to files
 
     FILE* insert_throughput_file=fopen("insert.csv","a");
