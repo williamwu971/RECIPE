@@ -462,13 +462,13 @@ void log_debug_print() {
     for (uint64_t i = 0; i < lm.num_entries; i++) {
 
         if (lm.entries[i][0] == OCCUPIED) {
-            printf("%5lu ", i);
+//            printf("%5lu ", i);
             used++;
         }
 
-        if (used > 0 && used % 100 == 0) {
-            printf("\n");
-        }
+//        if (used > 0 && used % 100 == 0) {
+//            printf("\n");
+//        }
 
     }
     printf("total logs used:%lu\n", used);
