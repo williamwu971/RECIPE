@@ -395,7 +395,7 @@ void run(char **argv) {
                 rdtscll(a);
 
 //                char* raw =(char*) tree->get(keys[i], t);
-                char* raw = (char*)tree->del_and_return(keys[i],-1,t);
+                char* raw = (char*)tree->del_and_return(keys[i],0,0,t);
                 uint64_t *ret = reinterpret_cast<uint64_t *> (raw+sizeof(struct log_cell));
 //                uint64_t *ret = reinterpret_cast<uint64_t *> (tree->get(keys[i], t));
                 if (*ret != keys[i]) {

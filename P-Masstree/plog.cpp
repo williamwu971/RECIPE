@@ -45,6 +45,7 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads) {
 
         // todo: not sure if this has overhead
         auto t = tree->getThreadInfo();
+
         if (lm.entries[i][0] == OCCUPIED) {
 
             char *end = big_map + (i + 1) * LOG_SIZE;
@@ -56,19 +57,13 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads) {
 
                 if (!lc->is_delete) {
                     tree->put_if_newer(lc->key, lc, 1, t);
+                } else {
+                    tree->del_and_return(lc->key, 1, lc->version, t);
                 }
-                // todo: should probably update the metadata here
 
+                // todo: should probably update the metadata here
                 curr += sizeof(struct log_cell) + lc->value_size;
             }
-        }
-    }
-
-    // process deletes next
-#pragma omp parallel for schedule(dynamic, 1)
-    for (uint64_t i = 0; i < lm.num_entries; i++) {
-        if (lm.entries[i][0] == OCCUPIED) {
-
         }
     }
 
