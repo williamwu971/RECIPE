@@ -459,6 +459,17 @@ void log_end_gc() {
     gc_ids = (pthread_t *) realloc(gc_ids, sizeof(pthread_t) * (--num_gcs));
 }
 
+void log_join_all_pc() {
+
+    gc_stopped = 1;
+
+    pthread_cond_broadcast(&gq.cond);
+
+    for (int i = 0; i < num_gcs; i++) {
+        pthread_join(gc_ids[i], NULL);
+    }
+}
+
 
 void log_debug_print() {
 
