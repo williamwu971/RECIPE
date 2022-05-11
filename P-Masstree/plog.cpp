@@ -9,6 +9,7 @@ char *big_map;
 
 // log map and lock to protect the map
 struct log_map lm;
+int OCCUPIED;
 pthread_mutex_t lm_lock = PTHREAD_MUTEX_INITIALIZER;
 
 // every thread hold its own log
@@ -41,12 +42,25 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads) {
     // process inserts first todo: OCCUPIED ENUM IS WRONG NOW
 #pragma omp parallel for schedule(dynamic, 1)
     for (uint64_t i = 0; i < lm.num_entries; i++) {
+
+        // todo: not sure if this has overhead
+        auto t = tree->getThreadInfo();
         if (lm.entries[i][0] == OCCUPIED) {
-            char *curr;
-            char *base;
 
-            //while (char*)
+            char *end = big_map + (i + 1) * LOG_SIZE;
+            char *curr = big_map + i * LOG_SIZE;
 
+            while (curr < end) {
+
+                struct log_cell *lc = (struct log_cell *) curr;
+
+                if (!lc->is_delete) {
+                    tree->put_if_newer(lc->key, lc, 1, t);
+                }
+                // todo: should probably update the metadata here
+
+                curr += sizeof(struct log_cell) + lc->value_size;
+            }
         }
     }
 
@@ -91,6 +105,7 @@ int log_recover(const char *fn, masstree::masstree *tree, int num_threads) {
     for (uint64_t i = 0; i < lm.num_entries; i++) {
         lm.entries[i] = (int *) (inodes + CACHE_LINE_SIZE * i);
     }
+    OCCUPIED = num_logs + 1;
 
     // usage
     log_meta = (char *) malloc(CACHE_LINE_SIZE * num_logs);
@@ -159,10 +174,11 @@ void log_init(const char *fn, uint64_t num_logs) {
     // inodes
     lm.num_entries = num_logs;
     lm.entries = (int **) malloc(sizeof(int *) * lm.num_entries);
-    for (uint64_t i = 0; i < lm.num_entries; i++) {
-        lm.entries[i] = (int *) (inodes + CACHE_LINE_SIZE * i);
-        lm.entries[i][0] = AVAILABLE;
-    }
+    OCCUPIED = num_logs + 1;
+//    for (uint64_t i = 0; i < lm.num_entries; i++) {
+//        lm.entries[i] = (int *) (inodes + CACHE_LINE_SIZE * i);
+//        lm.entries[i][0] = AVAILABLE;
+//    }
     lm.next_available = -1;
     lm.used = 0;
 

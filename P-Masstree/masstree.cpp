@@ -837,7 +837,7 @@ leaf_retry:
     }
 }
 
-void* masstree::del_and_return(uint64_t key, int64_t version, ThreadInfo &threadEpocheInfo)
+void* masstree::del_and_return(uint64_t key, int check_version, uint64_t version, ThreadInfo &threadEpocheInfo)
 {
     EpocheGuard epocheGuard(threadEpocheInfo);
     void *root = NULL;
@@ -931,7 +931,7 @@ void* masstree::del_and_return(uint64_t key, int64_t version, ThreadInfo &thread
         snapshot_v = l->value(kx_.p);
 
         struct log_cell* lc = (struct log_cell*)snapshot_v;
-        if (version!=-1 && lc->version>=version){
+        if (check_version && lc->version>=version){
             return NULL;
         }
 
@@ -946,7 +946,7 @@ void* masstree::del_and_return(uint64_t key, int64_t version, ThreadInfo &thread
     }
 
     if (!(l->leaf_delete(this, NULL, 0, NULL, kx_, threadEpocheInfo))) {
-        return del_and_return(key, version, threadEpocheInfo);
+        return del_and_return(key, check_version,version, threadEpocheInfo);
     }
 
     return snapshot_v;

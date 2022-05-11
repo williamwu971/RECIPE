@@ -47,10 +47,10 @@
 #define rdtscll(val) __asm__ __volatile__("rdtsc" : "=A" (val))
 #endif
 
-enum {
-    AVAILABLE,
-    OCCUPIED,
-};
+//enum {
+//    AVAILABLE,
+//    OCCUPIED,
+//};
 
 // occupy the first 4m of log file
 struct log_map {
