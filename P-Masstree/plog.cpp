@@ -302,7 +302,7 @@ void log_gq_add(uint64_t idx) {
     gq.num++;
 
 
-    // wake up garbage collector if queue is long enough
+    // wake up ONE garbage collector if queue is long enough
     if (gq.num >= GAR_QUEUE_LENGTH) {
         pthread_cond_signal(&gq.cond);
     }
