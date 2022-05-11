@@ -454,11 +454,11 @@ void log_start_gc(masstree::masstree *t) {
 }
 
 void log_end_gc() {
-    gc_stopped = 1;
 
     pthread_cancel(gc_ids[num_gcs - 1]);
     gc_ids = (pthread_t *) realloc(gc_ids, sizeof(pthread_t) * (--num_gcs));
 }
+
 
 void log_debug_print() {
 
