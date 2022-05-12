@@ -487,7 +487,11 @@ void log_debug_print(int to_file) {
 
     FILE *file = stdin;
 
-    if (to_file) file = fopen("log_debug_print.txt", "w");
+    if (to_file) {
+        char fn_buf[128];
+        sprintf(fn_buf, "log_debug_print_%d.txt", to_file);
+        file = fopen(fn_buf, "w");
+    }
 
     pthread_mutex_lock(&lm_lock);
 
