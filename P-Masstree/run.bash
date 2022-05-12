@@ -45,8 +45,8 @@ value_location=("log")
 num_threads=(20)
 
 workload=100000000
-#key_order="random"
-key_order="seq"
+key_order="random"
+#key_order="seq"
 
 echo "insert,workload=$workload,unit=ops/us,key_order=$key_order" >insert.csv
 echo "lookup,workload=$workload,unit=ops/us,key_order=$key_order" >lookup.csv
