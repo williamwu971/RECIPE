@@ -607,7 +607,7 @@ void* masstree::put_and_return(uint64_t key, void *value, int create, ThreadInfo
             return put_and_return(key, value,create, threadEpocheInfo);
         }
 
-        return NULL;
+        return value;
 
     }else{
 
