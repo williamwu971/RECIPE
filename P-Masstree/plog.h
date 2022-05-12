@@ -113,6 +113,6 @@ void log_start_gc(masstree::masstree *);
 
 void log_join_all_pc();
 
-void log_debug_print();
+void log_debug_print(int to_file);
 
 #endif

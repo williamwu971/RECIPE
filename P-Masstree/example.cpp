@@ -402,7 +402,7 @@ void run(char **argv) {
 //        printf("Elapsed time: insert,%ld,%f sec\n", n, duration.count() / 1000000.0);
         insert_throughput=(n * 1.0) / duration.count();
     }
-        log_debug_print();
+        log_debug_print(0);
     {
         // Update
         auto starttime = std::chrono::system_clock::now();
@@ -447,7 +447,7 @@ void run(char **argv) {
     }
 
     lookup:
-    log_debug_print();
+    log_debug_print(0);
 
     {
         // Lookup
@@ -471,7 +471,7 @@ void run(char **argv) {
 //        printf("Elapsed time: lookup,%ld,%f sec\n", n, duration.count() / 1000000.0);
     }
 
-    log_debug_print();
+    log_debug_print(0);
     // logging throughput to files
 
     FILE* insert_throughput_file=fopen("insert.csv","a");
@@ -489,7 +489,7 @@ void run(char **argv) {
     fclose(latency_file);
 
     log_join_all_pc();
-    log_debug_print();
+    log_debug_print(1);
 
     delete[] keys;
 }
