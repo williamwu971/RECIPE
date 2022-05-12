@@ -403,7 +403,7 @@ class leafnode {
 
         void assign_value(int p, void *value);
 
-        void* assign_value_if_newer(int p, void *value);
+        void* assign_value_if_newer(int p, void *value, int create);
 
         inline void assign_initialize(int p, const uint64_t& key, void *value);
 
