@@ -349,10 +349,10 @@ void run(char **argv) {
          char const *log_fn = "/pmem0/masstree_log_logs";
 
         if (access(inode_fn,F_OK)==0 && access(log_fn,F_OK)==0){
-            log_recover(inode_fn,log_fn,tree);
+            log_recover(tree,n);
             goto lookup;
         }else{
-            log_init(inode_fn,log_fn,10240);
+            log_init(10240);
         }
 
 
