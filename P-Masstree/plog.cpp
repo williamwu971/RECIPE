@@ -485,7 +485,7 @@ void log_join_all_pc() {
 
 void log_debug_print(int to_file) {
 
-    FILE *file = stdin;
+    FILE *file = stdout;
 
     if (to_file) {
         char fn_buf[128];
