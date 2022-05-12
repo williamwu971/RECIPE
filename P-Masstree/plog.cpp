@@ -51,15 +51,30 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads) {
 
             char *end = big_map + (i + 1) * LOG_SIZE;
             char *curr = big_map + i * LOG_SIZE;
+            struct log *current_log = (struct log *) (log_meta + CACHE_LINE_SIZE * i);
 
             while (curr < end) {
 
                 struct log_cell *lc = (struct log_cell *) curr;
+                uint64_t total_size = sizeof(struct log_cell) + lc->value_size;
 
                 if (!lc->is_delete) {
-                    if (tree->put_and_return(lc->key, lc, 1, t)!=NULL){
 
+                    struct log_cell *res = (struct log_cell *)
+                            tree->put_and_return(lc->key, lc, 1, t);
+
+                    // insert success and created a new key-value
+                    if (res == lc) {
+                        current_log->available -= total_size;
                     }
+                        // replaced a value, should free some space in other log
+                    else if (res != NULL) {
+
+                        uint64_t idx = (uint64_t) ((char *) res - big_map) / LOG_SIZE;
+                        struct log *target_log = (struct log *) (log_meta + CACHE_LINE_SIZE * idx);
+                        target_log->freed.fetch_add(sizeof(struct log_cell) + res->value_size);
+                    }
+
                 } else {
                     tree->del_and_return(lc->key, 1, lc->version, t);
                 }
@@ -73,16 +88,14 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads) {
     omp_set_num_threads(old_num_threads);
 }
 
-int log_recover(const char *fn, masstree::masstree *tree, int num_threads) {
+int log_recover(const char *inode_fn, const char *log_fn, masstree::masstree *tree, int num_threads) {
     log_structs_size_check();
 
-
-    char buf[CACHE_LINE_SIZE];
     size_t mapped_len;
     int is_pmem;
 
-    sprintf(buf, "%s_inodes", fn);
-    inodes = (char *) pmem_map_file(buf, 0, 0, 0, &mapped_len, &is_pmem);
+    inodes = (char *)
+            pmem_map_file(inode_fn, 0, 0, 0, &mapped_len, &is_pmem);
     is_pmem = is_pmem && pmem_is_pmem(inodes, mapped_len);
     if (inodes == NULL || mapped_len == 0 || mapped_len % CACHE_LINE_SIZE != 0 || !is_pmem) {
         die("inodes:%p mapped_len:%zu is_pmem:%d", inodes, mapped_len, is_pmem);
@@ -90,10 +103,10 @@ int log_recover(const char *fn, masstree::masstree *tree, int num_threads) {
 
     uint64_t num_logs = mapped_len / CACHE_LINE_SIZE;
 
-    sprintf(buf, "%s_logs", fn);
-    big_map = (char *) pmem_map_file(buf, 0, 0, 0, &mapped_len, &is_pmem);
+    big_map = (char *)
+            pmem_map_file(log_fn, 0, 0, 0, &mapped_len, &is_pmem);
     is_pmem = is_pmem && pmem_is_pmem(big_map, mapped_len);
-    if (big_map == NULL || mapped_len == 0 || mapped_len % LOG_SIZE != 0 || !is_pmem) {
+    if (big_map == NULL || mapped_len != num_logs * LOG_SIZE || !is_pmem) {
         die("big_map:%p mapped_len:%zu is_pmem:%d", big_map, mapped_len, is_pmem);
     }
 
@@ -221,7 +234,7 @@ char *log_acquire(int write_thread_log) {
     if (i > lm.num_entries) die("all logs are occupied");
 
     lm.entries[i][0] = OCCUPIED;
-    pmem_persist(lm.entries[i],sizeof(int));
+    pmem_persist(lm.entries[i], sizeof(int));
 
     log_address = big_map + i * LOG_SIZE;
     if (write_thread_log) {
@@ -251,6 +264,8 @@ void log_release(uint64_t idx) {
 
     lm.entries[idx][0] = lm.next_available;
     lm.next_available = idx;
+
+    pmem_persist(lm.entries[idx], sizeof(int));
 
 
     pthread_mutex_unlock(&lm_lock);
@@ -402,7 +417,7 @@ void *log_garbage_collection(void *arg) {
                 new_lc->is_delete = old_lc->is_delete;
                 new_lc->value_size = old_lc->value_size;
 //                rdtscll(new_lc->version);
-                new_lc->version=old_lc->version+1; // todo: this is a heck
+                new_lc->version = old_lc->version + 1; // todo: this is a heck
                 pmem_persist(new_lc, sizeof(struct log_cell));
 
                 pmem_memcpy_persist(thread_log->curr + sizeof(struct log_cell),
