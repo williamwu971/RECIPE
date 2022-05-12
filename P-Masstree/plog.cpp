@@ -280,7 +280,7 @@ void *log_malloc(size_t size) {
     rdtscll(lc->version);
 
     thread_log->curr += size;
-//    pmem_persist(thread_log,sizeof(struct log));
+    pmem_persist(thread_log,sizeof(struct log));
 
     return thread_log->curr - size;
 }
