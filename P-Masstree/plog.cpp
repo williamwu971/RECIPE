@@ -417,7 +417,7 @@ void *log_garbage_collection(void *arg) {
                     void* res = tree->put_and_return(new_lc->key, new_lc, 0, t);
 
                     // the log acquired by gc thread shouldn't need atomic ops
-                    if (res) {
+                    if (res!=NULL) {
                         thread_log->available -= total_size;
                         thread_log->curr += total_size;
                     }
