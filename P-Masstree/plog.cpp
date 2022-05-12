@@ -500,7 +500,7 @@ void log_debug_print(int to_file) {
             used++;
             if (to_file) {
                 struct log *target_log = (struct log *) (log_meta + CACHE_LINE_SIZE * i);
-                fprintf(file, "log %lu available:%lu free:%lu",
+                fprintf(file, "log %lu available:%lu free:%lu\n",
                         i, target_log->available, target_log->freed.load());
 
             }
