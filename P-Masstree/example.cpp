@@ -450,9 +450,10 @@ void run(char **argv) {
             for (uint64_t i = range.begin(); i != range.end(); i++) {
 
 
-                char* raw =(char*) tree->get(keys[i], t);
-                if (raw != NULL) {
-                    std::cout << "wrong value read: " << raw << " expected:" << NULL << std::endl;
+                char* raw = (char*)tree->get(keys[i], t);
+                uint64_t *ret = reinterpret_cast<uint64_t *> (raw+sizeof(struct log_cell));
+                if (*ret != keys[i]) {
+                    std::cout << "wrong value read: " << *ret << " expected:" << keys[i] << std::endl;
                     throw;
                 }
             }
