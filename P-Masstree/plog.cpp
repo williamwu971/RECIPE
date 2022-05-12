@@ -374,7 +374,7 @@ void *log_garbage_collection(void *arg) {
 //        if (gq.num != GAR_QUEUE_LENGTH) die("gc detected gq length:%lu", gq.num);
 //        if (queue_length < GAR_QUEUE_LENGTH) die("gc detected gq length:%lu", queue_length);
 
-        uint64_t counter = 0;
+//        uint64_t counter = 0;
 
 #ifdef GC_DEBUG_OUTPUT
         printf("merge ");
@@ -384,9 +384,9 @@ void *log_garbage_collection(void *arg) {
         while (queue != NULL) {
 
             // acquire a new log, it is poss
-            if (counter == 0) {
-                if (log_acquire(1) == NULL)die("cannot acquire new log");
-            }
+//            if (counter == 0) {
+//                if (log_acquire(1) == NULL)die("cannot acquire new log");
+//            }
 
 
             struct log *target_log = (struct log *) (log_meta + CACHE_LINE_SIZE * queue->index);
@@ -401,6 +401,12 @@ void *log_garbage_collection(void *arg) {
 
                 // read and advance the pointer
                 struct log_cell *old_lc = (struct log_cell *) current_ptr;
+                uint64_t total_size = sizeof(struct log_cell) + old_lc->value_size;
+                if (thread_log == NULL || thread_log->available < total_size) {
+                    if (log_acquire(1) == NULL)die("cannot acquire new log");
+                }
+
+
                 struct log_cell *new_lc = (struct log_cell *) thread_log->curr;
 
 
@@ -420,9 +426,10 @@ void *log_garbage_collection(void *arg) {
 //                pmem_memcpy_persist(thread_log->curr, current_ptr,
 //                                    sizeof(struct log_cell) + new_lc->value_size);
 
-                uint64_t total_size = sizeof(struct log_cell) + new_lc->value_size;
+
                 // this step might be buggy if went out of bound of the new log
                 // ignore a cell if it is delete
+
                 if (!new_lc->is_delete) {
 
                     // try to commit this entry
@@ -441,8 +448,8 @@ void *log_garbage_collection(void *arg) {
             log_release(queue->index);
 
             queue = queue->next;
-            counter++;
-            if (counter == GAR_QUEUE_LENGTH) counter = 0;
+//            counter++;
+//            if (counter == GAR_QUEUE_LENGTH) counter = 0;
 
             if (thread_log->curr > thread_log->base + LOG_SIZE)
                 die("log overflow detected used:%ld", thread_log->curr - thread_log->base);
