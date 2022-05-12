@@ -88,14 +88,14 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads) {
     omp_set_num_threads(old_num_threads);
 }
 
-int log_recover(const char *inode_fn, const char *log_fn, masstree::masstree *tree, int num_threads) {
+int log_recover(masstree::masstree *tree, int num_threads) {
     log_structs_size_check();
 
     size_t mapped_len;
     int is_pmem;
 
     inodes = (char *)
-            pmem_map_file(inode_fn, 0, 0, 0, &mapped_len, &is_pmem);
+            pmem_map_file(INODE_FN, 0, 0, 0, &mapped_len, &is_pmem);
     is_pmem = is_pmem && pmem_is_pmem(inodes, mapped_len);
     if (inodes == NULL || mapped_len == 0 || mapped_len % CACHE_LINE_SIZE != 0 || !is_pmem) {
         die("inodes:%p mapped_len:%zu is_pmem:%d", inodes, mapped_len, is_pmem);
@@ -104,7 +104,7 @@ int log_recover(const char *inode_fn, const char *log_fn, masstree::masstree *tr
     uint64_t num_logs = mapped_len / CACHE_LINE_SIZE;
 
     big_map = (char *)
-            pmem_map_file(log_fn, 0, 0, 0, &mapped_len, &is_pmem);
+            pmem_map_file(LOG_FN, 0, 0, 0, &mapped_len, &is_pmem);
     is_pmem = is_pmem && pmem_is_pmem(big_map, mapped_len);
     if (big_map == NULL || mapped_len != num_logs * LOG_SIZE || !is_pmem) {
         die("big_map:%p mapped_len:%zu is_pmem:%d", big_map, mapped_len, is_pmem);
@@ -241,7 +241,7 @@ char *log_acquire(int write_thread_log) {
         thread_log->base = log_address;
         thread_log->curr = thread_log->base;
 
-        pmem_persist(thread_log,CACHE_LINE_SIZE);
+        pmem_persist(thread_log, CACHE_LINE_SIZE);
     }
     pthread_mutex_unlock(&lm_lock);
     return log_address;
