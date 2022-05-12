@@ -392,21 +392,24 @@ void *log_garbage_collection(void *arg) {
             while (current_ptr < end_ptr) {
 
                 // read and advance the pointer
-                struct log_cell *old_lc = (struct log_cell *) current_ptr;
+//                struct log_cell *old_lc = (struct log_cell *) current_ptr;
                 struct log_cell *new_lc = (struct log_cell *) thread_log->curr;
 
 
                 // persist this entry to the new log first
                 // todo: two flushes are required here
-                new_lc->key = old_lc->key;
-                new_lc->is_delete = old_lc->is_delete;
-                new_lc->value_size = old_lc->value_size;
-                rdtscll(new_lc->version);
-                pmem_persist(new_lc, sizeof(struct log_cell));
+//                new_lc->key = old_lc->key;
+//                new_lc->is_delete = old_lc->is_delete;
+//                new_lc->value_size = old_lc->value_size;
+//                rdtscll(new_lc->version);
+//                pmem_persist(new_lc, sizeof(struct log_cell));
+//
+//                pmem_memcpy_persist(thread_log->curr + sizeof(struct log_cell),
+//                                    current_ptr + sizeof(struct log_cell),
+//                                    new_lc->value_size);
 
-                pmem_memcpy_persist(thread_log->curr + sizeof(struct log_cell),
-                                    current_ptr + sizeof(struct log_cell),
-                                    new_lc->value_size);
+                pmem_memcpy_persist(thread_log->curr, current_ptr,
+                                    sizeof(struct log_cell) + new_lc->value_size);
 
                 uint64_t total_size = sizeof(struct log_cell) + new_lc->value_size;
                 // this step might be buggy if went out of bound of the new log
@@ -414,10 +417,10 @@ void *log_garbage_collection(void *arg) {
                 if (!new_lc->is_delete) {
 
                     // try to commit this entry
-                    void* res = tree->put_and_return(new_lc->key, new_lc, 0, t);
+                    void *res = tree->put_and_return(new_lc->key, new_lc, 0, t);
 
                     // the log acquired by gc thread shouldn't need atomic ops
-                    if (res!=NULL) {
+                    if (res != NULL) {
                         thread_log->available -= total_size;
                         thread_log->curr += total_size;
                     }
