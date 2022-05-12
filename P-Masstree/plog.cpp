@@ -316,11 +316,11 @@ void log_free(void *ptr) {
 
     // commit a dummy log to represent that this entry has been freed
     struct log_cell *lc = (struct log_cell *) ptr;
-    struct log_cell *tombstone = (struct log_cell *) log_malloc(sizeof(struct log_cell));
-
-    tombstone->is_delete = 1;
-    tombstone->key = lc->key;
-    pmem_persist(tombstone, sizeof(struct log_cell)); // PERSIST
+//    struct log_cell *tombstone = (struct log_cell *) log_malloc(sizeof(struct log_cell));
+//
+//    tombstone->is_delete = 1;
+//    tombstone->key = lc->key;
+//    pmem_persist(tombstone, sizeof(struct log_cell)); // PERSIST
 
 
     // locate the log and its metadata
@@ -414,7 +414,7 @@ void *log_garbage_collection(void *arg) {
                 if (!new_lc->is_delete) {
 
                     // try to commit this entry
-                    int res = tree->put_if_newer(new_lc->key, new_lc, 0, t);
+                    void* res = tree->put_and_return(new_lc->key, new_lc, 0, t);
 
                     // the log acquired by gc thread shouldn't need atomic ops
                     if (res) {

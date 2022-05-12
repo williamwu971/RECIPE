@@ -426,7 +426,7 @@ void run(char **argv) {
 
                 if (require_flush) clflush((char*)value,size,true,true);
 
-                void* old = (char*)tree->put_and_return(keys[i],0,0,t);
+                void* old = (char*)tree->put_and_return(keys[i],raw,0,t);
 
                 which_free(old);
                 rdtscll(b);
