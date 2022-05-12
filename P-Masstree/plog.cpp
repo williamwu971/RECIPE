@@ -133,7 +133,7 @@ int log_recover(const char *inode_fn, const char *log_fn, masstree::masstree *tr
     inited = 1;
 }
 
-void log_init(const char *inode_fn, const char *log_fn, uint64_t num_logs) {
+void log_init(uint64_t num_logs) {
 
     log_structs_size_check();
 
@@ -142,7 +142,7 @@ void log_init(const char *inode_fn, const char *log_fn, uint64_t num_logs) {
     int is_pmem;
 
     file_size = num_logs * CACHE_LINE_SIZE;
-    inodes = (char *) pmem_map_file(inode_fn, file_size,
+    inodes = (char *) pmem_map_file(INODE_FN, file_size,
                                     PMEM_FILE_CREATE | PMEM_FILE_EXCL, 00777,
                                     &mapped_len, &is_pmem);
     is_pmem = is_pmem && pmem_is_pmem(inodes, file_size);
@@ -150,8 +150,16 @@ void log_init(const char *inode_fn, const char *log_fn, uint64_t num_logs) {
         die("inodes:%p mapped_len:%zu is_pmem:%d", inodes, mapped_len, is_pmem);
     }
 
+    log_meta = (char *) pmem_map_file(META_FN, file_size,
+                                      PMEM_FILE_CREATE | PMEM_FILE_EXCL, 00777,
+                                      &mapped_len, &is_pmem);
+    is_pmem = is_pmem && pmem_is_pmem(log_meta, file_size);
+    if (log_meta == NULL || mapped_len != file_size || !is_pmem) {
+        die("log_meta:%p mapped_len:%zu is_pmem:%d", inodes, mapped_len, is_pmem);
+    }
+
     file_size = num_logs * LOG_SIZE;
-    big_map = (char *) pmem_map_file(log_fn, file_size,
+    big_map = (char *) pmem_map_file(LOG_FN, file_size,
                                      PMEM_FILE_CREATE | PMEM_FILE_EXCL, 00777,
                                      &mapped_len, &is_pmem);
     is_pmem = is_pmem && pmem_is_pmem(big_map, file_size);
@@ -159,38 +167,19 @@ void log_init(const char *inode_fn, const char *log_fn, uint64_t num_logs) {
         die("big_map:%p mapped_len:%zu is_pmem:%d", big_map, mapped_len, is_pmem);
     }
 
-//    sprintf(buf, "%s_inodes", fn);
-//    file_size = num_logs * CACHE_LINE_SIZE;
-//    fd = open(buf, O_RDWR | O_CREAT | O_EXCL, 00777);
-//    if (fd < 0)die("fd error: %d", fd);
-//    if (posix_fallocate(fd, 0, file_size)) die("fallocate error");
-//    inodes = (char *) mmap(NULL, file_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-//    if (inodes == MAP_FAILED)die("map error");
-//    close(fd);
-//
-//
-//    sprintf(buf, "%s_logs", fn);
-//    file_size = num_logs * LOG_SIZE;
-//    fd = open(buf, O_RDWR | O_CREAT | O_EXCL, 00777);
-//    if (fd < 0)die("fd error: %d", fd);
-//    if (posix_fallocate(fd, 0, file_size)) die("fallocate error");
-//    big_map = (char *) mmap(NULL, file_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-//    if (big_map == MAP_FAILED)die("map error");
-//    close(fd);
-
     // inodes
     lm.num_entries = num_logs;
     lm.entries = (int **) malloc(sizeof(int *) * lm.num_entries);
     OCCUPIED = num_logs + 1;
     for (uint64_t i = 0; i < lm.num_entries; i++) {
         lm.entries[i] = (int *) (inodes + CACHE_LINE_SIZE * i);
-//        lm.entries[i][0] = AVAILABLE;
     }
     lm.next_available = -1;
     lm.used = 0;
 
     // usage
-    log_meta = (char *) malloc(CACHE_LINE_SIZE * num_logs);
+//    log_meta = (char *) malloc(CACHE_LINE_SIZE * num_logs);
+
 
     // gc
     pthread_mutex_init(&gq.lock, NULL);
@@ -251,6 +240,8 @@ char *log_acquire(int write_thread_log) {
         thread_log->full.store(0);
         thread_log->base = log_address;
         thread_log->curr = thread_log->base;
+
+        pmem_persist(thread_log,CACHE_LINE_SIZE);
     }
     pthread_mutex_unlock(&lm_lock);
     return log_address;

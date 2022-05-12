@@ -49,6 +49,10 @@
 #define rdtscll(val) __asm__ __volatile__("rdtsc" : "=A" (val))
 #endif
 
+#define INODE_FN "/pmem0/masstree_log_inodes"
+#define LOG_FN "/pmem0/masstree_log_logs"
+#define META_FN "/pmem0/masstree_log_metas"
+
 //enum {
 //    AVAILABLE,
 //    OCCUPIED,
@@ -97,9 +101,9 @@ struct log_cell {
     uint64_t key;
 };
 
-int log_recover(const char *inode_fn, const char *log_fn, masstree::masstree *tree, int num_threads);
+int log_recover(masstree::masstree *tree, int num_threads);
 
-void log_init(const char *inode_fn, const char *log_fn, uint64_t num_logs);
+void log_init(uint64_t num_logs);
 
 void *log_malloc(size_t size);
 
