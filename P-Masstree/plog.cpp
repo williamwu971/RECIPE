@@ -57,7 +57,7 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads) {
                 struct log_cell *lc = (struct log_cell *) curr;
 
                 if (!lc->is_delete) {
-                    tree->put_if_newer(lc->key, lc, 1, t);
+                    tree->put_and_return(lc->key, lc, 1, t);
                 } else {
                     tree->del_and_return(lc->key, 1, lc->version, t);
                 }
