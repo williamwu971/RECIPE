@@ -402,7 +402,7 @@ void run(char **argv) {
 //        printf("Elapsed time: insert,%ld,%f sec\n", n, duration.count() / 1000000.0);
         insert_throughput=(n * 1.0) / duration.count();
     }
-        log_debug_print(0);
+        log_debug_print(1);
     {
         // Update
         auto starttime = std::chrono::system_clock::now();
