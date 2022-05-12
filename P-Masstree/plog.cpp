@@ -57,7 +57,9 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads) {
                 struct log_cell *lc = (struct log_cell *) curr;
 
                 if (!lc->is_delete) {
-                    tree->put_and_return(lc->key, lc, 1, t);
+                    if (tree->put_and_return(lc->key, lc, 1, t)!=NULL){
+
+                    }
                 } else {
                     tree->del_and_return(lc->key, 1, lc->version, t);
                 }
@@ -118,19 +120,16 @@ int log_recover(const char *fn, masstree::masstree *tree, int num_threads) {
     inited = 1;
 }
 
-void log_init(const char *fn, uint64_t num_logs) {
+void log_init(const char *inode_fn, const char *log_fn, uint64_t num_logs) {
 
     log_structs_size_check();
 
-    char buf[CACHE_LINE_SIZE];
-//    int fd;
     uint64_t file_size;
     size_t mapped_len;
     int is_pmem;
 
-    sprintf(buf, "%s_inodes", fn);
     file_size = num_logs * CACHE_LINE_SIZE;
-    inodes = (char *) pmem_map_file(buf, file_size,
+    inodes = (char *) pmem_map_file(inode_fn, file_size,
                                     PMEM_FILE_CREATE | PMEM_FILE_EXCL, 00777,
                                     &mapped_len, &is_pmem);
     is_pmem = is_pmem && pmem_is_pmem(inodes, file_size);
@@ -138,9 +137,8 @@ void log_init(const char *fn, uint64_t num_logs) {
         die("inodes:%p mapped_len:%zu is_pmem:%d", inodes, mapped_len, is_pmem);
     }
 
-    sprintf(buf, "%s_logs", fn);
     file_size = num_logs * LOG_SIZE;
-    big_map = (char *) pmem_map_file(buf, file_size,
+    big_map = (char *) pmem_map_file(log_fn, file_size,
                                      PMEM_FILE_CREATE | PMEM_FILE_EXCL, 00777,
                                      &mapped_len, &is_pmem);
     is_pmem = is_pmem && pmem_is_pmem(big_map, file_size);
@@ -223,6 +221,8 @@ char *log_acquire(int write_thread_log) {
     if (i > lm.num_entries) die("all logs are occupied");
 
     lm.entries[i][0] = OCCUPIED;
+    pmem_persist(lm.entries[i],sizeof(int));
+
     log_address = big_map + i * LOG_SIZE;
     if (write_thread_log) {
 
@@ -392,24 +392,25 @@ void *log_garbage_collection(void *arg) {
             while (current_ptr < end_ptr) {
 
                 // read and advance the pointer
-//                struct log_cell *old_lc = (struct log_cell *) current_ptr;
+                struct log_cell *old_lc = (struct log_cell *) current_ptr;
                 struct log_cell *new_lc = (struct log_cell *) thread_log->curr;
 
 
                 // persist this entry to the new log first
                 // todo: two flushes are required here
-//                new_lc->key = old_lc->key;
-//                new_lc->is_delete = old_lc->is_delete;
-//                new_lc->value_size = old_lc->value_size;
+                new_lc->key = old_lc->key;
+                new_lc->is_delete = old_lc->is_delete;
+                new_lc->value_size = old_lc->value_size;
 //                rdtscll(new_lc->version);
-//                pmem_persist(new_lc, sizeof(struct log_cell));
-//
-//                pmem_memcpy_persist(thread_log->curr + sizeof(struct log_cell),
-//                                    current_ptr + sizeof(struct log_cell),
-//                                    new_lc->value_size);
+                new_lc->version=old_lc->version+1; // todo: this is a heck
+                pmem_persist(new_lc, sizeof(struct log_cell));
 
-                pmem_memcpy_persist(thread_log->curr, current_ptr,
-                                    sizeof(struct log_cell) + new_lc->value_size);
+                pmem_memcpy_persist(thread_log->curr + sizeof(struct log_cell),
+                                    current_ptr + sizeof(struct log_cell),
+                                    new_lc->value_size);
+
+//                pmem_memcpy_persist(thread_log->curr, current_ptr,
+//                                    sizeof(struct log_cell) + new_lc->value_size);
 
                 uint64_t total_size = sizeof(struct log_cell) + new_lc->value_size;
                 // this step might be buggy if went out of bound of the new log

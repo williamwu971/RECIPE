@@ -97,9 +97,9 @@ struct log_cell {
     uint64_t key;
 };
 
-int log_recover(const char *fn, masstree::masstree *tree);
+int log_recover(const char *inode_fn, const char *log_fn, masstree::masstree *tree);
 
-void log_init(const char *fn, uint64_t num_logs);
+void log_init(const char *inode_fn, const char *log_fn, uint64_t num_logs);
 
 void *log_malloc(size_t size);
 

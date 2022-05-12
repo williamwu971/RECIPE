@@ -260,7 +260,7 @@ void run(char **argv) {
 
     uint64_t n = std::atoll(argv[1]);
     uint64_t *keys = new uint64_t[n];
-
+    uint64_t *rands = new uint64_t[n];
 
     // Generate keys
     for (uint64_t i = 0; i < n; i++) {
@@ -345,16 +345,22 @@ void run(char **argv) {
 
     if (require_log_init){
         printf("init log and GC... ");
-        char const *fn = "/pmem0/masstree_log";
-        log_init(fn,10240);
+        char const *inode_fn = "/pmem0/masstree_log_inodes";
+         char const *log_fn = "/pmem0/masstree_log_logs";
+
+        if (access(inode_fn,F_OK)==0 && access(log_fn,F_OK)==0){
+            log_recover(inode_fn,log_fn,tree);
+            goto lookup;
+        }else{
+            log_init(inode_fn,log_fn,10240);
+        }
+
 
         for (int gcc=0;gcc<8;gcc++){
             log_start_gc(tree);
         }
 
     }
-
-    uint64_t *rands = new uint64_t[n];
 
 
     // Generate keys
@@ -440,6 +446,7 @@ void run(char **argv) {
         lookup_throughput=(n * 1.0) / duration.count();
     }
 
+    lookup:
     log_debug_print();
 
     {
