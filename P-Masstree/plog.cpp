@@ -501,6 +501,12 @@ void log_debug_print() {
 //        }
 
     }
-    printf("total logs used:%lu\n", used);
+
     pthread_mutex_unlock(&lm_lock);
+
+    pthread_mutex_lock(&gq.lock);
+    uint64_t len = gq.num;
+    pthread_mutex_unlock(&gq.lock);
+
+    printf("total logs used:%lu gq length:%lu\n", used, len);
 }
