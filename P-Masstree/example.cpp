@@ -353,6 +353,15 @@ void run(char **argv) {
         }
 
     }
+
+    uint64_t *rands = new uint64_t[n];
+
+
+    // Generate keys
+    for (uint64_t i = 0; i < n; i++) {
+        rands[i] = rand();
+    }
+
     printf("\n");
     printf("operation,n,ops/s\n");
 
@@ -373,12 +382,12 @@ void run(char **argv) {
                 lc->key=keys[i];
 
                 uint64_t *value=(uint64_t*)(raw+sizeof(struct log_cell));
-                *value=keys[i];
+                *value=rands[i];
 
                 // flush value before inserting todo: should this exist for DRAM+DRAM?
 
                 if (require_flush) clflush((char*)value,size,true,true);
-                tree->put_if_newer(keys[i], raw,1, t);
+                tree->put_and_return(keys[i], raw,1, t);
             }
         });
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
@@ -389,7 +398,7 @@ void run(char **argv) {
     }
         log_debug_print();
     {
-        // Delete
+        // Update
         auto starttime = std::chrono::system_clock::now();
         tbb::parallel_for(tbb::blocked_range<uint64_t>(0, n), [&](const tbb::blocked_range<uint64_t> &range) {
             auto t = tree->getThreadInfo();
@@ -399,15 +408,27 @@ void run(char **argv) {
                 rdtscll(a);
 
 //                char* raw =(char*) tree->get(keys[i], t);
-                char* raw = (char*)tree->del_and_return(keys[i],0,0,t);
-                uint64_t *ret = reinterpret_cast<uint64_t *> (raw+sizeof(struct log_cell));
+//                char* raw = (char*)tree->del_and_return(keys[i],0,0,t);
+//                uint64_t *ret = reinterpret_cast<uint64_t *> (raw+sizeof(struct log_cell));
 //                uint64_t *ret = reinterpret_cast<uint64_t *> (tree->get(keys[i], t));
-                if (*ret != keys[i]) {
-                    std::cout << "wrong value read: " << *ret << " expected:" << keys[i] << std::endl;
-                    throw;
-                }
 
-                which_free(raw);
+                int size = sizeof(uint64_t);
+                char* raw = (char*)which_malloc(sizeof(struct log_cell)+size);
+
+                struct log_cell* lc = (struct log_cell*)raw;
+                lc->is_delete=0;
+                lc->key=keys[i];
+
+                uint64_t *value=(uint64_t*)(raw+sizeof(struct log_cell));
+                *value=keys[i];
+
+                // flush value before inserting todo: should this exist for DRAM+DRAM?
+
+                if (require_flush) clflush((char*)value,size,true,true);
+
+                void* old = (char*)tree->put_and_return(keys[i],0,0,t);
+
+                which_free(old);
                 rdtscll(b);
                 latencies[i]=b - a;
             }

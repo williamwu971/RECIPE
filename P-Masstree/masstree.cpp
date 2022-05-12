@@ -506,7 +506,7 @@ leaf_retry:
     }
 }
 
-int masstree::put_if_newer(uint64_t key, void *value, int create, ThreadInfo &threadEpocheInfo)
+void* masstree::put_and_return(uint64_t key, void *value, int create, ThreadInfo &threadEpocheInfo)
 {
     EpocheGuard epocheGuard(threadEpocheInfo);
     key_indexed_position kx_;
@@ -598,21 +598,21 @@ int masstree::put_if_newer(uint64_t key, void *value, int create, ThreadInfo &th
     // return True if there is an insert, False otherwise
     if (kx_.p >= 0 && l->key(kx_.p) == key) {
 
-        int res = l->assign_value_if_newer(kx_.p, value);
+        void* res = l->assign_value_if_newer(kx_.p, value);
         l->writeUnlock(false);
         return res;
     } else if (create){
 
         if (!(l->leaf_insert(this, NULL, 0, NULL, key, value, kx_))) {
-            return put_if_newer(key, value,create, threadEpocheInfo);
+            return put_and_return(key, value,create, threadEpocheInfo);
         }
 
-        return 1;
+        return NULL;
 
     }else{
 
         l->writeUnlock(false);
-        return 0;
+        return NULL;
     }
 }
 
@@ -1160,17 +1160,17 @@ void leafnode::assign_value(int p, void *value)
     clflush((char *)&entry[p].value, sizeof(void *), false, true);
 }
 
-int leafnode::assign_value_if_newer(int p,void *value)
+void* leafnode::assign_value_if_newer(int p,void *value)
 {
     struct log_cell* old_lc = (struct log_cell*)entry[p].value;
     struct log_cell* new_lc = (struct log_cell*)value;
 
     // todo: modification in version number will need another flush. How to avoid?
-    if (new_lc->version<=old_lc->version) return 0;
+    if (new_lc->version<=old_lc->version) return NULL;
 
     entry[p].value = value;
     clflush((char *)&entry[p].value, sizeof(void *), false, true);
-    return 1;
+    return old_lc;
 }
 
 void *leafnode::entry_addr(int p)
