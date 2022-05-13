@@ -190,6 +190,27 @@ void log_init(uint64_t num_logs) {
     inited = 1;
 }
 
+void log_gq_add(uint64_t idx) {
+    struct garbage_queue_node *node = (struct garbage_queue_node *) malloc(sizeof(struct garbage_queue_node));
+    node->index = idx;
+    node->next = NULL;
+
+    pthread_mutex_lock(&gq.lock);
+
+    // add the node to the queue
+    if (gq.head != NULL) { node->next = gq.head; }
+    gq.head = node;
+    gq.num++;
+
+
+    // wake up ONE garbage collector if queue is long enough
+    if (gq.num >= GAR_QUEUE_LENGTH) {
+        pthread_cond_signal(&gq.cond);
+    }
+
+    pthread_mutex_unlock(&gq.lock);
+}
+
 char *log_acquire(int write_thread_log) {
 
     char *log_address;
@@ -230,7 +251,12 @@ char *log_acquire(int write_thread_log) {
 
         // retire and mark the old log for collection
         if (thread_log != NULL) {
-            thread_log->full.store(1);
+
+            if (thread_log->freed.load() > LOG_MERGE_THRESHOLD) {
+                log_gq_add(thread_log->index);
+            } else {
+                thread_log->full.store(1);
+            }
         }
 
         thread_log = (struct log *) (log_meta + CACHE_LINE_SIZE * i);
@@ -295,27 +321,6 @@ int log_memalign(void **memptr, size_t alignment, size_t size) {
     *memptr = log_malloc(size);
 
     return 0;
-}
-
-void log_gq_add(uint64_t idx) {
-    struct garbage_queue_node *node = (struct garbage_queue_node *) malloc(sizeof(struct garbage_queue_node));
-    node->index = idx;
-    node->next = NULL;
-
-    pthread_mutex_lock(&gq.lock);
-
-    // add the node to the queue
-    if (gq.head != NULL) { node->next = gq.head; }
-    gq.head = node;
-    gq.num++;
-
-
-    // wake up ONE garbage collector if queue is long enough
-    if (gq.num >= GAR_QUEUE_LENGTH) {
-        pthread_cond_signal(&gq.cond);
-    }
-
-    pthread_mutex_unlock(&gq.lock);
 }
 
 void log_free(void *ptr) {
