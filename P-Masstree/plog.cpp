@@ -468,7 +468,7 @@ void log_start_gc(masstree::masstree *t) {
     gc_ids = (pthread_t *) realloc(gc_ids, sizeof(pthread_t) * (++num_gcs));
 
     pthread_create(gc_ids + (num_gcs - 1), NULL, log_garbage_collection, t);
-    pthread_detach(gc_ids[num_gcs - 1]);
+//    pthread_detach(gc_ids[num_gcs - 1]);
 
 }
 
