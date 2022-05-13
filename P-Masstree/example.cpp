@@ -424,8 +424,10 @@ void run(char **argv) {
                 char* raw = (char*)which_malloc(sizeof(struct log_cell)+size);
 
                 struct log_cell* lc = (struct log_cell*)raw;
+                lc->value_size=size;
                 lc->is_delete=0;
                 lc->key=keys[i];
+                rdtscll(lc->version);
 
                 uint64_t *value=(uint64_t*)(raw+sizeof(struct log_cell));
                 *value=keys[i];
