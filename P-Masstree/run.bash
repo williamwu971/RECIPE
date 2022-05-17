@@ -40,9 +40,9 @@ value_location=("pmem" "log")
 index_location=("dram")
 value_location=("log")
 #value_location=("pmem")
-num_threads=(20)
+num_threads=(18)
 use_perf="yes"
-num_of_gc=0
+num_of_gc=6
 
 workload=100000000
 key_order="random"
