@@ -350,9 +350,9 @@ void run(char **argv) {
         }
 
 
-//        for (int gcc=0;gcc<6;gcc++){
-//            log_start_gc(tree);
-//        }
+        for (int gcc=0;gcc<6;gcc++){
+            log_start_gc(tree);
+        }
 
     }
 
