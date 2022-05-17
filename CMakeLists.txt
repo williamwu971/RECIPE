@@ -8,7 +8,7 @@ else()
     message(STATUS "Build type is set to ${CMAKE_BUILD_TYPE}")
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -march=native -mrtm -mcx16 -mavx -mavx2 -mbmi2 -mlzcnt -Wno-deprecated-declarations -Wall -Wextra -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free -faligned-new=64 -fopenmp -fno-omit-frame-pointer -ggdb3 -DNDEBUG -DGC_DEBUG_OUTPUT -I../../ralloc/src/")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -march=native -mrtm -mcx16 -mavx -mavx2 -mbmi2 -mlzcnt -Wno-deprecated-declarations -Wall -Wextra -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free -faligned-new=64 -fopenmp -fno-omit-frame-pointer -ggdb3 -DNDEBUG -DGC_DEBUG_OUTPUT -I../ralloc/src/")
 
 execute_process(COMMAND cat /proc/cpuinfo COMMAND grep clflush OUTPUT_VARIABLE ENABLE_CLFLUSH)
 execute_process(COMMAND cat /proc/cpuinfo COMMAND grep clflushopt OUTPUT_VARIABLE ENABLE_CLFLUSHOPT)
@@ -110,4 +110,4 @@ target_link_libraries(Indexes ${TbbLib} ${JemallocLib} ${CMAKE_THREAD_LIBS_INIT}
 set(YCSB_TEST ycsb.cpp)
 add_executable(ycsb ${YCSB_TEST})
 
-target_link_libraries(ycsb Indexes atomic boost_system boost_thread pmem ../../ralloc/test/libralloc.a pthread)
+target_link_libraries(ycsb Indexes atomic boost_system boost_thread pmem ../ralloc/test/libralloc.a pthread)
