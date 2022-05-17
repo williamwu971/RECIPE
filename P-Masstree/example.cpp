@@ -456,10 +456,11 @@ void run(char **argv) {
             }
         });
 
-        if (use_perf)log_stop_perf();
-
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
                 std::chrono::system_clock::now() - starttime);
+
+        if (use_perf)log_stop_perf();
+
         printf("Throughput: update,%ld,%f ops/us\n", n, (n * 1.0) / duration.count());
 //        printf("Elapsed time: delete,%ld,%f sec\n", n, duration.count() / 1000000.0);
         lookup_throughput=(n * 1.0) / duration.count();
@@ -488,11 +489,11 @@ void run(char **argv) {
             }
         });
 
+        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
+                std::chrono::system_clock::now() - starttime);
 
         if (use_perf)log_stop_perf();
 
-        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
-                std::chrono::system_clock::now() - starttime);
         printf("Throughput: lookup,%ld,%f ops/us\n", n, (n * 1.0) / duration.count());
 //        printf("Elapsed time: lookup,%ld,%f sec\n", n, duration.count() / 1000000.0);
     }
