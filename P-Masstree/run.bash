@@ -41,7 +41,7 @@ index_location=("dram")
 value_location=("log")
 #value_location=("pmem")
 num_threads=(20)
-use_perf="no"
+use_perf="yes"
 num_of_gc=0
 
 workload=100000000
