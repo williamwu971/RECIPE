@@ -311,7 +311,7 @@ void log_release(uint64_t idx) {
     pthread_mutex_lock(&lm_lock);
 
     // todo: this persist is possibly unreliable (for recovery purpose)
-    pmem_memset_persist(big_map + idx * LOG_SIZE, 0, LOG_SIZE);
+//    pmem_memset_persist(big_map + idx * LOG_SIZE, 0, LOG_SIZE);
 
 //    lm.entries[idx][0] = AVAILABLE;
 
