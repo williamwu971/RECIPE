@@ -274,7 +274,7 @@ void run(char **argv) {
     int require_log_init=0;
     int require_flush=0;
     int shuffle_keys=0;
-    int use_perf=0;
+    int use_perf=1;
     int num_of_gc=0;
 
     printf("argv: ");
