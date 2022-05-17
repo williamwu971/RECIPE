@@ -115,8 +115,8 @@ void log_join_all_pc();
 
 void log_debug_print(int to_file);
 
-void log_start_perf(const char *perf_fn);
+int log_start_perf(const char *perf_fn);
 
-void log_stop_perf();
+int log_stop_perf();
 
 #endif

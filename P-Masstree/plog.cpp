@@ -577,7 +577,7 @@ void log_debug_print(int to_file) {
 }
 
 
-void log_start_perf(const char *perf_fn) {
+int log_start_perf(const char *perf_fn) {
 
     char command[1024];
 
@@ -585,10 +585,10 @@ void log_start_perf(const char *perf_fn) {
             "/home/blepers/linux/tools/perf/perf -p %d -o %s -g &",
             getppid(), perf_fn);
 
-    system(command);
+    return system(command);
 }
 
-void log_stop_perf() {
+int log_stop_perf() {
 
-    system("sudo killall -w perf");
+    return system("sudo killall -w perf");
 }
