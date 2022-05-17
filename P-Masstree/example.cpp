@@ -366,6 +366,8 @@ void run(char **argv) {
     printf("operation,n,ops/s\n");
 
     {
+        log_start_perf("insert.perf");
+
         // Build tree
         auto starttime = std::chrono::system_clock::now();
         tbb::parallel_for(tbb::blocked_range<uint64_t>(0, n), [&](const tbb::blocked_range<uint64_t> &range) {
@@ -394,12 +396,17 @@ void run(char **argv) {
         });
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
                 std::chrono::system_clock::now() - starttime);
+
+        log_stop_perf();
         printf("Throughput: insert,%ld,%f ops/us\n", n, (n * 1.0) / duration.count());
 //        printf("Elapsed time: insert,%ld,%f sec\n", n, duration.count() / 1000000.0);
         insert_throughput=(n * 1.0) / duration.count();
     }
         log_debug_print(1);
     {
+
+        log_start_perf("update.perf");
+
         // Update
         auto starttime = std::chrono::system_clock::now();
         tbb::parallel_for(tbb::blocked_range<uint64_t>(0, n), [&](const tbb::blocked_range<uint64_t> &range) {
@@ -437,6 +444,9 @@ void run(char **argv) {
                 latencies[i]=b - a;
             }
         });
+
+        log_stop_perf();
+
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
                 std::chrono::system_clock::now() - starttime);
         printf("Throughput: update,%ld,%f ops/us\n", n, (n * 1.0) / duration.count());
@@ -448,6 +458,9 @@ void run(char **argv) {
     log_debug_print(0);
 
     {
+
+        log_start_perf("lookup.perf");
+
         // Lookup
         auto starttime = std::chrono::system_clock::now();
         tbb::parallel_for(tbb::blocked_range<uint64_t>(0, n), [&](const tbb::blocked_range<uint64_t> &range) {
@@ -463,6 +476,10 @@ void run(char **argv) {
                 }
             }
         });
+
+
+        log_stop_perf();
+
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
                 std::chrono::system_clock::now() - starttime);
         printf("Throughput: lookup,%ld,%f ops/us\n", n, (n * 1.0) / duration.count());
