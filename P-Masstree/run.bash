@@ -41,6 +41,8 @@ index_location=("dram")
 value_location=("log")
 #value_location=("pmem")
 num_threads=(20)
+use_perf="yes"
+num_of_gc=0
 
 workload=100000000
 key_order="random"
@@ -72,7 +74,7 @@ for i in "${index_location[@]}"; do
       echo 1 > /proc/sys/vm/drop_caches
       rm -rf /pmem0/*
 #      /home/blepers/linux/tools/perf/perf record -g ./example "$workload" "$n" index="$i" value="$v" key="$key_order"
-      ./example "$workload" "$n" index="$i" value="$v" key="$key_order"
+      ./example "$workload" "$n" index="$i" value="$v" key="$key_order" perf="$use_perf" gc="$num_of_gc"
 #      python3 ../graph.py --r latency.csv --ylim 1000000
 #      mv out.png out_"$i"_"$v".png
       #      ./example 100 "$n" index="$i" value="$v"
