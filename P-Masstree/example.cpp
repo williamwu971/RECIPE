@@ -274,7 +274,7 @@ void run(char **argv) {
     int require_log_init=0;
     int require_flush=0;
     int shuffle_keys=0;
-    int use_perf=1;
+    int use_perf=0;
     int num_of_gc=0;
 
     printf("argv: ");
@@ -309,6 +309,12 @@ void run(char **argv) {
         }else if (strcasestr(argv[ac],"ycsb")){
             launch_ycsb(ycsb_a_uniform,n);
             exit(0);
+        }else if (strcasestr(argv[ac],"perf")){
+            if (strcasestr(argv[ac],"y")){
+                use_perf=1;
+            }
+        }else if (strcasestr(argv[ac],"gc")){
+            num_of_gc=atoi(strcasestr(argv[ac],"=")+1);
         }
     }
     printf("\n");
@@ -515,10 +521,10 @@ void run(char **argv) {
 }
 
 int main(int argc, char **argv) {
-    if (argc != 6) {
+    if (argc != 8) {
         if (argc==3){
 
-            char** new_argv = (char**)malloc(sizeof(char*)*6);
+            char** new_argv = (char**)malloc(sizeof(char*)*8);
             new_argv[0]=argv[0];
             new_argv[1]=argv[1];
             new_argv[2]=argv[2];
@@ -526,10 +532,16 @@ int main(int argc, char **argv) {
             new_argv[3]=(char*)malloc(sizeof(char)*64);
             new_argv[4]=(char*)malloc(sizeof(char)*64);
             new_argv[5]=(char*)malloc(sizeof(char)*64);
+            new_argv[6]=(char*)malloc(sizeof(char)*64);
+            new_argv[7]=(char*)malloc(sizeof(char)*64);
 
             sprintf(new_argv[3],"index=dram");
             sprintf(new_argv[4],"value=log");
             sprintf(new_argv[5],"key=random");
+            sprintf(new_argv[6],"perf=yes");
+            sprintf(new_argv[7],"gc=0");
+
+            argv=new_argv;
 
             goto start;
         }
