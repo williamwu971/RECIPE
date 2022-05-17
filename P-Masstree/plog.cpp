@@ -277,7 +277,10 @@ char *log_acquire(int write_thread_log) {
 void log_release(uint64_t idx) {
     pthread_mutex_lock(&lm_lock);
 
+    pmem_memset_persist(big_map + idx * LOG_SIZE, 0, LOG_SIZE);
+
 //    lm.entries[idx][0] = AVAILABLE;
+
 
     lm.entries[idx][0] = lm.next_available;
     lm.next_available = idx;

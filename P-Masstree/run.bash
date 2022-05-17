@@ -67,6 +67,9 @@ for i in "${index_location[@]}"; do
     printf '%s,%s,' "$i" "$v" >>lookup.csv
 
     for n in "${num_threads[@]}"; do
+
+      # drop system cache and clear pmem device
+      echo 1 > /proc/sys/vm/drop_caches
       rm -rf /pmem0/*
 #      echo "$workload" "$n" index="$i" value="$v" key="$key_order"
 #      /home/blepers/linux/tools/perf/perf record -g ./example "$workload" "$n" index="$i" value="$v" key="$key_order"
