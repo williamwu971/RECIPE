@@ -274,6 +274,7 @@ void run(char **argv) {
     int require_log_init=0;
     int require_flush=0;
     int shuffle_keys=0;
+    int use_perf=0;
 
     printf("argv: ");
     for (int ac=0;ac<6;ac++){
@@ -366,7 +367,7 @@ void run(char **argv) {
     printf("operation,n,ops/s\n");
 
     {
-        log_start_perf("insert.perf");
+        if (use_perf)log_start_perf("insert.perf");
 
         // Build tree
         auto starttime = std::chrono::system_clock::now();
@@ -397,7 +398,7 @@ void run(char **argv) {
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
                 std::chrono::system_clock::now() - starttime);
 
-        log_stop_perf();
+        if (use_perf)log_stop_perf();
         printf("Throughput: insert,%ld,%f ops/us\n", n, (n * 1.0) / duration.count());
 //        printf("Elapsed time: insert,%ld,%f sec\n", n, duration.count() / 1000000.0);
         insert_throughput=(n * 1.0) / duration.count();
@@ -405,7 +406,7 @@ void run(char **argv) {
         log_debug_print(1);
     {
 
-        log_start_perf("update.perf");
+        if (use_perf)log_start_perf("update.perf");
 
         // Update
         auto starttime = std::chrono::system_clock::now();
@@ -445,7 +446,7 @@ void run(char **argv) {
             }
         });
 
-        log_stop_perf();
+        if (use_perf)log_stop_perf();
 
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
                 std::chrono::system_clock::now() - starttime);
@@ -459,7 +460,7 @@ void run(char **argv) {
 
     {
 
-        log_start_perf("lookup.perf");
+        if (use_perf)log_start_perf("lookup.perf");
 
         // Lookup
         auto starttime = std::chrono::system_clock::now();
@@ -478,7 +479,7 @@ void run(char **argv) {
         });
 
 
-        log_stop_perf();
+        if (use_perf)log_stop_perf();
 
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
                 std::chrono::system_clock::now() - starttime);
