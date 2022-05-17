@@ -20,7 +20,6 @@ for var in "$@"; do
 #    fi
 
     # build P-Masstree
-    cd $PREFIX/RECIPE/P-Masstree/ || exit
     git pull
     rm -rf build && mkdir build
     cd build || exit
@@ -35,7 +34,7 @@ for var in "$@"; do
   fi
 done
 
-cd $PREFIX/RECIPE/P-Masstree/build/ || exit
+cd build || exit
 
 index_location=("dram" "pmem")
 value_location=("pmem" "log")
