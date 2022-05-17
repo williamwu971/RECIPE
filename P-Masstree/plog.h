@@ -115,4 +115,6 @@ void log_join_all_pc();
 
 void log_debug_print(int to_file);
 
+void
+
 #endif

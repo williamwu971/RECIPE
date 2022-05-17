@@ -571,7 +571,7 @@ void log_debug_print(int to_file) {
     uint64_t len = gq.num;
     pthread_mutex_unlock(&gq.lock);
 
-    fprintf(file, "total logs used:%lu gq length:%lu\n", used, len);
+    printf("total logs used:%lu gq length:%lu\n", used, len);
 
     fflush(file);
 }
