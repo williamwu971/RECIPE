@@ -10,12 +10,6 @@ void (*which_memfree)(void *ptr);
 void *(*which_malloc)(size_t size);
 void (*which_free)(void *ptr);
 
-#define die(msg, args...) \
-   do {                         \
-      fprintf(stderr,"(%s,%d) " msg "\n", __FUNCTION__ , __LINE__, ##args); \
-      exit(-1); \
-   } while(0)
-
 using namespace std;
 
 #include "masstree.h"
