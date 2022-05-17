@@ -584,6 +584,8 @@ void log_start_perf(const char *perf_fn) {
     sprintf(command,
             "/home/blepers/linux/tools/perf/perf -p %d -o %s -g &",
             getppid(), perf_fn);
+
+    system(command);
 }
 
 void log_stop_perf() {
