@@ -21,8 +21,8 @@
 #include <libpmem.h>
 #include <omp.h>
 
-#define LOG_SIZE (4*1024*1024)
-#define LOG_MERGE_THRESHOLD (2*1024*1024)
+#define LOG_SIZE (4*1024*1024ULL)
+#define LOG_MERGE_THRESHOLD (2*1024*1024ULL)
 #define CACHE_LINE_SIZE 64
 #define GAR_QUEUE_LENGTH 2
 

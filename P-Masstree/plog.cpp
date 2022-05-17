@@ -40,6 +40,14 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads) {
     int old_num_threads = omp_get_num_threads();
     omp_set_num_threads(num_threads);
 
+    puts("rebuilding tree...");
+
+    for (uint64_t i = 0; i < lm.num_entries; i++) {
+        struct log *target_log = (struct log *) (log_meta + CACHE_LINE_SIZE * i);
+        target_log->freed.store(0);
+        target_log->available = LOG_SIZE;
+    }
+
     // process inserts first todo: OCCUPIED ENUM IS WRONG NOW
 #pragma omp parallel for schedule(dynamic, 1)
     for (uint64_t i = 0; i < lm.num_entries; i++) {
@@ -47,42 +55,67 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads) {
         // todo: not sure if this has overhead
         auto t = tree->getThreadInfo();
 
-        if (lm.entries[i][0] == OCCUPIED) {
+//        if (lm.entries[i][0] == OCCUPIED) {
 
-            char *end = big_map + (i + 1) * LOG_SIZE;
-            char *curr = big_map + i * LOG_SIZE;
-            struct log *current_log = (struct log *) (log_meta + CACHE_LINE_SIZE * i);
+        char *end = big_map + (i + 1) * LOG_SIZE;
+        char *curr = big_map + i * LOG_SIZE;
+        struct log *current_log = (struct log *) (log_meta + CACHE_LINE_SIZE * i);
 
-            while (curr < end) {
+        while (curr < end) {
 
-                struct log_cell *lc = (struct log_cell *) curr;
-                uint64_t total_size = sizeof(struct log_cell) + lc->value_size;
+            struct log_cell *lc = (struct log_cell *) curr;
 
-                if (!lc->is_delete) {
+            // if field of the struct is zero, then abort this one
+            if (lc->version == 0) break;
 
-                    struct log_cell *res = (struct log_cell *)
-                            tree->put_and_return(lc->key, lc, 1, t);
+            uint64_t total_size = sizeof(struct log_cell) + lc->value_size;
+            current_log->available -= total_size;
 
-                    // insert success and created a new key-value
-                    if (res == lc) {
-                        current_log->available -= total_size;
-                    }
-                        // replaced a value, should free some space in other log
-                    else if (res != NULL) {
+            if (!lc->is_delete) {
 
-                        uint64_t idx = (uint64_t) ((char *) res - big_map) / LOG_SIZE;
-                        struct log *target_log = (struct log *) (log_meta + CACHE_LINE_SIZE * idx);
-                        target_log->freed.fetch_add(sizeof(struct log_cell) + res->value_size);
-                    }
+                struct log_cell *res = (struct log_cell *)
+                        tree->put_and_return(lc->key, lc, 1, t);
 
-                } else {
-                    tree->del_and_return(lc->key, 1, lc->version, t);
+                // insert success and created a new key-value
+                // replaced a value, should free some space in other log
+                if (res != NULL && res != lc) {
+
+                    uint64_t idx = (uint64_t) ((char *) res - big_map) / LOG_SIZE;
+                    struct log *target_log = (struct log *) (log_meta + CACHE_LINE_SIZE * idx);
+                    target_log->freed.fetch_add(sizeof(struct log_cell) + res->value_size);
                 }
 
-                // todo: should probably update the metadata here
-                curr += sizeof(struct log_cell) + lc->value_size;
+            } else {
+                tree->del_and_return(lc->key, 1, lc->version, t);
+            }
+
+            // todo: should probably update the metadata here
+            curr += sizeof(struct log_cell) + lc->value_size;
+        }
+//        }
+    }
+
+    // sequentially reconstruct metadata
+    // from end to beginning
+    puts("rebuilding metadata");
+
+    lm.used = lm.num_entries;
+    lm.next_available = -1;
+
+    for (uint64_t i = lm.num_entries - 1;; i--) {
+        struct log *target_log = (struct log *) (log_meta + CACHE_LINE_SIZE * i);
+
+        if (target_log->available == 0 ||
+            target_log->freed.load() == LOG_SIZE - target_log->available) {
+
+            if (lm.used == i + 1) {
+                lm.used--;
+            } else {
+                lm.entries[i][0] = lm.next_available;
+                lm.next_available = i;
             }
         }
+        if (i == 0) break;
     }
 
     omp_set_num_threads(old_num_threads);
@@ -241,10 +274,10 @@ char *log_acquire(int write_thread_log) {
 
     end:
 
-    if (i > lm.num_entries) die("all logs are occupied");
+    if (i >= lm.num_entries) die("all logs are occupied");
 
     lm.entries[i][0] = OCCUPIED;
-    pmem_persist(lm.entries[i], sizeof(int));
+//    pmem_persist(lm.entries[i], sizeof(int));
 
     log_address = big_map + i * LOG_SIZE;
     if (write_thread_log) {
@@ -267,7 +300,7 @@ char *log_acquire(int write_thread_log) {
         thread_log->base = log_address;
         thread_log->curr = thread_log->base;
 
-        pmem_persist(thread_log, CACHE_LINE_SIZE);
+//        pmem_persist(thread_log, CACHE_LINE_SIZE);
     }
     pthread_mutex_unlock(&lm_lock);
     return log_address;
@@ -277,6 +310,7 @@ char *log_acquire(int write_thread_log) {
 void log_release(uint64_t idx) {
     pthread_mutex_lock(&lm_lock);
 
+    // todo: this persist is possibly unreliable (for recovery purpose)
     pmem_memset_persist(big_map + idx * LOG_SIZE, 0, LOG_SIZE);
 
 //    lm.entries[idx][0] = AVAILABLE;
@@ -285,7 +319,7 @@ void log_release(uint64_t idx) {
     lm.entries[idx][0] = lm.next_available;
     lm.next_available = idx;
 
-    pmem_persist(lm.entries[idx], sizeof(int));
+//    pmem_persist(lm.entries[idx], sizeof(int));
 
 
     pthread_mutex_unlock(&lm_lock);
