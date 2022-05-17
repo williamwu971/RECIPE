@@ -275,6 +275,7 @@ void run(char **argv) {
     int require_flush=0;
     int shuffle_keys=0;
     int use_perf=0;
+    int num_of_gc=0;
 
     printf("argv: ");
     for (int ac=0;ac<6;ac++){
@@ -351,7 +352,7 @@ void run(char **argv) {
         }
 
 
-        for (int gcc=0;gcc<6;gcc++){
+        for (int gcc=0;gcc<num_of_gc;gcc++){
             log_start_gc(tree);
         }
 
