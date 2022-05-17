@@ -278,7 +278,7 @@ void run(char **argv) {
     int num_of_gc=0;
 
     printf("argv: ");
-    for (int ac=0;ac<6;ac++){
+    for (int ac=0;ac<8;ac++){
         printf("%s ",argv[ac]);
         if (strcasestr(argv[ac],"index")){
             if (strcasestr(argv[ac],"pmem")){
