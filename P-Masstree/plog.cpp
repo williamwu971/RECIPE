@@ -583,7 +583,7 @@ int log_start_perf(const char *perf_fn) {
 
     sprintf(command,
             "/home/blepers/linux/tools/perf/perf record -p %d -o %s -g &",
-            getppid(), perf_fn);
+            getpid(), perf_fn);
 
     return system(command);
 }
