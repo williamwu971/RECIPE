@@ -604,3 +604,53 @@ int log_stop_perf() {
 
     return system("sudo killall -s INT -w perf");
 }
+
+
+void log_print_pmem_bandwidth(const char *perf_fn) {
+    const char *pmem_sticks[] = {
+            "uncore_imc_1/",
+            "uncore_imc_4/",
+            "uncore_imc_7/",
+            "uncore_imc_10/"
+    };
+    int length = 4;
+
+    FILE *file = fopen(perf_fn, "r");
+    if (file == NULL) return;
+    char buf[1024];
+
+    uint64_t read = 0;
+    uint64_t write = 0;
+    double elapsed;
+
+    while (fgets(buf, 1024, file)) {
+
+        char no_use[1024];
+
+        for (int i = 0; i < length; i++) {
+
+            if (strstr(buf, pmem_sticks[i])) {
+
+                uint64_t number;
+
+                sscanf(buf, "%lu %s", &number, no_use);
+
+                if (strstr(buf, "0xe3")) {
+                    read += number;
+                } else if (strstr(buf, "0xe7")) {
+                    write += number;
+                }
+
+                printf("adding %lu\n", number);
+            }
+        }
+        if (strstr(buf, "seconds")) {
+            sscanf(buf, "%lf %s %s %s", &elapsed, no_use, no_use, no_use);
+        }
+    }
+
+    double read_bw = (double) read * 64.0f / 1024.0f / 1024.0f / 1024.0f / elapsed;
+    double write_bw = (double) write * 64.0f / 1024.0f / 1024.0f / 1024.0f / elapsed;
+
+    printf("read: %fgb/s write:%fgb/s\n", read_bw, write_bw);
+}

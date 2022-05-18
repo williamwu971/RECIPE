@@ -119,4 +119,6 @@ int log_start_perf(const char *perf_fn);
 
 int log_stop_perf();
 
+float log_compute_pmem_bandwidth(const char* perf_fn);
+
 #endif
