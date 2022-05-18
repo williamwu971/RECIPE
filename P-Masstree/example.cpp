@@ -409,7 +409,7 @@ void run(char **argv) {
                 std::chrono::system_clock::now() - starttime);
 
         if (use_perf)log_stop_perf();
-        printf("Throughput: insert,%ld,%f ops/us\n", n, (n * 1.0) / duration.count());
+        printf("Throughput: insert,%ld,%f ops/us %f sec\n", n, (n * 1.0) / duration.count(),duration.count() / 1000000.0);
 //        printf("Elapsed time: insert,%ld,%f sec\n", n, duration.count() / 1000000.0);
         insert_throughput=(n * 1.0) / duration.count();
     }
@@ -461,7 +461,7 @@ void run(char **argv) {
 
         if (use_perf)log_stop_perf();
 
-        printf("Throughput: update,%ld,%f ops/us\n", n, (n * 1.0) / duration.count());
+        printf("Throughput: update,%ld,%f ops/us %f sec\n", n, (n * 1.0) / duration.count(),duration.count() / 1000000.0);
 //        printf("Elapsed time: delete,%ld,%f sec\n", n, duration.count() / 1000000.0);
         lookup_throughput=(n * 1.0) / duration.count();
     }
@@ -494,7 +494,7 @@ void run(char **argv) {
 
         if (use_perf)log_stop_perf();
 
-        printf("Throughput: lookup,%ld,%f ops/us\n", n, (n * 1.0) / duration.count());
+        printf("Throughput: lookup,%ld,%f ops/us %f sec\n", n, (n * 1.0) / duration.count(),duration.count() / 1000000.0);
 //        printf("Elapsed time: lookup,%ld,%f sec\n", n, duration.count() / 1000000.0);
     }
 
