@@ -42,7 +42,7 @@ value_location=("log")
 #value_location=("pmem")
 num_threads=(18)
 use_perf="yes"
-num_of_gc=6
+num_of_gc=8
 
 workload=100000000
 key_order="random"
