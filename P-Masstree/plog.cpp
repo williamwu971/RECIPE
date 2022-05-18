@@ -589,7 +589,7 @@ int log_start_perf(const char *perf_fn) {
             getpid(), perf_fn);
 
     sprintf(command,
-            "sudo /home/blepers/linux/tools/perf/perf stat -a --per-socket "
+            "sudo /home/blepers/linux/tools/perf/perf stat -a --per-socket -e"
             "uncore_imc_0/event=0xe7,umask=0x0/,uncore_imc_0/event=0xe7,umask=0x0/,"
             "uncore_imc_1/event=0xe7,umask=0x0/,uncore_imc_0/event=0xe7,umask=0x0/,"
             "uncore_imc_2/event=0xe7,umask=0x0/,uncore_imc_0/event=0xe7,umask=0x0/,"
@@ -601,7 +601,7 @@ int log_start_perf(const char *perf_fn) {
             "uncore_imc_8/event=0xe7,umask=0x0/,uncore_imc_0/event=0xe7,umask=0x0/,"
             "uncore_imc_9/event=0xe7,umask=0x0/,uncore_imc_0/event=0xe7,umask=0x0/,"
             "uncore_imc_10/event=0xe7,umask=0x0/,uncore_imc_0/event=0xe7,umask=0x0/,"
-            "uncore_imc_11/event=0xe7,umask=0x0/,uncore_imc_0/event=0xe7,umask=0x0/ record -o %s &", perf_fn);
+            "uncore_imc_11/event=0xe7,umask=0x0/,uncore_imc_0/event=0xe7,umask=0x0/ &");
 
     return system(command);
 }
