@@ -416,7 +416,7 @@ void run(char **argv) {
         log_debug_print(1);
     {
 
-        if (use_perf)log_start_perf("update.perf");
+        if (use_perf)log_start_perf(num_of_gc?"update_gc.perf":"update.perf");
 
         // Update
         auto starttime = std::chrono::system_clock::now();
