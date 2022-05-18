@@ -646,5 +646,5 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed) {
     double read_bw = (double) read * 64.0f / 1024.0f / 1024.0f / 1024.0f / elapsed;
     double write_bw = (double) write * 64.0f / 1024.0f / 1024.0f / 1024.0f / elapsed;
 
-    printf("read: %fgb/s write:%fgb/s\t", read_bw, write_bw);
+    printf("\nread: %fgb/s write:%fgb/s\n", read_bw, write_bw);
 }
