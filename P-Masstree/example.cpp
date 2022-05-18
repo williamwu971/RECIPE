@@ -276,6 +276,7 @@ void run(char **argv) {
     int shuffle_keys=0;
     int use_perf=0;
     int num_of_gc=0;
+    int show_log_usage=0;
 
     printf("argv: ");
     for (int ac=0;ac<8;ac++){
@@ -417,7 +418,7 @@ void run(char **argv) {
 //        printf("Elapsed time: insert,%ld,%f sec\n", n, duration.count() / 1000000.0);
         insert_throughput=(n * 1.0) / duration.count();
     }
-        log_debug_print(1);
+        log_debug_print(1,show_log_usage);
     {
 
         const char* perf_fn =num_of_gc?"update_gc.perf":"update.perf";
@@ -475,7 +476,7 @@ void run(char **argv) {
     }
 
     lookup:
-    log_debug_print(0);
+    log_debug_print(0,show_log_usage);
 
     {
         const char* perf_fn="lookup.perf";
@@ -509,7 +510,7 @@ void run(char **argv) {
 //        printf("Elapsed time: lookup,%ld,%f sec\n", n, duration.count() / 1000000.0);
     }
 
-    log_debug_print(0);
+    log_debug_print(0,show_log_usage);
     // logging throughput to files
 
     FILE* insert_throughput_file=fopen("insert.csv","a");
@@ -527,7 +528,7 @@ void run(char **argv) {
     fclose(latency_file);
 
     log_join_all_pc();
-    log_debug_print(2);
+    log_debug_print(2,show_log_usage);
 
     delete[] keys;
 }

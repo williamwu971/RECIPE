@@ -113,7 +113,7 @@ void log_start_gc(masstree::masstree *);
 
 void log_join_all_pc();
 
-void log_debug_print(int to_file);
+void log_debug_print(int to_file, int show);
 
 int log_start_perf(const char *perf_fn);
 

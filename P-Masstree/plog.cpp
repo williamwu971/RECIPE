@@ -532,7 +532,7 @@ void log_join_all_pc() {
 }
 
 
-void log_debug_print(int to_file) {
+void log_debug_print(int to_file, int show) {
 
     FILE *file = stdout;
 
@@ -571,7 +571,7 @@ void log_debug_print(int to_file) {
     uint64_t len = gq.num;
     pthread_mutex_unlock(&gq.lock);
 
-//    printf("total logs used:%lu gq length:%lu\n", used, len);
+    if (show)printf("total logs used:%lu gq length:%lu\n", used, len);
 
     fflush(file);
 }
