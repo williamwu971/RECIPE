@@ -593,7 +593,7 @@ int log_start_perf(const char *perf_fn) {
             "uncore_imc_1/event=0xe3,umask=0x0/,uncore_imc_1/event=0xe7,umask=0x0/,"
             "uncore_imc_4/event=0xe3,umask=0x0/,uncore_imc_4/event=0xe7,umask=0x0/,"
             "uncore_imc_7/event=0xe3,umask=0x0/,uncore_imc_7/event=0xe7,umask=0x0/,"
-            "uncore_imc_10/event=0xe3,umask=0x0/,uncore_imc_10/event=0xe7,umask=0x0/ > %s &",
+            "uncore_imc_10/event=0xe3,umask=0x0/,uncore_imc_10/event=0xe7,umask=0x0/ > %s 2>&1 &",
             perf_fn
     );
 
