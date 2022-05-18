@@ -606,7 +606,7 @@ int log_stop_perf() {
 }
 
 
-void log_print_pmem_bandwidth(const char *perf_fn) {
+void log_print_pmem_bandwidth(const char *perf_fn, double elapsed) {
     const char *pmem_sticks[] = {
             "uncore_imc_1/",
             "uncore_imc_4/",
@@ -621,7 +621,6 @@ void log_print_pmem_bandwidth(const char *perf_fn) {
 
     uint64_t read = 0;
     uint64_t write = 0;
-    double elapsed;
 
     while (fgets(buf, 1024, file)) {
 
@@ -643,9 +642,6 @@ void log_print_pmem_bandwidth(const char *perf_fn) {
 
                 printf("adding %lu\n", number);
             }
-        }
-        if (strstr(buf, "seconds")) {
-            sscanf(buf, "%lf %s %s %s", &elapsed, no_use, no_use, no_use);
         }
     }
 
