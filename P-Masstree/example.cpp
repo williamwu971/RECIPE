@@ -377,7 +377,8 @@ void run(char **argv) {
     printf("operation,n,ops/s\n");
 
     {
-        if (use_perf)log_start_perf("insert.perf");
+        const char* perf_fn = "insert.perf";
+        if (use_perf)log_start_perf(perf_fn);
 
         // Build tree
         auto starttime = std::chrono::system_clock::now();
@@ -408,15 +409,19 @@ void run(char **argv) {
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
                 std::chrono::system_clock::now() - starttime);
 
-        if (use_perf)log_stop_perf();
-        printf("Throughput: insert,%ld,%f ops/us %f sec\n", n, (n * 1.0) / duration.count(),duration.count() / 1000000.0);
+        if (use_perf){
+            log_stop_perf();
+            log_print_pmem_bandwidth(perf_fn,duration.count() / 1000000.0);
+        }
+        printf("Throughput: insert,%ld,%f ops/us\n", n, (n * 1.0) / duration.count());
 //        printf("Elapsed time: insert,%ld,%f sec\n", n, duration.count() / 1000000.0);
         insert_throughput=(n * 1.0) / duration.count();
     }
         log_debug_print(1);
     {
 
-        if (use_perf)log_start_perf(num_of_gc?"update_gc.perf":"update.perf");
+        const char* perf_fn =num_of_gc?"update_gc.perf":"update.perf";
+        if (use_perf)log_start_perf(perf_fn);
 
         // Update
         auto starttime = std::chrono::system_clock::now();
@@ -459,9 +464,12 @@ void run(char **argv) {
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
                 std::chrono::system_clock::now() - starttime);
 
-        if (use_perf)log_stop_perf();
+        if (use_perf){
+            log_stop_perf();
+            log_print_pmem_bandwidth(perf_fn,duration.count() / 1000000.0);
+        }
 
-        printf("Throughput: update,%ld,%f ops/us %f sec\n", n, (n * 1.0) / duration.count(),duration.count() / 1000000.0);
+        printf("Throughput: update,%ld,%f ops/us\n", n, (n * 1.0) / duration.count());
 //        printf("Elapsed time: delete,%ld,%f sec\n", n, duration.count() / 1000000.0);
         lookup_throughput=(n * 1.0) / duration.count();
     }
@@ -470,8 +478,8 @@ void run(char **argv) {
     log_debug_print(0);
 
     {
-
-        if (use_perf)log_start_perf("lookup.perf");
+        const char* perf_fn="lookup.perf";
+        if (use_perf)log_start_perf(perf_fn);
 
         // Lookup
         auto starttime = std::chrono::system_clock::now();
@@ -492,9 +500,12 @@ void run(char **argv) {
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
                 std::chrono::system_clock::now() - starttime);
 
-        if (use_perf)log_stop_perf();
+        if (use_perf){
+            log_stop_perf();
+            log_print_pmem_bandwidth(perf_fn,duration.count() / 1000000.0);
+        }
 
-        printf("Throughput: lookup,%ld,%f ops/us %f sec\n", n, (n * 1.0) / duration.count(),duration.count() / 1000000.0);
+        printf("Throughput: lookup,%ld,%f ops/us\n", n, (n * 1.0) / duration.count());
 //        printf("Elapsed time: lookup,%ld,%f sec\n", n, duration.count() / 1000000.0);
     }
 
