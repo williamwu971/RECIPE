@@ -593,5 +593,5 @@ int log_start_perf(const char *perf_fn) {
 
 int log_stop_perf() {
 
-    return system("sudo killall -w perf");
+    return system("sudo killall -s INT -w perf");
 }
