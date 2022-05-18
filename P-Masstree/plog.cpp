@@ -639,8 +639,6 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed) {
                 } else if (strstr(buf, "0xe7")) {
                     write += number;
                 }
-
-                printf("adding %lu\n", number);
             }
         }
     }
