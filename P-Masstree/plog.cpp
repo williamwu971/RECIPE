@@ -620,13 +620,13 @@ int log_start_perf(const char *perf_fn) {
             perf_fn
     );
 
-    sprintf(command,
-            "/home/blepers/linux/tools/perf/perf record --call-graph=dwarf -p %d -o %s -g >> perf.out 2>&1 &",
-            getpid(), perf_fn);
-
-    sprintf(command,
-            "/home/blepers/linux/tools/perf/perf record -p %d -o %s -g >> perf.out 2>&1 &",
-            getpid(), perf_fn);
+//    sprintf(command,
+//            "/home/blepers/linux/tools/perf/perf record --call-graph=dwarf -p %d -o %s -g >> perf.out 2>&1 &",
+//            getpid(), perf_fn);
+//
+//    sprintf(command,
+//            "/home/blepers/linux/tools/perf/perf record -p %d -o %s -g >> perf.out 2>&1 &",
+//            getpid(), perf_fn);
 
 //    printf("perf: %s\n", command);
     int res = system(command);
