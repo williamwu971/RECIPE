@@ -205,9 +205,9 @@ void log_init(uint64_t num_logs) {
     }
 
     omp_set_num_threads(23);
-#pragma omp parallel for schedule(dynamic,1)
-    for (uint64_t fs=0;fs<file_size;fs+=(2*1024*1024ULL)){
-        pmem_memset_persist(big_map+fs, 0, (2*1024*1024ULL));
+#pragma omp parallel for schedule(dynamic, 1)
+    for (uint64_t fs = 0; fs < file_size; fs += (2 * 1024 * 1024ULL)) {
+        pmem_memset_persist(big_map + fs, 0, (2 * 1024 * 1024ULL));
     }
 
 
@@ -620,10 +620,10 @@ int log_start_perf(const char *perf_fn) {
             perf_fn
     );
 
-//    sprintf(command,
-//            "/home/blepers/linux/tools/perf/perf record --call-graph=dwarf -p %d -o %s -g >> perf.out 2>&1 &",
-//            getpid(), perf_fn);
-//
+    sprintf(command,
+            "/home/blepers/linux/tools/perf/perf record --call-graph -p %d -o %s -g >> perf.out 2>&1 &",
+            getpid(), perf_fn);
+
 //    sprintf(command,
 //            "/home/blepers/linux/tools/perf/perf record -p %d -o %s -g >> perf.out 2>&1 &",
 //            getpid(), perf_fn);
