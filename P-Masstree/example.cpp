@@ -6,8 +6,11 @@
 
 
 int (*which_memalign)(void **memptr, size_t alignment, size_t size);
+
 void (*which_memfree)(void *ptr);
+
 void *(*which_malloc)(size_t size);
+
 void (*which_free)(void *ptr);
 
 using namespace std;
@@ -15,29 +18,28 @@ using namespace std;
 #include "masstree.h"
 #include "ralloc.hpp"
 
-inline int RP_memalign(void **memptr, size_t alignment, size_t size){
-    *memptr=RP_malloc(size+(alignment-size%alignment));
+inline int RP_memalign(void **memptr, size_t alignment, size_t size) {
+    *memptr = RP_malloc(size + (alignment - size % alignment));
     return 0;
 }
 
 //static constexpr uint64_t CACHE_LINE_SIZE = 64;
 
-static inline void clflush(char *data, int len, bool front, bool back)
-{
-    volatile char *ptr = (char *)((unsigned long)data &~(CACHE_LINE_SIZE-1));
+static inline void clflush(char *data, int len, bool front, bool back) {
+    volatile char *ptr = (char *) ((unsigned long) data & ~(CACHE_LINE_SIZE - 1));
     if (front)
-        asm volatile("sfence":::"memory");
-    for(; ptr<data+len; ptr+=CACHE_LINE_SIZE){
+        asm volatile("sfence":: :"memory");
+    for (; ptr < data + len; ptr += CACHE_LINE_SIZE) {
 #ifdef CLFLUSH
         asm volatile("clflush %0" : "+m" (*(volatile char *)ptr));
 #elif CLFLUSH_OPT
         asm volatile(".byte 0x66; clflush %0" : "+m" (*(volatile char *)(ptr)));
 #elif CLWB
-        asm volatile(".byte 0x66; xsaveopt %0" : "+m" (*(volatile char *)(ptr)));
+        asm volatile(".byte 0x66; xsaveopt %0" : "+m" (*(volatile char *) (ptr)));
 #endif
     }
     if (back)
-        asm volatile("sfence":::"memory");
+        asm volatile("sfence":: :"memory");
 }
 
 
@@ -52,42 +54,43 @@ static double zeta2theta; //initialized in init_zipf_generator function
 static long countforzeta; //initialized in init_zipf_generator function
 
 
-double zetastatic(long st, long n, double initialsum){
-    double sum=initialsum;
-    for (long i=st; i<n; i++){
-        sum+=1/(pow(i+1,theta));
+double zetastatic(long st, long n, double initialsum) {
+    double sum = initialsum;
+    for (long i = st; i < n; i++) {
+        sum += 1 / (pow(i + 1, theta));
     }
     return sum;
 }
 
 double zeta(long st, long n, double initialsum) {
-    countforzeta=n;
-    return zetastatic(st,n,initialsum);
+    countforzeta = n;
+    return zetastatic(st, n, initialsum);
 }
 
 static unsigned int __thread seed;
 
-long next_long(long itemcount){
+long next_long(long itemcount) {
     //from "Quickly Generating Billion-Record Synthetic Databases", Jim Gray et al, SIGMOD 1994
-    if (itemcount!=countforzeta){
-        if (itemcount>countforzeta){
-            printf("WARNING: Incrementally recomputing Zipfian distribtion. (itemcount= %ld; countforzeta= %ld)", itemcount, countforzeta);
+    if (itemcount != countforzeta) {
+        if (itemcount > countforzeta) {
+            printf("WARNING: Incrementally recomputing Zipfian distribtion. (itemcount= %ld; countforzeta= %ld)",
+                   itemcount, countforzeta);
             //we have added more items. can compute zetan incrementally, which is cheaper
-            zetan = zeta(countforzeta,itemcount,zetan);
-            eta = ( 1 - pow(2.0/items,1-theta) ) / (1-zeta2theta/zetan);
+            zetan = zeta(countforzeta, itemcount, zetan);
+            eta = (1 - pow(2.0 / items, 1 - theta)) / (1 - zeta2theta / zetan);
         }
     }
 
-    double u = (double)(rand_r(&seed)%RAND_MAX) / ((double)RAND_MAX);
-    double uz=u*zetan;
-    if (uz < 1.0){
+    double u = (double) (rand_r(&seed) % RAND_MAX) / ((double) RAND_MAX);
+    double uz = u * zetan;
+    if (uz < 1.0) {
         return base;
     }
 
-    if (uz<1.0 + pow(0.5,theta)) {
+    if (uz < 1.0 + pow(0.5, theta)) {
         return base + 1;
     }
-    long ret = base + (long)((itemcount) * pow(eta*u - eta + 1, alpha));
+    long ret = base + (long) ((itemcount) * pow(eta * u - eta + 1, alpha));
     return ret;
 }
 
@@ -116,7 +119,7 @@ typedef enum available_bench {
 /* Is the current request a get or a put? */
 static int random_get_put(int test) {
     long random = uniform_next() % 100;
-    switch(test) {
+    switch (test) {
         case 0: // A
             return random >= 50;
         case 1: // B
@@ -137,30 +140,30 @@ struct item_metadata {
     // value
 };
 
-void init_zipf_generator(long min, long max){
-    items = max-min+1;
+void init_zipf_generator(long min, long max) {
+    items = max - min + 1;
     base = min;
     zipfianconstant = 0.99;
     theta = zipfianconstant;
     zeta2theta = zeta(0, 2, 0);
-    alpha = 1.0/(1.0-theta);
-    zetan = zetastatic(0, max-min+1, 0);
+    alpha = 1.0 / (1.0 - theta);
+    zetan = zetastatic(0, max - min + 1, 0);
     countforzeta = items;
-    eta=(1 - pow(2.0/items,1-theta) )/(1-zeta2theta/zetan);
+    eta = (1 - pow(2.0 / items, 1 - theta)) / (1 - zeta2theta / zetan);
 
     zipf_next();
 }
 
 char *create_unique_item(size_t item_size, uint64_t uid) {
-    char *item = (char*)which_malloc(item_size);
-    struct item_metadata *meta = (struct item_metadata *)item;
+    char *item = (char *) which_malloc(item_size);
+    struct item_metadata *meta = (struct item_metadata *) item;
     meta->key_size = 8;
     meta->value_size = item_size - 8 - sizeof(*meta);
 
     char *item_key = &item[sizeof(*meta)];
     char *item_value = &item[sizeof(*meta) + meta->key_size];
-    *(uint64_t*)item_key = uid;
-    *(uint64_t*)item_value = uid;
+    *(uint64_t *) item_key = uid;
+    *(uint64_t *) item_value = uid;
     return item;
 }
 
@@ -168,7 +171,7 @@ char *create_unique_item(size_t item_size, uint64_t uid) {
 static void _launch_ycsb(int test, int nb_requests, int zipfian) {
 
     init_zipf_generator(0, nb_requests - 1);
-    long (*rand_next)(void) = zipfian?zipf_next:uniform_next;
+    long (*rand_next)(void) = zipfian ? zipf_next : uniform_next;
     masstree::masstree *tree = new masstree::masstree();
 
     auto starttime = std::chrono::system_clock::now();
@@ -176,13 +179,13 @@ static void _launch_ycsb(int test, int nb_requests, int zipfian) {
         auto t = tree->getThreadInfo();
         for (uint64_t i = scope.begin(); i != scope.end(); i++) {
 
-            long fkey=rand_next();
-            char* item= create_unique_item(1024,fkey);
+            long fkey = rand_next();
+            char *item = create_unique_item(1024, fkey);
 
-            if(random_get_put(test)) { // In these tests we update with a given probability
+            if (random_get_put(test)) { // In these tests we update with a given probability
                 tree->put(fkey, item, t);
             } else { // or we read
-                tree->get(fkey,t);
+                tree->get(fkey, t);
 //                uint64_t *ret = reinterpret_cast<uint64_t *> (tree->get((char *)keys[i]->fkey, t));
 //                if (ap == UNIFORM && (uint64_t) ret != keys[i]->value) {
 //                    printf("[MASS] search key = %lu, search value = %lu\n", keys[i]->value, ret);
@@ -200,7 +203,7 @@ static void _launch_ycsb(int test, int nb_requests, int zipfian) {
 static void _launch_ycsb_e(int test, int nb_requests, int zipfian) {
 
     init_zipf_generator(0, nb_requests - 1);
-    long (*rand_next)(void) = zipfian?zipf_next:uniform_next;
+    long (*rand_next)(void) = zipfian ? zipf_next : uniform_next;
     masstree::masstree *tree = new masstree::masstree();
 
     auto starttime = std::chrono::system_clock::now();
@@ -209,13 +212,13 @@ static void _launch_ycsb_e(int test, int nb_requests, int zipfian) {
         for (uint64_t i = scope.begin(); i != scope.end(); i++) {
 
             long key = rand_next();
-            char* item = create_unique_item(1024,key);
+            char *item = create_unique_item(1024, key);
 
-            if(random_get_put(test)) {
+            if (random_get_put(test)) {
                 tree->put(key, item, t);
-            }else{
+            } else {
                 uint64_t buf[200];
-                int ret = tree->scan(key, uniform_next()%99+1, buf, t);
+                int ret = tree->scan(key, uniform_next() % 99 + 1, buf, t);
             }
 
         }
@@ -226,8 +229,8 @@ static void _launch_ycsb_e(int test, int nb_requests, int zipfian) {
 }
 
 /* Generic interface */
-static void launch_ycsb( bench_t b,uint64_t nb_requests) {
-    switch(b) {
+static void launch_ycsb(bench_t b, uint64_t nb_requests) {
+    switch (b) {
         case ycsb_a_uniform:
             return _launch_ycsb(0, nb_requests, 0);
         case ycsb_b_uniform:
@@ -266,76 +269,75 @@ void run(char **argv) {
 
 
     // todo: make templates/cpp (modular) <- important
-    which_memalign=posix_memalign;
-    which_memfree=free;
-    which_malloc=malloc;
-    which_free=free;
-    int require_RP_init=0;
-    int require_log_init=0;
-    int require_flush=0;
-    int shuffle_keys=0;
-    int use_perf=0;
-    int num_of_gc=0;
-    int show_log_usage=0;
+    which_memalign = posix_memalign;
+    which_memfree = free;
+    which_malloc = malloc;
+    which_free = free;
+    int require_RP_init = 0;
+    int require_log_init = 0;
+    int require_flush = 0;
+    int shuffle_keys = 0;
+    int use_perf = 0;
+    int num_of_gc = 0;
+    int show_log_usage = 0;
 
     printf("argv: ");
-    for (int ac=0;ac<8;ac++){
-        printf("%s ",argv[ac]);
-        if (strcasestr(argv[ac],"index")){
-            if (strcasestr(argv[ac],"pmem")){
-                which_memalign=RP_memalign;
-                which_memfree=RP_free;
-                require_RP_init=1;
-            }else if (strcasestr(argv[ac],"log")){
-                which_memalign=log_memalign;
-                which_memfree=log_free;
-                require_log_init=1;
+    for (int ac = 0; ac < 8; ac++) {
+        printf("%s ", argv[ac]);
+        if (strcasestr(argv[ac], "index")) {
+            if (strcasestr(argv[ac], "pmem")) {
+                which_memalign = RP_memalign;
+                which_memfree = RP_free;
+                require_RP_init = 1;
+            } else if (strcasestr(argv[ac], "log")) {
+                which_memalign = log_memalign;
+                which_memfree = log_free;
+                require_log_init = 1;
             }
-        }else if (strcasestr(argv[ac],"value")){
-            if (strcasestr(argv[ac],"pmem")){
-                which_malloc=RP_malloc;
-                which_free=RP_free;
-                require_RP_init=1;
-                require_flush=1;
-            }else if (strcasestr(argv[ac],"log")){
-                which_malloc=log_malloc;
-                which_free=log_free;
-                require_log_init=1;
-                require_flush=1;
+        } else if (strcasestr(argv[ac], "value")) {
+            if (strcasestr(argv[ac], "pmem")) {
+                which_malloc = RP_malloc;
+                which_free = RP_free;
+                require_RP_init = 1;
+                require_flush = 1;
+            } else if (strcasestr(argv[ac], "log")) {
+                which_malloc = log_malloc;
+                which_free = log_free;
+                require_log_init = 1;
+                require_flush = 1;
             }
-        }else if (strcasestr(argv[ac],"key")){
-            if (strcasestr(argv[ac],"rand")){
-                shuffle_keys=1;
+        } else if (strcasestr(argv[ac], "key")) {
+            if (strcasestr(argv[ac], "rand")) {
+                shuffle_keys = 1;
             }
-        }else if (strcasestr(argv[ac],"ycsb")){
-            launch_ycsb(ycsb_a_uniform,n);
+        } else if (strcasestr(argv[ac], "ycsb")) {
+            launch_ycsb(ycsb_a_uniform, n);
             exit(0);
-        }else if (strcasestr(argv[ac],"perf")){
-            if (strcasestr(argv[ac],"y")){
-                use_perf=1;
+        } else if (strcasestr(argv[ac], "perf")) {
+            if (strcasestr(argv[ac], "y")) {
+                use_perf = 1;
             }
-        }else if (strcasestr(argv[ac],"gc")){
-            num_of_gc=atoi(strcasestr(argv[ac],"=")+1);
+        } else if (strcasestr(argv[ac], "gc")) {
+            num_of_gc = atoi(strcasestr(argv[ac], "=") + 1);
         }
     }
     printf("\n");
 
-    if (require_RP_init){
+    if (require_RP_init) {
         printf("init RP... ");
-        RP_init("masstree",64*1024*1024*1024ULL);
+        RP_init("masstree", 64 * 1024 * 1024 * 1024ULL);
     }
 
     if (use_perf)printf("WARNING: PERF is enabled!\n");
-    if (num_of_gc)printf("WARNING: GC is enabled %d\n",num_of_gc);
+    if (num_of_gc)printf("WARNING: GC is enabled %d\n", num_of_gc);
 
     // todo: add latency tracker and perf
 
     // (TP dropped) shuffle the array todo: random keys (make it faster)
-    if (shuffle_keys){
+    if (shuffle_keys) {
         printf("shuffle keys... ");
         srand(time(NULL));
-        for (uint64_t i = 0; i < n - 1; i++)
-        {
+        for (uint64_t i = 0; i < n - 1; i++) {
             uint64_t j = i + rand() / (RAND_MAX / (n - i) + 1);
             uint64_t t = keys[j];
             keys[j] = keys[i];
@@ -345,24 +347,24 @@ void run(char **argv) {
 
     double insert_throughput;
     double lookup_throughput;
-    u_int64_t* latencies=(u_int64_t*)malloc(sizeof(u_int64_t)*n);
+    u_int64_t *latencies = (u_int64_t *) malloc(sizeof(u_int64_t) * n);
 
     masstree::masstree *tree = new masstree::masstree();
 
-    if (require_log_init){
+    if (require_log_init) {
         printf("init log and GC... ");
         char const *inode_fn = "/pmem0/masstree_log_inodes";
-         char const *log_fn = "/pmem0/masstree_log_logs";
+        char const *log_fn = "/pmem0/masstree_log_logs";
 
-        if (access(inode_fn,F_OK)==0 && access(log_fn,F_OK)==0){
-            log_recover(tree,n);
+        if (access(inode_fn, F_OK) == 0 && access(log_fn, F_OK) == 0) {
+            log_recover(tree, n);
             goto lookup;
-        }else{
+        } else {
             log_init(10240);
         }
 
 
-        for (int gcc=0;gcc<num_of_gc;gcc++){
+        for (int gcc = 0; gcc < num_of_gc; gcc++) {
             log_start_gc(tree);
         }
 
@@ -378,7 +380,7 @@ void run(char **argv) {
     printf("operation,n,ops/s\n");
 
     {
-        const char* perf_fn = "insert.perf";
+        const char *perf_fn = "insert.perf";
         if (use_perf)log_start_perf(perf_fn);
 
         // Build tree
@@ -390,38 +392,38 @@ void run(char **argv) {
 
                 // todo: size randomize (YCSB/Facebook workload)
                 int size = sizeof(uint64_t);
-                char* raw = (char*)which_malloc(sizeof(struct log_cell)+size);
+                char *raw = (char *) which_malloc(sizeof(struct log_cell) + size);
 
-                struct log_cell* lc = (struct log_cell*)raw;
+                struct log_cell *lc = (struct log_cell *) raw;
                 lc->value_size = size;
-                lc->is_delete=0;
-                lc->key=keys[i];
+                lc->is_delete = 0;
+                lc->key = keys[i];
                 rdtscll(lc->version);
 
-                uint64_t *value=(uint64_t*)(raw+sizeof(struct log_cell));
-                *value=rands[i];
+                uint64_t *value = (uint64_t *) (raw + sizeof(struct log_cell));
+                *value = rands[i];
 
                 // flush value before inserting todo: should this exist for DRAM+DRAM?
 
-                if (require_flush) clflush((char*)value,size,true,true);
-                tree->put_and_return(keys[i], raw,1, t);
+                if (require_flush) clflush((char *) value, size, true, true);
+                tree->put_and_return(keys[i], raw, 1, t);
             }
         });
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
                 std::chrono::system_clock::now() - starttime);
 
-        if (use_perf){
+        if (use_perf) {
             log_stop_perf();
-            log_print_pmem_bandwidth(perf_fn,duration.count() / 1000000.0);
+            log_print_pmem_bandwidth(perf_fn, duration.count() / 1000000.0);
         }
-        printf("Throughput: insert,%ld,%f ops/us\n", n, (n * 1.0) / duration.count());
-//        printf("Elapsed time: insert,%ld,%f sec\n", n, duration.count() / 1000000.0);
-        insert_throughput=(n * 1.0) / duration.count();
+        printf("Throughput: insert,%ld,%f ops/us %f sec\n",
+               n, (n * 1.0) / duration.count(), duration.count() / 1000000.0);
+        insert_throughput = (n * 1.0) / duration.count();
     }
-        log_debug_print(1,show_log_usage);
+    log_debug_print(1, show_log_usage);
     {
 
-        const char* perf_fn =num_of_gc?"update_gc.perf":"update.perf";
+        const char *perf_fn = num_of_gc ? "update_gc.perf" : "update.perf";
         if (use_perf)log_start_perf(perf_fn);
 
         // Update
@@ -430,7 +432,7 @@ void run(char **argv) {
             auto t = tree->getThreadInfo();
             for (uint64_t i = range.begin(); i != range.end(); i++) {
 
-                u_int64_t a,b;
+                u_int64_t a, b;
                 rdtscll(a);
 
 //                char* raw =(char*) tree->get(keys[i], t);
@@ -439,47 +441,47 @@ void run(char **argv) {
 //                uint64_t *ret = reinterpret_cast<uint64_t *> (tree->get(keys[i], t));
 
                 int size = sizeof(uint64_t);
-                char* raw = (char*)which_malloc(sizeof(struct log_cell)+size);
+                char *raw = (char *) which_malloc(sizeof(struct log_cell) + size);
 
-                struct log_cell* lc = (struct log_cell*)raw;
-                lc->value_size=size;
-                lc->is_delete=0;
-                lc->key=keys[i];
+                struct log_cell *lc = (struct log_cell *) raw;
+                lc->value_size = size;
+                lc->is_delete = 0;
+                lc->key = keys[i];
                 rdtscll(lc->version);
 
-                uint64_t *value=(uint64_t*)(raw+sizeof(struct log_cell));
-                *value=keys[i];
+                uint64_t *value = (uint64_t *) (raw + sizeof(struct log_cell));
+                *value = keys[i];
 
                 // flush value before inserting todo: should this exist for DRAM+DRAM?
 
-                if (require_flush) clflush((char*)value,size,true,true);
+                if (require_flush) clflush((char *) value, size, true, true);
 
-                void* old = (char*)tree->put_and_return(keys[i],raw,0,t);
+                void *old = (char *) tree->put_and_return(keys[i], raw, 0, t);
 
                 which_free(old);
                 rdtscll(b);
-                latencies[i]=b - a;
+                latencies[i] = b - a;
             }
         });
 
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
                 std::chrono::system_clock::now() - starttime);
 
-        if (use_perf){
+        if (use_perf) {
             log_stop_perf();
-            log_print_pmem_bandwidth(perf_fn,duration.count() / 1000000.0);
+            log_print_pmem_bandwidth(perf_fn, duration.count() / 1000000.0);
         }
 
-        printf("Throughput: update,%ld,%f ops/us\n", n, (n * 1.0) / duration.count());
-//        printf("Elapsed time: delete,%ld,%f sec\n", n, duration.count() / 1000000.0);
-        lookup_throughput=(n * 1.0) / duration.count();
+        printf("Throughput: update,%ld,%f ops/us %f sec\n",
+               n, (n * 1.0) / duration.count(), duration.count() / 1000000.0);
+        lookup_throughput = (n * 1.0) / duration.count();
     }
 
     lookup:
-    log_debug_print(0,show_log_usage);
+    log_debug_print(0, show_log_usage);
 
     {
-        const char* perf_fn="lookup.perf";
+        const char *perf_fn = "lookup.perf";
         if (use_perf)log_start_perf(perf_fn);
 
         // Lookup
@@ -489,8 +491,8 @@ void run(char **argv) {
             for (uint64_t i = range.begin(); i != range.end(); i++) {
 
 
-                char* raw = (char*)tree->get(keys[i], t);
-                uint64_t *ret = reinterpret_cast<uint64_t *> (raw+sizeof(struct log_cell));
+                char *raw = (char *) tree->get(keys[i], t);
+                uint64_t *ret = reinterpret_cast<uint64_t *> (raw + sizeof(struct log_cell));
                 if (*ret != keys[i]) {
                     std::cout << "wrong value read: " << *ret << " expected:" << keys[i] << std::endl;
                     throw;
@@ -501,26 +503,26 @@ void run(char **argv) {
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
                 std::chrono::system_clock::now() - starttime);
 
-        if (use_perf){
+        if (use_perf) {
             log_stop_perf();
-            log_print_pmem_bandwidth(perf_fn,duration.count() / 1000000.0);
+            log_print_pmem_bandwidth(perf_fn, duration.count() / 1000000.0);
         }
 
-        printf("Throughput: lookup,%ld,%f ops/us\n", n, (n * 1.0) / duration.count());
-//        printf("Elapsed time: lookup,%ld,%f sec\n", n, duration.count() / 1000000.0);
+        printf("Throughput: lookup,%ld,%f ops/us %f sec\n",
+               n, (n * 1.0) / duration.count(), duration.count() / 1000000.0);
     }
 
-    log_debug_print(0,show_log_usage);
+    log_debug_print(0, show_log_usage);
     // logging throughput to files
 
-    FILE* insert_throughput_file=fopen("insert.csv","a");
-    FILE* lookup_throughput_file=fopen("lookup.csv","a");
-    FILE* latency_file=fopen("latency.csv","w");
+    FILE *insert_throughput_file = fopen("insert.csv", "a");
+    FILE *lookup_throughput_file = fopen("lookup.csv", "a");
+    FILE *latency_file = fopen("latency.csv", "w");
 
-    fprintf(insert_throughput_file,"%.2f,", insert_throughput);
-    fprintf(lookup_throughput_file,"%.2f,", lookup_throughput);
-    for (uint64_t idx = 0;idx<n;idx++){
-        fprintf(latency_file,"%lu\n",latencies[idx]);
+    fprintf(insert_throughput_file, "%.2f,", insert_throughput);
+    fprintf(lookup_throughput_file, "%.2f,", lookup_throughput);
+    for (uint64_t idx = 0; idx < n; idx++) {
+        fprintf(latency_file, "%lu\n", latencies[idx]);
     }
 
     fclose(insert_throughput_file);
@@ -528,37 +530,38 @@ void run(char **argv) {
     fclose(latency_file);
 
     log_join_all_pc();
-    log_debug_print(2,show_log_usage);
+    log_debug_print(2, show_log_usage);
 
     delete[] keys;
 }
 
 int main(int argc, char **argv) {
     if (argc != 8) {
-        if (argc==3){
+        if (argc == 3) {
 
-            char** new_argv = (char**)malloc(sizeof(char*)*8);
-            new_argv[0]=argv[0];
-            new_argv[1]=argv[1];
-            new_argv[2]=argv[2];
+            char **new_argv = (char **) malloc(sizeof(char *) * 8);
+            new_argv[0] = argv[0];
+            new_argv[1] = argv[1];
+            new_argv[2] = argv[2];
 
-            new_argv[3]=(char*)malloc(sizeof(char)*64);
-            new_argv[4]=(char*)malloc(sizeof(char)*64);
-            new_argv[5]=(char*)malloc(sizeof(char)*64);
-            new_argv[6]=(char*)malloc(sizeof(char)*64);
-            new_argv[7]=(char*)malloc(sizeof(char)*64);
+            new_argv[3] = (char *) malloc(sizeof(char) * 64);
+            new_argv[4] = (char *) malloc(sizeof(char) * 64);
+            new_argv[5] = (char *) malloc(sizeof(char) * 64);
+            new_argv[6] = (char *) malloc(sizeof(char) * 64);
+            new_argv[7] = (char *) malloc(sizeof(char) * 64);
 
-            sprintf(new_argv[3],"index=dram");
-            sprintf(new_argv[4],"value=log");
-            sprintf(new_argv[5],"key=random");
-            sprintf(new_argv[6],"perf=yes");
-            sprintf(new_argv[7],"gc=0");
+            sprintf(new_argv[3], "index=dram");
+            sprintf(new_argv[4], "value=log");
+            sprintf(new_argv[5], "key=random");
+            sprintf(new_argv[6], "perf=yes");
+            sprintf(new_argv[7], "gc=0");
 
-            argv=new_argv;
+            argv = new_argv;
 
             goto start;
         }
-        printf("usage: %s [n] [nthreads]\nn: number of keys (integer)\nnthreads: number of threads (integer)\n", argv[0]);
+        printf("usage: %s [n] [nthreads]\nn: number of keys (integer)\nnthreads: number of threads (integer)\n",
+               argv[0]);
         return 1;
     }
 
