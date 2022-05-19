@@ -631,9 +631,9 @@ int log_stop_perf() {
     sprintf(command, "sudo killall -s INT -w perf");
 
 //    printf("perf: %s\n", command);
-    int res = system(command);
     rdtscll(perf_stop_rtd);
 
+    int res = system(command);
     return res;
 }
 
