@@ -522,9 +522,10 @@ void log_end_gc() {
     gc_ids = (pthread_t *) realloc(gc_ids, sizeof(pthread_t) * (--num_gcs));
 }
 
-void log_join_all_pc() {
+void log_join_all_gc() {
 
     gc_stopped = 1;
+    puts("waiting gc");
 
     pthread_cond_broadcast(&gq.cond);
 

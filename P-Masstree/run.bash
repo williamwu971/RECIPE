@@ -44,7 +44,7 @@ num_threads=(18)
 use_perf="yes"
 num_of_gc=8
 
-workload=1000000
+workload=10000000
 key_order="random"
 #key_order="seq"
 

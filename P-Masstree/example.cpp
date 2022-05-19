@@ -546,7 +546,7 @@ void run(char **argv) {
     fclose(lookup_throughput_file);
     fclose(latency_file);
 
-    log_join_all_pc();
+    log_join_all_gc();
     log_debug_print(2, show_log_usage);
 
     delete[] keys;
