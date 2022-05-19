@@ -393,11 +393,14 @@ void run(char **argv) {
 
                 // todo: size randomize (YCSB/Facebook workload)
 //                int size = sizeof(uint64_t);
-                int size = 1024 - sizeof(struct log_cell);
-                char *raw = (char *) which_malloc(sizeof(struct log_cell) + size);
+//                int size = 1024 - sizeof(struct log_cell);
+//                char *raw = (char *) which_malloc(sizeof(struct log_cell) + size);
+
+                int raw_size = 1024;
+                char *raw = (char *) which_malloc(raw_size);
 
                 struct log_cell *lc = (struct log_cell *) raw;
-                lc->value_size = size;
+                lc->value_size = raw_size - sizeof(struct log_cell);
                 lc->is_delete = 0;
                 lc->key = keys[i];
                 rdtscll(lc->version);
@@ -407,7 +410,9 @@ void run(char **argv) {
 
                 // flush value before inserting todo: should this exist for DRAM+DRAM?
 
-                if (require_flush) clflush((char *) value, size, true, true);
+                if (require_flush) {
+                    clflush(raw, raw_size, true, true);
+                }
                 tree->put_and_return(keys[i], raw, 1, t);
             }
         });
@@ -443,11 +448,14 @@ void run(char **argv) {
 //                uint64_t *ret = reinterpret_cast<uint64_t *> (tree->get(keys[i], t));
 
 //                int size = sizeof(uint64_t);
-                int size = 1024 - sizeof(struct log_cell);
-                char *raw = (char *) which_malloc(sizeof(struct log_cell) + size);
+//                int size = 1024 - sizeof(struct log_cell);
+//                char *raw = (char *) which_malloc(sizeof(struct log_cell) + size);
+
+                int raw_size = 1024;
+                char *raw = (char *) which_malloc(raw_size);
 
                 struct log_cell *lc = (struct log_cell *) raw;
-                lc->value_size = size;
+                lc->value_size = raw_size - sizeof(struct log_cell);
                 lc->is_delete = 0;
                 lc->key = keys[i];
                 rdtscll(lc->version);
@@ -458,7 +466,7 @@ void run(char **argv) {
                 // flush value before inserting todo: should this exist for DRAM+DRAM?
 
                 if (require_flush) {
-                    clflush((char *) value, size, true, true);
+                    clflush(raw, raw_size, true, true);
                 }
 
                 void *old = (char *) tree->put_and_return(keys[i], raw, 0, t);
