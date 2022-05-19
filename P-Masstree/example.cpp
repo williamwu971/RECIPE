@@ -346,6 +346,7 @@ void run(char **argv) {
     }
 
     double insert_throughput;
+    double update_throughput;
     double lookup_throughput;
     u_int64_t *latencies = (u_int64_t *) malloc(sizeof(u_int64_t) * n);
 
@@ -391,7 +392,8 @@ void run(char **argv) {
 //                tree->put(keys[i], &keys[i], t);
 
                 // todo: size randomize (YCSB/Facebook workload)
-                int size = sizeof(uint64_t);
+//                int size = sizeof(uint64_t);
+                int size = 1024-sizeof(struct log_cell);
                 char *raw = (char *) which_malloc(sizeof(struct log_cell) + size);
 
                 struct log_cell *lc = (struct log_cell *) raw;
@@ -440,7 +442,8 @@ void run(char **argv) {
 //                uint64_t *ret = reinterpret_cast<uint64_t *> (raw+sizeof(struct log_cell));
 //                uint64_t *ret = reinterpret_cast<uint64_t *> (tree->get(keys[i], t));
 
-                int size = sizeof(uint64_t);
+//                int size = sizeof(uint64_t);
+                int size = 1024-sizeof(struct log_cell);
                 char *raw = (char *) which_malloc(sizeof(struct log_cell) + size);
 
                 struct log_cell *lc = (struct log_cell *) raw;
@@ -474,7 +477,7 @@ void run(char **argv) {
 
         printf("Throughput: update,%ld,%.2f ops/us %.2f sec\n",
                n, (n * 1.0) / duration.count(), duration.count() / 1000000.0);
-        lookup_throughput = (n * 1.0) / duration.count();
+        update_throughput = (n * 1.0) / duration.count();
     }
 
     lookup:
@@ -510,22 +513,26 @@ void run(char **argv) {
 
         printf("Throughput: lookup,%ld,%.2f ops/us %.2f sec\n",
                n, (n * 1.0) / duration.count(), duration.count() / 1000000.0);
+        lookup_throughput = (n * 1.0) / duration.count();
     }
 
     log_debug_print(0, show_log_usage);
     // logging throughput to files
 
     FILE *insert_throughput_file = fopen("insert.csv", "a");
+    FILE *update_throughput_file = fopen("update.csv", "a");
     FILE *lookup_throughput_file = fopen("lookup.csv", "a");
     FILE *latency_file = fopen("latency.csv", "w");
 
     fprintf(insert_throughput_file, "%.2f,", insert_throughput);
+    fprintf(update_throughput_file, "%.2f,", update_throughput);
     fprintf(lookup_throughput_file, "%.2f,", lookup_throughput);
     for (uint64_t idx = 0; idx < n; idx++) {
         fprintf(latency_file, "%lu\n", latencies[idx]);
     }
 
     fclose(insert_throughput_file);
+    fclose(update_throughput_file);
     fclose(lookup_throughput_file);
     fclose(latency_file);
 
