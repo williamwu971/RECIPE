@@ -412,7 +412,8 @@ void run(char **argv) {
                 // flush value before inserting todo: should this exist for DRAM+DRAM?
 
                 if (require_flush) {
-                    clflush(raw, raw_size, true, true);
+//                    clflush(raw, raw_size, true, true);
+                    pmem_persist(raw, raw_size);
                 }
                 tree->put_and_return(keys[i], raw, 1, t);
             }
@@ -468,7 +469,8 @@ void run(char **argv) {
                 // flush value before inserting todo: should this exist for DRAM+DRAM?
 
                 if (require_flush) {
-                    clflush(raw, raw_size, true, true);
+//                    clflush(raw, raw_size, true, true);
+                    pmem_persist(raw, raw_size);
                 }
 
                 void *old = (char *) tree->put_and_return(keys[i], raw, 0, t);
