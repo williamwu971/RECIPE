@@ -393,7 +393,7 @@ void run(char **argv) {
 
                 // todo: size randomize (YCSB/Facebook workload)
 //                int size = sizeof(uint64_t);
-                int size = 1024-sizeof(struct log_cell);
+                int size = 1024 - sizeof(struct log_cell);
                 char *raw = (char *) which_malloc(sizeof(struct log_cell) + size);
 
                 struct log_cell *lc = (struct log_cell *) raw;
@@ -443,7 +443,7 @@ void run(char **argv) {
 //                uint64_t *ret = reinterpret_cast<uint64_t *> (tree->get(keys[i], t));
 
 //                int size = sizeof(uint64_t);
-                int size = 1024-sizeof(struct log_cell);
+                int size = 1024 - sizeof(struct log_cell);
                 char *raw = (char *) which_malloc(sizeof(struct log_cell) + size);
 
                 struct log_cell *lc = (struct log_cell *) raw;
@@ -457,7 +457,9 @@ void run(char **argv) {
 
                 // flush value before inserting todo: should this exist for DRAM+DRAM?
 
-                if (require_flush) clflush((char *) value, size, true, true);
+                if (require_flush) {
+                    clflush((char *) value, size, true, true);
+                }
 
                 void *old = (char *) tree->put_and_return(keys[i], raw, 0, t);
 
