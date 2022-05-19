@@ -583,14 +583,6 @@ void log_debug_print(int to_file, int show) {
 int log_start_perf(const char *perf_fn) {
 
     char command[1024];
-
-//    sprintf(command,
-//            "/home/blepers/linux/tools/perf/perf record --call-graph=dwarf -p %d -o %s -g >> perf.out 2>&1 &",
-//            getpid(), perf_fn);
-    sprintf(command,
-            "/home/blepers/linux/tools/perf/perf stat -e cpu/event=0xe7,umask=0x00/ -p %d record -o %s &",
-            getpid(), perf_fn);
-
     sprintf(command,
             "sudo /home/blepers/linux/tools/perf/perf stat -e"
 
@@ -618,6 +610,10 @@ int log_start_perf(const char *perf_fn) {
             "> %s 2>&1 &",
             perf_fn
     );
+
+    sprintf(command,
+            "/home/blepers/linux/tools/perf/perf record --call-graph=dwarf -p %d -o %s -g >> perf.out 2>&1 &",
+            getpid(), perf_fn);
 
 //    printf("perf: %s\n", command);
     int res = system(command);
