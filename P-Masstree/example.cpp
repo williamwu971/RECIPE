@@ -396,7 +396,7 @@ void run(char **argv) {
 //                int size = 1024 - sizeof(struct log_cell);
 //                char *raw = (char *) which_malloc(sizeof(struct log_cell) + size);
 
-                int raw_size = 1024;
+                int raw_size = sizeof(struct log_cell)+sizeof(uint64_t);
                 char *raw = (char *) which_malloc(raw_size);
 
                 struct log_cell *lc = (struct log_cell *) raw;
@@ -453,7 +453,7 @@ void run(char **argv) {
 //                int size = 1024 - sizeof(struct log_cell);
 //                char *raw = (char *) which_malloc(sizeof(struct log_cell) + size);
 
-                int raw_size = 1024;
+                int raw_size = sizeof(struct log_cell)+sizeof(uint64_t);
                 char *raw = (char *) which_malloc(raw_size);
 
                 struct log_cell *lc = (struct log_cell *) raw;
