@@ -279,7 +279,7 @@ void run(char **argv) {
     int shuffle_keys = 0;
     int use_perf = 0;
     int num_of_gc = 0;
-    int show_log_usage = 0;
+    int show_log_usage = 1;
 
     printf("argv: ");
     for (int ac = 0; ac < 8; ac++) {
