@@ -627,11 +627,12 @@ int log_start_perf(const char *perf_fn) {
 
 int log_stop_perf() {
 
+    rdtscll(perf_stop_rtd);
+
     char command[1024];
     sprintf(command, "sudo killall -s INT -w perf");
-
 //    printf("perf: %s\n", command);
-    rdtscll(perf_stop_rtd);
+
 
     int res = system(command);
     return res;
