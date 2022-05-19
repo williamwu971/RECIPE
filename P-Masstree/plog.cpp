@@ -22,6 +22,8 @@ int gc_stopped = 0;
 pthread_t *gc_ids = NULL;
 int num_gcs;
 
+uint64_t perf_start_rtd;
+uint64_t perf_stop_rtd;
 
 void log_structs_size_check() {
 
@@ -617,7 +619,10 @@ int log_start_perf(const char *perf_fn) {
     );
 
 //    printf("perf: %s\n", command);
-    return system(command);
+    int res = system(command);
+    rdtscll(perf_start_rtd);
+
+    return res;
 }
 
 int log_stop_perf() {
@@ -626,7 +631,10 @@ int log_stop_perf() {
     sprintf(command, "sudo killall -s INT -w perf");
 
 //    printf("perf: %s\n", command);
-    return system(command);
+    int res = system(command);
+    rdtscll(perf_stop_rtd);
+
+    return res;
 }
 
 
@@ -645,6 +653,8 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed) {
 
     uint64_t read = 0;
     uint64_t write = 0;
+    uint64_t read_b_cycle = 0;
+    uint64_t write_b_cycle = 0;
 
     while (fgets(buf, 1024, file)) {
 
@@ -658,8 +668,12 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed) {
 
                 sscanf(buf, "%lu %s", &number, no_use);
 
-                if (strstr(buf, "0xe3")) {
+                if (strstr(buf, "0xe2")) {
+                    if (number > read_b_cycle)read_b_cycle = number;
+                } else if (strstr(buf, "0xe3")) {
                     read += number;
+                } else if (strstr(buf, "0xe6")) {
+                    if (number > write_b_cycle)write_b_cycle = number;
                 } else if (strstr(buf, "0xe7")) {
                     write += number;
                 }
@@ -667,8 +681,13 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed) {
         }
     }
 
+    uint64_t elapsed_cycles = perf_stop_rtd - perf_start_rtd;
+
+    double read_b_percent = (double) read_b_cycle / (double) elapsed_cycles;
     double read_bw = (double) read * 64.0f / 1024.0f / 1024.0f / 1024.0f / elapsed;
+    double write_b_percent = (double) write_b_cycle / (double) elapsed_cycles;
     double write_bw = (double) write * 64.0f / 1024.0f / 1024.0f / 1024.0f / elapsed;
 
-    printf("\nread: %fgb/s write:%fgb/s\n", read_bw, write_bw);
+    printf("\nread: %.2f%% %.2fgb/s write: %.2f%% %.2fgb/s\n",
+           read_b_percent, read_bw, write_b_percent, write_bw);
 }
