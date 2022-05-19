@@ -423,7 +423,7 @@ void run(char **argv) {
 
         if (use_perf) {
             log_stop_perf();
-            //log_print_pmem_bandwidth(perf_fn, duration.count() / 1000000.0);
+            log_print_pmem_bandwidth(perf_fn, duration.count() / 1000000.0);
         }
         printf("Throughput: insert,%ld,%.2f ops/us %.2f sec\n",
                n, (n * 1.0) / duration.count(), duration.count() / 1000000.0);
@@ -486,7 +486,7 @@ void run(char **argv) {
 
         if (use_perf) {
             log_stop_perf();
-            //log_print_pmem_bandwidth(perf_fn, duration.count() / 1000000.0);
+            log_print_pmem_bandwidth(perf_fn, duration.count() / 1000000.0);
         }
 
         printf("Throughput: update,%ld,%.2f ops/us %.2f sec\n",
@@ -522,7 +522,7 @@ void run(char **argv) {
 
         if (use_perf) {
             log_stop_perf();
-            //log_print_pmem_bandwidth(perf_fn, duration.count() / 1000000.0);
+            log_print_pmem_bandwidth(perf_fn, duration.count() / 1000000.0);
         }
 
         printf("Throughput: lookup,%ld,%.2f ops/us %.2f sec\n",
