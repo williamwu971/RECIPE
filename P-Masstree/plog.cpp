@@ -616,7 +616,7 @@ int log_start_perf(const char *perf_fn) {
             perf_fn
     );
 
-    printf("perf: %s\n", command);
+//    printf("perf: %s\n", command);
     return system(command);
 }
 
@@ -625,7 +625,7 @@ int log_stop_perf() {
     char command[1024];
     sprintf(command, "sudo killall -s INT -w perf");
 
-    printf("perf: %s\n", command);
+//    printf("perf: %s\n", command);
     return system(command);
 }
 

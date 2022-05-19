@@ -325,6 +325,7 @@ void run(char **argv) {
         RP_init("masstree",64*1024*1024*1024ULL);
     }
 
+    if (use_perf)printf("WARNING: PERF is enabled!\n");
     if (num_of_gc)printf("WARNING: GC is enabled %d\n",num_of_gc);
 
     // todo: add latency tracker and perf
