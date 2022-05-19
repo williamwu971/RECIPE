@@ -24,6 +24,7 @@ int num_gcs;
 
 uint64_t perf_start_rtd;
 uint64_t perf_stop_rtd;
+int perf_stat = 1;
 
 void log_structs_size_check() {
 
@@ -623,6 +624,7 @@ int log_start_perf(const char *perf_fn) {
     sprintf(command,
             "/home/blepers/linux/tools/perf/perf record --call-graph -p %d -o %s -g >> perf.out 2>&1 &",
             getpid(), perf_fn);
+    perf_stat = 0;
 
 //    sprintf(command,
 //            "/home/blepers/linux/tools/perf/perf record -p %d -o %s -g >> perf.out 2>&1 &",
@@ -650,6 +652,9 @@ int log_stop_perf() {
 
 
 void log_print_pmem_bandwidth(const char *perf_fn, double elapsed) {
+
+    if (!perf_stat) return;
+
     const char *pmem_sticks[] = {
             "uncore_imc_1/",
             "uncore_imc_4/",
