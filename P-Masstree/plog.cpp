@@ -590,10 +590,29 @@ int log_start_perf(const char *perf_fn) {
 
     sprintf(command,
             "sudo /home/blepers/linux/tools/perf/perf stat -e"
-            "uncore_imc_1/event=0xe3,umask=0x0/,uncore_imc_1/event=0xe7,umask=0x0/,"
-            "uncore_imc_4/event=0xe3,umask=0x0/,uncore_imc_4/event=0xe7,umask=0x0/,"
-            "uncore_imc_7/event=0xe3,umask=0x0/,uncore_imc_7/event=0xe7,umask=0x0/,"
-            "uncore_imc_10/event=0xe3,umask=0x0/,uncore_imc_10/event=0xe7,umask=0x0/ > %s 2>&1 &",
+
+            "uncore_imc_1/event=0xe2,umask=0x0/,"
+            "uncore_imc_1/event=0xe3,umask=0x0/,"
+            "uncore_imc_1/event=0xe6,umask=0x0/,"
+            "uncore_imc_1/event=0xe7,umask=0x0/,"
+
+            "uncore_imc_4/event=0xe2,umask=0x0/,"
+            "uncore_imc_4/event=0xe3,umask=0x0/,"
+            "uncore_imc_4/event=0xe6,umask=0x0/,"
+            "uncore_imc_4/event=0xe7,umask=0x0/,"
+
+            "uncore_imc_7/event=0xe2,umask=0x0/,"
+            "uncore_imc_7/event=0xe3,umask=0x0/,"
+            "uncore_imc_7/event=0xe6,umask=0x0/,"
+            "uncore_imc_7/event=0xe7,umask=0x0/,"
+
+            "uncore_imc_10/event=0xe2,umask=0x0/,"
+            "uncore_imc_10/event=0xe3,umask=0x0/,"
+            "uncore_imc_10/event=0xe6,umask=0x0/,"
+            "uncore_imc_10/event=0xe7,umask=0x0/ "
+
+
+            "> %s 2>&1 &",
             perf_fn
     );
 
