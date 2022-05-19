@@ -184,6 +184,7 @@ void log_init(uint64_t num_logs) {
     if (inodes == NULL || mapped_len != file_size || !is_pmem) {
         die("inodes:%p mapped_len:%zu is_pmem:%d", inodes, mapped_len, is_pmem);
     }
+    pmem_memset_persist(inodes, 0, file_size);
 
     log_meta = (char *) pmem_map_file(META_FN, file_size,
                                       PMEM_FILE_CREATE | PMEM_FILE_EXCL, 00777,
@@ -192,6 +193,7 @@ void log_init(uint64_t num_logs) {
     if (log_meta == NULL || mapped_len != file_size || !is_pmem) {
         die("log_meta:%p mapped_len:%zu is_pmem:%d", inodes, mapped_len, is_pmem);
     }
+    pmem_memset_persist(log_meta, 0, file_size);
 
     file_size = num_logs * LOG_SIZE;
     big_map = (char *) pmem_map_file(LOG_FN, file_size,
@@ -201,6 +203,7 @@ void log_init(uint64_t num_logs) {
     if (big_map == NULL || mapped_len != file_size || !is_pmem) {
         die("big_map:%p mapped_len:%zu is_pmem:%d", big_map, mapped_len, is_pmem);
     }
+    pmem_memset_persist(big_map, 0, file_size);
 
     // inodes
     lm.num_entries = num_logs;
