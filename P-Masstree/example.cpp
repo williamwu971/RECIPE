@@ -407,6 +407,7 @@ void run(char **argv) {
 
                 uint64_t *value = (uint64_t *) (raw + sizeof(struct log_cell));
                 *value = rands[i];
+                memset(value + 1, 7, raw_size - sizeof(struct log_cell) - sizeof(uint64_t));
 
                 // flush value before inserting todo: should this exist for DRAM+DRAM?
 
@@ -462,6 +463,7 @@ void run(char **argv) {
 
                 uint64_t *value = (uint64_t *) (raw + sizeof(struct log_cell));
                 *value = keys[i];
+                memset(value + 1, 7, raw_size - sizeof(struct log_cell) - sizeof(uint64_t));
 
                 // flush value before inserting todo: should this exist for DRAM+DRAM?
 
