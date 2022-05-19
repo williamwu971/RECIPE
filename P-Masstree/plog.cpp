@@ -203,7 +203,13 @@ void log_init(uint64_t num_logs) {
     if (big_map == NULL || mapped_len != file_size || !is_pmem) {
         die("big_map:%p mapped_len:%zu is_pmem:%d", big_map, mapped_len, is_pmem);
     }
-    pmem_memset_persist(big_map, 0, file_size);
+
+    omp_set_num_threads(16);
+#pragma omp parallel for schedule(dynamic,1)
+    for (uint64_t fs=0;fs<file_size;fs+=CACHE_LINE_SIZE){
+        pmem_memset_persist(big_map+fs, 0, CACHE_LINE_SIZE);
+    }
+
 
     // inodes
     lm.num_entries = num_logs;
