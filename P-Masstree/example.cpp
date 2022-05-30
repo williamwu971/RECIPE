@@ -280,9 +280,10 @@ void run(char **argv) {
     int use_perf = 0;
     int num_of_gc = 0;
     int show_log_usage = 1;
+    int record_latency = 0;
 
     printf("argv: ");
-    for (int ac = 0; ac < 8; ac++) {
+    for (int ac = 0; ac < 9; ac++) {
         printf("%s ", argv[ac]);
         if (strcasestr(argv[ac], "index")) {
             if (strcasestr(argv[ac], "pmem")) {
@@ -319,6 +320,10 @@ void run(char **argv) {
             }
         } else if (strcasestr(argv[ac], "gc")) {
             num_of_gc = atoi(strcasestr(argv[ac], "=") + 1);
+        } else if (strcasestr(argv[ac], "latency")) {
+            if (strcasestr(argv[ac], "y")) {
+                record_latency = 1;
+            }
         }
     }
     printf("\n");
@@ -396,7 +401,7 @@ void run(char **argv) {
 //                int size = 1024 - sizeof(struct log_cell);
 //                char *raw = (char *) which_malloc(sizeof(struct log_cell) + size);
 
-                int raw_size = sizeof(struct log_cell)+sizeof(uint64_t);
+                int raw_size = sizeof(struct log_cell) + sizeof(uint64_t);
                 char *raw = (char *) which_malloc(raw_size);
 
                 struct log_cell *lc = (struct log_cell *) raw;
@@ -442,7 +447,8 @@ void run(char **argv) {
             for (uint64_t i = range.begin(); i != range.end(); i++) {
 
                 u_int64_t a, b;
-                rdtscll(a);
+
+                if (record_latency) rdtscll(a);
 
 //                char* raw =(char*) tree->get(keys[i], t);
 //                char* raw = (char*)tree->del_and_return(keys[i],0,0,t);
@@ -453,7 +459,7 @@ void run(char **argv) {
 //                int size = 1024 - sizeof(struct log_cell);
 //                char *raw = (char *) which_malloc(sizeof(struct log_cell) + size);
 
-                int raw_size = sizeof(struct log_cell)+sizeof(uint64_t);
+                int raw_size = sizeof(struct log_cell) + sizeof(uint64_t);
                 char *raw = (char *) which_malloc(raw_size);
 
                 struct log_cell *lc = (struct log_cell *) raw;
@@ -476,8 +482,11 @@ void run(char **argv) {
                 void *old = (char *) tree->put_and_return(keys[i], raw, 0, t);
 
                 which_free(old);
-                rdtscll(b);
-                latencies[i] = b - a;
+
+                if (record_latency) {
+                    rdtscll(b);
+                    latencies[i] = b - a;
+                }
             }
         });
 
@@ -536,19 +545,25 @@ void run(char **argv) {
     FILE *insert_throughput_file = fopen("insert.csv", "a");
     FILE *update_throughput_file = fopen("update.csv", "a");
     FILE *lookup_throughput_file = fopen("lookup.csv", "a");
-    FILE *latency_file = fopen("latency.csv", "w");
+
 
     fprintf(insert_throughput_file, "%.2f,", insert_throughput);
     fprintf(update_throughput_file, "%.2f,", update_throughput);
     fprintf(lookup_throughput_file, "%.2f,", lookup_throughput);
-    for (uint64_t idx = 0; idx < n; idx++) {
-//        fprintf(latency_file, "%lu\n", latencies[idx]);
-    }
+
 
     fclose(insert_throughput_file);
     fclose(update_throughput_file);
     fclose(lookup_throughput_file);
-    fclose(latency_file);
+
+
+    if (record_latency) {
+        FILE *latency_file = fopen("latency.csv", "w");
+        for (uint64_t idx = 0; idx < n; idx++) {
+            fprintf(latency_file, "%lu\n", latencies[idx]);
+        }
+        fclose(latency_file);
+    }
 
     log_join_all_gc();
     log_debug_print(2, show_log_usage);
@@ -560,7 +575,7 @@ int main(int argc, char **argv) {
     if (argc != 8) {
         if (argc == 3) {
 
-            char **new_argv = (char **) malloc(sizeof(char *) * 8);
+            char **new_argv = (char **) malloc(sizeof(char *) * 9);
             new_argv[0] = argv[0];
             new_argv[1] = argv[1];
             new_argv[2] = argv[2];
@@ -570,12 +585,14 @@ int main(int argc, char **argv) {
             new_argv[5] = (char *) malloc(sizeof(char) * 64);
             new_argv[6] = (char *) malloc(sizeof(char) * 64);
             new_argv[7] = (char *) malloc(sizeof(char) * 64);
+            new_argv[8] = (char *) malloc(sizeof(char) * 64);
 
             sprintf(new_argv[3], "index=dram");
             sprintf(new_argv[4], "value=log");
             sprintf(new_argv[5], "key=random");
             sprintf(new_argv[6], "perf=yes");
             sprintf(new_argv[7], "gc=0");
+            sprintf(new_argv[8], "latency=yes");
 
             argv = new_argv;
 
