@@ -447,7 +447,7 @@ void run(char **argv) {
 
                 u_int64_t a = 0, b;
 
-                if (record_latency) rdtscll(a);
+//                if (record_latency) rdtscll(a);
 
 //                char* raw =(char*) tree->get(keys[i], t);
 //                char* raw = (char*)tree->del_and_return(keys[i],0,0,t);
@@ -469,7 +469,8 @@ void run(char **argv) {
                 *value = keys[i];
                 memset(value + 1, 7, raw_size - sizeof(struct log_cell) - sizeof(uint64_t));
 
-                if (record_latency) rdtscll(b);
+//                if (record_latency) rdtscll(b);
+                if (record_latency) rdtscll(a);
 
                 // flush value before inserting todo: should this exist for DRAM+DRAM?
 
@@ -477,6 +478,7 @@ void run(char **argv) {
 //                    clflush(raw, raw_size, true, true);
                     pmem_persist(raw, raw_size);
                 }
+                if (record_latency) rdtscll(b);
 
                 void *old = (char *) tree->put_and_return(keys[i], raw, 0, t);
 
