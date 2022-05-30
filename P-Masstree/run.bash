@@ -47,7 +47,7 @@ value_location=("log")
 #value_location=("pmem")
 num_threads=(18)
 use_perf="yes"
-record_latency="yes"
+record_latency="no"
 num_of_gc=0
 
 workload=10000000
