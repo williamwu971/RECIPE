@@ -599,7 +599,7 @@ int main(int argc, char **argv) {
             sprintf(new_argv[6], "perf=yes");
             sprintf(new_argv[7], "gc=0");
             sprintf(new_argv[8], "latency=yes");
-            sprintf(new_argv[9], "value_size=1024");
+            sprintf(new_argv[9], "value_size=%lu", sizeof(struct log_cell) + sizeof(uint64_t));
 
             argv = new_argv;
 
