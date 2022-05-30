@@ -63,7 +63,7 @@ for fp in "${file_prefixes[@]}"; do
   echo "" >>$fp.csv
 done
 
-rm -f latency.csv
+rm -f latency.csv out.png
 
 for i in "${index_location[@]}"; do
   for v in "${value_location[@]}"; do
@@ -79,7 +79,7 @@ for i in "${index_location[@]}"; do
       rm -rf /pmem0/*
       #      /home/blepers/linux/tools/perf/perf record -g ./example "$workload" "$n" index="$i" value="$v" key="$key_order"
       ./example "$workload" "$n" index="$i" value="$v" key="$key_order" perf="$use_perf" gc="$num_of_gc" latency="$record_latency"
-            python3 ../graph.py --r latency.csv --ylim 1000000
+      python3 ../graph.py --r latency.csv --ylim 1000000
       #      mv out.png out_"$i"_"$v".png
       #      ./example 100 "$n" index="$i" value="$v"
     done
