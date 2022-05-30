@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 
+# backup perf files
+for pfn in *.perf; do
+  [ -f "$pfn" ] || break
+  cp "$pfn" "$pfn".old
+done
+
 for var in "$@"; do
   if [ "$var" = "build" ]; then
 
@@ -65,13 +71,6 @@ done
 
 rm -f latency.csv out.png
 
-# backup perf files
-for pfn in *.perf; do
-  [ -f "$pfn" ] || break
-  echo copy "$pfn" to "$pfn".old
-  cp "$pfn" "$pfn".old
-done
-
 for i in "${index_location[@]}"; do
   for v in "${value_location[@]}"; do
 
@@ -100,4 +99,10 @@ for i in "${index_location[@]}"; do
 
   done
 
+done
+
+# move perf files
+for pfn in *.perf; do
+  [ -f "$pfn" ] || break
+  mv "$pfn" ../
 done
