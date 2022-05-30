@@ -286,7 +286,7 @@ void run(char **argv) {
     printf("argv: ");
     for (int ac = 0; ac < 10; ac++) {
         printf("%s ", argv[ac]);
-        if (strcasestr(argv[ac], "index")) {
+        if (strcasestr(argv[ac], "index=")) {
             if (strcasestr(argv[ac], "pmem")) {
                 which_memalign = RP_memalign;
                 which_memfree = RP_free;
@@ -296,7 +296,7 @@ void run(char **argv) {
                 which_memfree = log_free;
                 require_log_init = 1;
             }
-        } else if (strcasestr(argv[ac], "value")) {
+        } else if (strcasestr(argv[ac], "value=")) {
             if (strcasestr(argv[ac], "pmem")) {
                 which_malloc = RP_malloc;
                 which_free = RP_free;
@@ -308,24 +308,24 @@ void run(char **argv) {
                 require_log_init = 1;
                 require_flush = 1;
             }
-        } else if (strcasestr(argv[ac], "key")) {
+        } else if (strcasestr(argv[ac], "key=")) {
             if (strcasestr(argv[ac], "rand")) {
                 shuffle_keys = 1;
             }
         } else if (strcasestr(argv[ac], "ycsb")) {
             launch_ycsb(ycsb_a_uniform, n);
             exit(0);
-        } else if (strcasestr(argv[ac], "perf")) {
+        } else if (strcasestr(argv[ac], "perf=")) {
             if (strcasestr(argv[ac], "y")) {
                 use_perf = 1;
             }
-        } else if (strcasestr(argv[ac], "gc")) {
+        } else if (strcasestr(argv[ac], "gc=")) {
             num_of_gc = atoi(strcasestr(argv[ac], "=") + 1);
-        } else if (strcasestr(argv[ac], "latency")) {
+        } else if (strcasestr(argv[ac], "latency=")) {
             if (strcasestr(argv[ac], "y")) {
                 record_latency = 1;
             }
-        } else if (strcasestr(argv[ac], "size")) {
+        } else if (strcasestr(argv[ac], "value_size=")) {
             int desired_size = atoi(strcasestr(argv[ac], "=") + 1);
             if (desired_size > value_size) value_size = desired_size;
         }
