@@ -68,6 +68,7 @@ rm -f latency.csv out.png
 # backup perf files
 for pfn in *.perf; do
   [ -f "$pfn" ] || break
+  echo copy "$pfn" to "$pfn".old
   cp "$pfn" "$pfn".old
 done
 
