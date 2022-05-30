@@ -469,6 +469,8 @@ void run(char **argv) {
                 *value = keys[i];
                 memset(value + 1, 7, raw_size - sizeof(struct log_cell) - sizeof(uint64_t));
 
+                if (record_latency) rdtscll(b);
+
                 // flush value before inserting todo: should this exist for DRAM+DRAM?
 
                 if (require_flush) {
@@ -480,10 +482,8 @@ void run(char **argv) {
 
                 which_free(old);
 
-                if (record_latency) {
-                    rdtscll(b);
-                    latencies[i] = b - a;
-                }
+                if (record_latency)latencies[i] = b - a;
+
             }
         });
 
