@@ -627,8 +627,8 @@ int log_start_perf(const char *perf_fn) {
     perf_stat = 0;
 
     sprintf(command,
-            "sudo /home/blepers/linux/tools/perf/perf stat -e SQ_MISC.SQ_FUL -p %d &",
-            getpid()
+            "sudo /home/blepers/linux/tools/perf/perf stat -e SQ_MISC.SQ_FULL -p %d > %s 2>&1 &",
+            getpid(), perf_fn
     );
 
 //    sprintf(command,
