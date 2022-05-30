@@ -477,11 +477,11 @@ void run(char **argv) {
                     pmem_persist(raw, raw_size);
                 }
 //                if (record_latency) rdtscll(b);
-                if (record_latency) rdtscll(a);
+                if (record_latency) rdtscll_fence(a);
 
                 void *old = (char *) tree->put_and_return(keys[i], raw, 0, t);
 
-                if (record_latency) rdtscll(b);
+                if (record_latency) rdtscll_fence(b);
 
                 which_free(old);
 

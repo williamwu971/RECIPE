@@ -41,6 +41,11 @@
 
 #ifdef __x86_64__
 #define rdtscll(val) { \
+       unsigned int __a,__d;                                        \
+       asm volatile("rdtsc" : "=a" (__a), "=d" (__d));              \
+       (val) = ((unsigned long)__a) | (((unsigned long)__d)<<32);   \
+ }
+#define rdtscll_fence(val) { \
         asm volatile("sfence":::"memory");                \
        unsigned int __a,__d;                                        \
        asm volatile("rdtsc" : "=a" (__a), "=d" (__d));              \
