@@ -1,22 +1,21 @@
 #!/usr/bin/env bash
 
-
 for var in "$@"; do
   if [ "$var" = "build" ]; then
 
-#    apt-get update
-#    apt-get install -y build-essential cmake libboost-all-dev libpapi-dev default-jdk
-#    apt-get install -y libtbb-dev libjemalloc-dev libpmem-dev
+    #    apt-get update
+    #    apt-get install -y build-essential cmake libboost-all-dev libpapi-dev default-jdk
+    #    apt-get install -y libtbb-dev libjemalloc-dev libpmem-dev
 
     # build ralloc
-#    cd $PREFIX/ralloc/test/ || exit
-#    git pull
-#    make clean
-#    make libralloc.a
-#    if [ ! -f libralloc.a ]; then
-#      echo "Failed to build ralloc!"
-#      exit
-#    fi
+    #    cd $PREFIX/ralloc/test/ || exit
+    #    git pull
+    #    make clean
+    #    make libralloc.a
+    #    if [ ! -f libralloc.a ]; then
+    #      echo "Failed to build ralloc!"
+    #      exit
+    #    fi
 
     # build P-Masstree
     git pull
@@ -48,18 +47,20 @@ workload=30000000
 key_order="random"
 #key_order="seq"
 
-echo "insert,workload=$workload,unit=ops/us,key_order=$key_order" >insert.csv
-echo "lookup,workload=$workload,unit=ops/us,key_order=$key_order" >lookup.csv
+file_prefixes=("insert" "update" "lookup")
 
-# the header of csv file
-printf "index,value," >>insert.csv
-printf "index,value," >>lookup.csv
-for n in "${num_threads[@]}"; do
-  printf 'T=%s,' "$n" >>insert.csv
-  printf 'T=%s,' "$n" >>lookup.csv
+for fp in "${file_prefixes[@]}"; do
+  echo "$fp,workload=$workload,unit=ops/us,key_order=$key_order" >$fp.csv
+
+  # the header of csv file
+  printf "index,value," >>$fp.csv
+
+  for n in "${num_threads[@]}"; do
+    printf 'T=%s,' "$n" >>$fp.csv
+  done
+
+  echo "" >>$fp.csv
 done
-echo "" >>insert.csv
-echo "" >>lookup.csv
 
 for i in "${index_location[@]}"; do
   for v in "${value_location[@]}"; do
@@ -71,19 +72,22 @@ for i in "${index_location[@]}"; do
     for n in "${num_threads[@]}"; do
 
       # drop system cache and clear pmem device
-      echo 1 > /proc/sys/vm/drop_caches
+      echo 1 >/proc/sys/vm/drop_caches
       rm -rf /pmem0/*
-#      /home/blepers/linux/tools/perf/perf record -g ./example "$workload" "$n" index="$i" value="$v" key="$key_order"
+      #      /home/blepers/linux/tools/perf/perf record -g ./example "$workload" "$n" index="$i" value="$v" key="$key_order"
       ./example "$workload" "$n" index="$i" value="$v" key="$key_order" perf="$use_perf" gc="$num_of_gc"
-#      python3 ../graph.py --r latency.csv --ylim 1000000
-#      mv out.png out_"$i"_"$v".png
+      #      python3 ../graph.py --r latency.csv --ylim 1000000
+      #      mv out.png out_"$i"_"$v".png
       #      ./example 100 "$n" index="$i" value="$v"
     done
 
     # this should result in two csv files insert.csv and lookup.csv
     # just append a new line to it
-    echo "" >>insert.csv
-    echo "" >>lookup.csv
+
+    for fp in "${file_prefixes[@]}"; do
+      echo "" >>$fp.csv
+    done
 
   done
+
 done
