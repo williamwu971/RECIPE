@@ -1,11 +1,5 @@
 #!/usr/bin/env bash
 
-# backup perf files
-for pfn in *.perf; do
-  [ -f "$pfn" ] || break
-  cp "$pfn" "$pfn".old
-done
-
 for var in "$@"; do
   if [ "$var" = "build" ]; then
 
@@ -36,6 +30,12 @@ for var in "$@"; do
     echo "" && echo "############" && echo "OK" && echo "############" && echo ""
     exit
   fi
+done
+
+# backup perf files
+for pfn in *.perf; do
+  [ -f "$pfn" ] || break
+  cp "$pfn" "$pfn".old
 done
 
 cd build || exit
