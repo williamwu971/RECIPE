@@ -370,7 +370,7 @@ void run(char **argv) {
             log_recover(tree, n);
             goto lookup;
         } else {
-            log_init(20480);
+            log_init(10240);
         }
 
 
