@@ -281,9 +281,10 @@ void run(char **argv) {
     int num_of_gc = 0;
     int show_log_usage = 1;
     int record_latency = 0;
+    int value_size = sizeof(struct log_cell) + sizeof(uint64_t);
 
     printf("argv: ");
-    for (int ac = 0; ac < 9; ac++) {
+    for (int ac = 0; ac < 10; ac++) {
         printf("%s ", argv[ac]);
         if (strcasestr(argv[ac], "index")) {
             if (strcasestr(argv[ac], "pmem")) {
@@ -324,6 +325,8 @@ void run(char **argv) {
             if (strcasestr(argv[ac], "y")) {
                 record_latency = 1;
             }
+        } else if (strcasestr(argv[ac], "value_size")) {
+            value_size = atoi(strcasestr(argv[ac], "=") + 1);
         }
     }
     printf("\n");
@@ -398,7 +401,8 @@ void run(char **argv) {
 
                 // todo: size randomize (YCSB/Facebook workload)
 //                int raw_size = 1024;
-                int raw_size = sizeof(struct log_cell) + sizeof(uint64_t);
+//                int raw_size = sizeof(struct log_cell) + sizeof(uint64_t);
+                int raw_size = value_size;
 
                 char *raw = (char *) which_malloc(raw_size);
 
@@ -454,7 +458,8 @@ void run(char **argv) {
 //                uint64_t *ret = reinterpret_cast<uint64_t *> (tree->get(keys[i], t));
 
 //                int raw_size = 1024;
-                int raw_size = sizeof(struct log_cell) + sizeof(uint64_t);
+//                int raw_size = sizeof(struct log_cell) + sizeof(uint64_t);
+                int raw_size = value_size;
                 char *raw = (char *) which_malloc(raw_size);
 
                 struct log_cell *lc = (struct log_cell *) raw;
@@ -572,10 +577,10 @@ void run(char **argv) {
 }
 
 int main(int argc, char **argv) {
-    if (argc != 9) {
+    if (argc != 10) {
         if (argc == 3) {
 
-            char **new_argv = (char **) malloc(sizeof(char *) * 9);
+            char **new_argv = (char **) malloc(sizeof(char *) * 10);
             new_argv[0] = argv[0];
             new_argv[1] = argv[1];
             new_argv[2] = argv[2];
@@ -586,6 +591,7 @@ int main(int argc, char **argv) {
             new_argv[6] = (char *) malloc(sizeof(char) * 64);
             new_argv[7] = (char *) malloc(sizeof(char) * 64);
             new_argv[8] = (char *) malloc(sizeof(char) * 64);
+            new_argv[9] = (char *) malloc(sizeof(char) * 64);
 
             sprintf(new_argv[3], "index=dram");
             sprintf(new_argv[4], "value=log");
@@ -593,6 +599,7 @@ int main(int argc, char **argv) {
             sprintf(new_argv[6], "perf=yes");
             sprintf(new_argv[7], "gc=0");
             sprintf(new_argv[8], "latency=yes");
+            sprintf(new_argv[9], "value_size=1024");
 
             argv = new_argv;
 
