@@ -65,6 +65,12 @@ done
 
 rm -f latency.csv out.png
 
+# backup perf files
+for pfn in *.perf; do
+  [ -f "$pfn" ] || break
+  cp "$pfn" "$pfn".old
+done
+
 for i in "${index_location[@]}"; do
   for v in "${value_location[@]}"; do
 
