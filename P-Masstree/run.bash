@@ -41,6 +41,7 @@ value_location=("log")
 #value_location=("pmem")
 num_threads=(18)
 use_perf="yes"
+record_latency="no"
 num_of_gc=8
 
 workload=30000000
@@ -62,6 +63,8 @@ for fp in "${file_prefixes[@]}"; do
   echo "" >>$fp.csv
 done
 
+rm -f latency.csv
+
 for i in "${index_location[@]}"; do
   for v in "${value_location[@]}"; do
 
@@ -75,7 +78,7 @@ for i in "${index_location[@]}"; do
       echo 1 >/proc/sys/vm/drop_caches
       rm -rf /pmem0/*
       #      /home/blepers/linux/tools/perf/perf record -g ./example "$workload" "$n" index="$i" value="$v" key="$key_order"
-      ./example "$workload" "$n" index="$i" value="$v" key="$key_order" perf="$use_perf" gc="$num_of_gc"
+      ./example "$workload" "$n" index="$i" value="$v" key="$key_order" perf="$use_perf" gc="$num_of_gc" latency="$record_latency"
       #      python3 ../graph.py --r latency.csv --ylim 1000000
       #      mv out.png out_"$i"_"$v".png
       #      ./example 100 "$n" index="$i" value="$v"
