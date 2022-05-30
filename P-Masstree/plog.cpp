@@ -621,26 +621,26 @@ int log_start_perf(const char *perf_fn) {
             perf_fn
     );
 
-    sprintf(command,
-            "/home/blepers/linux/tools/perf/perf record --call-graph dwarf -p %d -o %s -g >> perf.out 2>&1 &",
-            getpid(), perf_fn);
-    perf_stat = 0;
+//    sprintf(command,
+//            "/home/blepers/linux/tools/perf/perf record --call-graph dwarf -p %d -o %s -g >> perf.out 2>&1 &",
+//            getpid(), perf_fn);
+//    perf_stat = 0;
 
-    sprintf(command,
-            "sudo /home/blepers/linux/tools/perf/perf stat "
-            "-e SQ_MISC.SQ_FULL "
-            "-e CYCLE_ACTIVITY.CYCLES_MEM_ANY "
-            "-e OFFCORE_REQUESTS_OUTSTANDING.CYCLES_WITH_DATA_RD "
-            "-e OFFCORE_REQUESTS_OUTSTANDING.CYCLES_WITH_DEMAND_RFO "
-            "-e RESOURCE_STALLS.SB "
-            "-e UNC_M_RPQ_OCCUPANCY_PCH0 "
-            "-e UNC_M_RPQ_OCCUPANCY_PCH1 "
-            "-e UNC_M_WPQ_OCCUPANCY_PCH0 "
-            "-e UNC_M_WPQ_OCCUPANCY_PCH1 "
-            "-p %d > %s 2>&1 &",
-            getpid(), perf_fn
-    );
-
+//    sprintf(command,
+//            "sudo /home/blepers/linux/tools/perf/perf stat "
+//            "-e SQ_MISC.SQ_FULL "
+//            "-e CYCLE_ACTIVITY.CYCLES_MEM_ANY "
+//            "-e OFFCORE_REQUESTS_OUTSTANDING.CYCLES_WITH_DATA_RD "
+//            "-e OFFCORE_REQUESTS_OUTSTANDING.CYCLES_WITH_DEMAND_RFO "
+//            "-e RESOURCE_STALLS.SB "
+//            "-e UNC_M_RPQ_OCCUPANCY_PCH0 "
+//            "-e UNC_M_RPQ_OCCUPANCY_PCH1 "
+//            "-e UNC_M_WPQ_OCCUPANCY_PCH0 "
+//            "-e UNC_M_WPQ_OCCUPANCY_PCH1 "
+//            "-p %d > %s 2>&1 &",
+//            getpid(), perf_fn
+//    );
+//
 //    sprintf(command,
 //            "sudo /home/blepers/linux/tools/perf/perf stat -d -d -d -p %d > %s 2>&1 &",
 //            getpid(), perf_fn
