@@ -626,10 +626,10 @@ int log_start_perf(const char *perf_fn) {
             getpid(), perf_fn);
     perf_stat = 0;
 
-    sprintf(command,
-            "sudo /home/blepers/linux/tools/perf/perf stat -d -d -d -p %d > %s 2>&1 &",
-            getpid(), perf_fn
-    );
+//    sprintf(command,
+//            "sudo /home/blepers/linux/tools/perf/perf stat -d -d -d -p %d > %s 2>&1 &",
+//            getpid(), perf_fn
+//    );
 
 //    sprintf(command,
 //            "/home/blepers/linux/tools/perf/perf record -p %d -o %s -g >> perf.out 2>&1 &",
