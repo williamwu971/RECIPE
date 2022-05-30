@@ -325,7 +325,7 @@ void run(char **argv) {
             if (strcasestr(argv[ac], "y")) {
                 record_latency = 1;
             }
-        } else if (strcasestr(argv[ac], "value_size")) {
+        } else if (strcasestr(argv[ac], "size")) {
             int desired_size = atoi(strcasestr(argv[ac], "=") + 1);
             if (desired_size > value_size) value_size = desired_size;
         }
