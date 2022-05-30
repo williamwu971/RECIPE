@@ -572,7 +572,7 @@ void run(char **argv) {
 }
 
 int main(int argc, char **argv) {
-    if (argc != 8) {
+    if (argc != 9) {
         if (argc == 3) {
 
             char **new_argv = (char **) malloc(sizeof(char *) * 9);
