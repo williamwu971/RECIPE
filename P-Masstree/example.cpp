@@ -542,7 +542,7 @@ void run(char **argv) {
     fprintf(update_throughput_file, "%.2f,", update_throughput);
     fprintf(lookup_throughput_file, "%.2f,", lookup_throughput);
     for (uint64_t idx = 0; idx < n; idx++) {
-        fprintf(latency_file, "%lu\n", latencies[idx]);
+//        fprintf(latency_file, "%lu\n", latencies[idx]);
     }
 
     fclose(insert_throughput_file);
