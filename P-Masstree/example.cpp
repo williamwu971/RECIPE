@@ -326,7 +326,8 @@ void run(char **argv) {
                 record_latency = 1;
             }
         } else if (strcasestr(argv[ac], "value_size")) {
-            value_size = atoi(strcasestr(argv[ac], "=") + 1);
+            int desired_size = atoi(strcasestr(argv[ac], "=") + 1);
+            if (desired_size > value_size) value_size = desired_size;
         }
     }
     printf("\n");
