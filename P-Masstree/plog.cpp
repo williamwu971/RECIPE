@@ -205,11 +205,11 @@ void log_init(uint64_t num_logs) {
         die("big_map:%p mapped_len:%zu is_pmem:%d", big_map, mapped_len, is_pmem);
     }
 
-    omp_set_num_threads(23);
-#pragma omp parallel for schedule(dynamic, 10)
-    for (uint64_t fs = 0; fs < file_size; fs += (4 * 1024ULL)) {
-        pmem_memset_persist(big_map + fs, 0, (4 * 1024ULL));
-    }
+//    omp_set_num_threads(23);
+//#pragma omp parallel for schedule(dynamic, 10)
+//    for (uint64_t fs = 0; fs < file_size; fs += (4 * 1024ULL)) {
+//        pmem_memset_persist(big_map + fs, 0, (4 * 1024ULL));
+//    }
 
 
     // inodes
