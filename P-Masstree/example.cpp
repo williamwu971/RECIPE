@@ -397,8 +397,8 @@ void run(char **argv) {
 //                tree->put(keys[i], &keys[i], t);
 
                 // todo: size randomize (YCSB/Facebook workload)
-//                int raw_size = 1024;
-                int raw_size = sizeof(struct log_cell) + sizeof(uint64_t);
+                int raw_size = 1024;
+//                int raw_size = sizeof(struct log_cell) + sizeof(uint64_t);
 
                 char *raw = (char *) which_malloc(raw_size);
 
@@ -453,8 +453,8 @@ void run(char **argv) {
 //                uint64_t *ret = reinterpret_cast<uint64_t *> (raw+sizeof(struct log_cell));
 //                uint64_t *ret = reinterpret_cast<uint64_t *> (tree->get(keys[i], t));
 
-//                int raw_size = 1024;
-                int raw_size = sizeof(struct log_cell) + sizeof(uint64_t);
+                int raw_size = 1024;
+//                int raw_size = sizeof(struct log_cell) + sizeof(uint64_t);
                 char *raw = (char *) which_malloc(raw_size);
 
                 struct log_cell *lc = (struct log_cell *) raw;
