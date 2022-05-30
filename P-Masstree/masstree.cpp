@@ -155,6 +155,9 @@ bool leafnode::tryLock(int &needRestart) {
 }
 
 void leafnode::upgradeToWriteLockOrRestart(uint64_t &version, int &needRestart) {
+
+
+    // todo: this line is believed to be very heavy when using 1024b value
     if (typeVersionLockObsolete.compare_exchange_strong(version, version + 0b10)) {
         version = version + 0b10;
     } else {
