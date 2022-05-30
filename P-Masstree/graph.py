@@ -110,8 +110,8 @@ for fn in args.f:
             args_copy[increment_target] = str(int(args_copy[increment_target]) + increment_size)
 
     else:
-        with open(fn,"r") as given_file:
-            all_data=list(map(lambda x:float(x),given_file.read().splitlines()))
+        with open(fn, "r") as given_file:
+            all_data = list(map(lambda x: float(x), given_file.read().splitlines()))
 
     if len(xs) > 1:
         xi = list(range(len(xs)))
@@ -137,7 +137,7 @@ for fn in args.f:
 # plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', fontsize='xx-small')
 temp_title = ' '.join(args.t if len(args.t) > 0 else args.f)
 # temp_title += ' iterations={} size={}'.format(*args.a[1:])
-plt.title(temp_title,fontsize=40)
+plt.title(temp_title, fontsize=40)
 if args.ylim != 0:
     plt.ylim(0, args.ylim)
 if args.xlim != 0:
@@ -146,6 +146,6 @@ if args.xlim != 0:
 plt.xticks(fontsize=30)
 plt.yticks(fontsize=30)
 
-plt.ylabel(' '.join(args.y),fontsize=40)
-plt.xlabel(' '.join(args.x),fontsize=40)
+plt.ylabel(' '.join(args.y), fontsize=40)
+plt.xlabel(' '.join(args.x), fontsize=40)
 plt.savefig('out.png', bbox_inches='tight')
