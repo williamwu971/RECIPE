@@ -43,7 +43,7 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads) {
     int old_num_threads = omp_get_num_threads();
     omp_set_num_threads(num_threads);
 
-    puts("rebuilding tree...");
+    printf("... rebuilding tree using %d omp threads ...\n", num_threads);
 
     for (uint64_t i = 0; i < lm.num_entries; i++) {
         struct log *target_log = (struct log *) (log_meta + CACHE_LINE_SIZE * i);
