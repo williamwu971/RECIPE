@@ -363,10 +363,12 @@ void run(char **argv) {
 
     if (require_log_init) {
         printf("init log and GC... ");
-        char const *inode_fn = "/pmem0/masstree_log_inodes";
-        char const *log_fn = "/pmem0/masstree_log_logs";
 
-        if (access(inode_fn, F_OK) == 0 && access(log_fn, F_OK) == 0) {
+        if (
+                access(INODE_FN, F_OK) == 0 &&
+                access(LOG_FN, F_OK) == 0 &&
+                access(META_FN, F_OK) == 0
+                ) {
             log_recover(tree, n);
             goto lookup;
         } else {
