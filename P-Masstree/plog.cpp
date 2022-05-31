@@ -221,8 +221,8 @@ void log_init(uint64_t num_logs) {
     uint64_t file_size = num_logs * CACHE_LINE_SIZE;
     int preset = 0;
 
-    log_map(1, INODE_FN, file_size, (void **) &inodes, &preset);
-    log_map(1, META_FN, file_size, (void **) &log_meta, &preset);
+    log_map(0, INODE_FN, file_size, (void **) &inodes, &preset);
+    log_map(0, META_FN, file_size, (void **) &log_meta, &preset);
 
     file_size = num_logs * LOG_SIZE;
     log_map(1, LOG_FN, file_size, (void **) &big_map, &preset);
