@@ -126,8 +126,10 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size, void **result
     void *map = NULL;
     size_t mapped_len = 0;
     int is_pmem = 1;
+    void *(*memset_func)(void *s, int c, size_t n);
 
     if (use_pmem) {
+        memset_func = pmem_memset_persist;
 
         if (file_size == 0) {
             map = pmem_map_file(fn, 0, 0, 0, &mapped_len, &is_pmem);
@@ -140,6 +142,8 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size, void **result
         is_pmem = is_pmem && pmem_is_pmem(map, mapped_len);
 
     } else {
+        memset_func = memset;
+
         mapped_len = file_size;
 
 //        map = mmap(NULL, file_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS, -1, 0);
@@ -152,10 +156,6 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size, void **result
 
     if (pre_set != NULL) {
         int value = *pre_set;
-        void *(*memset_func)(void *s, int c, size_t n);
-
-        if (use_pmem) memset_func = pmem_memset_persist;
-        else memset_func = memset;
 
         if (mapped_len == 0 || mapped_len % CACHE_LINE_SIZE != 0) {
             die("cannot memset size:%zu", mapped_len);
