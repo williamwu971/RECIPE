@@ -124,12 +124,11 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads) {
 
 uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size, void **result) {
 
-    void *map;
-    size_t mapped_len;
+    void *map = NULL;
+    size_t mapped_len = 0;
+    int is_pmem = 1;
 
     if (use_pmem) {
-
-        int is_pmem;
 
 
         if (file_size == 0) {
@@ -142,9 +141,6 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size, void **result
         }
         is_pmem = is_pmem && pmem_is_pmem(map, mapped_len);
 
-        if (map == NULL || !is_pmem)
-            die("map error map:%p is_pmem:%d", map, is_pmem);
-
     } else {
         mapped_len = file_size;
 
@@ -154,6 +150,10 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size, void **result
         map = malloc(file_size);
 
     }
+
+
+    if (map == NULL || !is_pmem)
+        die("map error map:%p is_pmem:%d", map, is_pmem);
 
     *result = map;
     return file_size;
