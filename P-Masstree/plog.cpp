@@ -143,7 +143,6 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size, void **result
         mapped_len = file_size;
 
 //        map = mmap(NULL, file_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS, -1, 0);
-
         map = malloc(file_size);
 
     }
