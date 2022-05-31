@@ -176,13 +176,13 @@ int log_recover(masstree::masstree *tree, int num_threads) {
 
     uint64_t mapped_len;
 
-    mapped_len = log_map(1, INODE_FN, 0, (void **) &inodes);
+    mapped_len = log_map(1, INODE_FN, 0, (void **) &inodes, NULL);
     if (mapped_len % CACHE_LINE_SIZE != 0) die("inodes mapped_len:%zu", mapped_len);
 
 
     uint64_t num_logs = mapped_len / CACHE_LINE_SIZE;
 
-    mapped_len = log_map(1, LOG_FN, 0, (void **) &big_map);
+    mapped_len = log_map(1, LOG_FN, 0, (void **) &big_map, NULL);
     if (mapped_len != num_logs * LOG_SIZE) die("big_map mapped_len:%zu", mapped_len);
 
 
