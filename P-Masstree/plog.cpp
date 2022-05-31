@@ -212,13 +212,10 @@ int log_recover(masstree::masstree *tree, int num_threads) {
     // inodes
     lm.num_entries = num_logs;
     lm.entries = (int **) malloc(sizeof(int *) * lm.num_entries);
+    OCCUPIED = num_logs + 1;
     for (uint64_t i = 0; i < lm.num_entries; i++) {
         lm.entries[i] = (int *) (inodes + CACHE_LINE_SIZE * i);
     }
-    OCCUPIED = num_logs + 1;
-
-    // usage
-    log_meta = (struct log *) malloc(CACHE_LINE_SIZE * num_logs);
 
     // reconstruct tree
     log_tree_rebuild(tree, num_threads, 1);
