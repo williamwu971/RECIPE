@@ -202,26 +202,16 @@ void log_init(uint64_t num_logs) {
     log_structs_size_check();
 
     uint64_t file_size;
-    size_t mapped_len;
-    int is_pmem;
+    uint64_t mapped_len;
 
     file_size = num_logs * CACHE_LINE_SIZE;
-    inodes = (char *) pmem_map_file(INODE_FN, file_size,
-                                    PMEM_FILE_CREATE | PMEM_FILE_EXCL, 00777,
-                                    &mapped_len, &is_pmem);
-    is_pmem = is_pmem && pmem_is_pmem(inodes, file_size);
-    if (inodes == NULL || mapped_len != file_size || !is_pmem) {
-        die("inodes:%p mapped_len:%zu is_pmem:%d", inodes, mapped_len, is_pmem);
-    }
+
+    mapped_len = log_map(1, INODE_FN, file_size, (void **) inodes);
+    if (mapped_len != file_size) die("inodes mapped_len:%zu", mapped_len);
     pmem_memset_persist(inodes, 0, file_size);
 
-    log_meta = (char *) pmem_map_file(META_FN, file_size,
-                                      PMEM_FILE_CREATE | PMEM_FILE_EXCL, 00777,
-                                      &mapped_len, &is_pmem);
-    is_pmem = is_pmem && pmem_is_pmem(log_meta, file_size);
-    if (log_meta == NULL || mapped_len != file_size || !is_pmem) {
-        die("log_meta:%p mapped_len:%zu is_pmem:%d", inodes, mapped_len, is_pmem);
-    }
+    mapped_len = log_map(1, META_FN, file_size, (void **) log_meta);
+    if (mapped_len != file_size) die("log_meta mapped_len:%zu", mapped_len);
     pmem_memset_persist(log_meta, 0, file_size);
 
     file_size = num_logs * LOG_SIZE;
