@@ -66,7 +66,7 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads) {
 
             struct log_cell *lc = (struct log_cell *) curr;
 
-            // if field of the struct is zero, then abort this one
+            // if field of the struct is zero, then abort the entire log
             if (lc->version == 0) break;
 
             uint64_t total_size = sizeof(struct log_cell) + lc->value_size;
