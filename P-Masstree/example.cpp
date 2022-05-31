@@ -369,7 +369,7 @@ void run(char **argv) {
                 access(LOG_FN, F_OK) == 0 &&
                 access(META_FN, F_OK) == 0
                 ) {
-            log_recover(tree, n);
+            log_recover(tree, 20);
             goto lookup;
         } else {
             log_init(10240);
