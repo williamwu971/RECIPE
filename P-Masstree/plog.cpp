@@ -38,12 +38,7 @@ void log_structs_size_check() {
 }
 
 
-void log_tree_rebuild(masstree::masstree *tree, int num_threads) {
-
-    int old_num_threads = omp_get_num_threads();
-    omp_set_num_threads(num_threads);
-
-    printf("... rebuilding tree using %d omp threads ...\n", num_threads);
+void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) {
 
     for (uint64_t i = 0; i < lm.num_entries; i++) {
         struct log *target_log = log_meta + i;
@@ -51,53 +46,65 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads) {
         target_log->available = LOG_SIZE;
     }
 
-    // process inserts first todo: OCCUPIED ENUM IS WRONG NOW
+    if (read_tree) {
+
+        printf("... rebuilding tree using %d omp threads ...\n", num_threads);
+
+        int old_num_threads = omp_get_num_threads();
+        omp_set_num_threads(num_threads);
+
+        // process inserts first todo: OCCUPIED ENUM IS WRONG NOW
 #pragma omp parallel for schedule(dynamic, 1)
-    for (uint64_t i = 0; i < lm.num_entries; i++) {
+        for (uint64_t i = 0; i < lm.num_entries; i++) {
 
-        // todo: not sure if this has overhead
-        auto t = tree->getThreadInfo();
+            // todo: not sure if this has overhead
+            auto t = tree->getThreadInfo();
 
-        char *end = big_map + (i + 1) * LOG_SIZE;
-        char *curr = big_map + i * LOG_SIZE;
-        struct log *current_log = log_meta + i;
+            char *end = big_map + (i + 1) * LOG_SIZE;
+            char *curr = big_map + i * LOG_SIZE;
+            struct log *current_log = log_meta + i;
 
-        while (curr < end) {
+            while (curr < end) {
 
-            struct log_cell *lc = (struct log_cell *) curr;
+                struct log_cell *lc = (struct log_cell *) curr;
 
-            // if field of the struct is zero, then abort the entire log
-            if (lc->version == 0) break;
+                // if field of the struct is zero, then abort the entire log
+                if (lc->version == 0) break;
 
-            uint64_t total_size = sizeof(struct log_cell) + lc->value_size;
-            current_log->available -= total_size;
+                uint64_t total_size = sizeof(struct log_cell) + lc->value_size;
+                current_log->available -= total_size;
 
-            if (!lc->is_delete) {
+                if (!lc->is_delete) {
 
-                struct log_cell *res = (struct log_cell *)
-                        tree->put_and_return(lc->key, lc, 1, t);
+                    struct log_cell *res = (struct log_cell *)
+                            tree->put_and_return(lc->key, lc, 1, t);
 
-                // insert success and created a new key-value
-                // replaced a value, should free some space in other log
-                if (res != NULL && res != lc) {
+                    // insert success and created a new key-value
+                    // replaced a value, should free some space in other log
+                    if (res != NULL && res != lc) {
 
-                    uint64_t idx = (uint64_t) ((char *) res - big_map) / LOG_SIZE;
-                    struct log *target_log = log_meta + idx;
-                    target_log->freed.fetch_add(sizeof(struct log_cell) + res->value_size);
+                        uint64_t idx = (uint64_t) ((char *) res - big_map) / LOG_SIZE;
+                        struct log *target_log = log_meta + idx;
+                        target_log->freed.fetch_add(sizeof(struct log_cell) + res->value_size);
+                    }
+
+                } else {
+                    tree->del_and_return(lc->key, 1, lc->version, t);
                 }
 
-            } else {
-                tree->del_and_return(lc->key, 1, lc->version, t);
+                // todo: should probably update the metadata here
+                curr += sizeof(struct log_cell) + lc->value_size;
             }
-
-            // todo: should probably update the metadata here
-            curr += sizeof(struct log_cell) + lc->value_size;
         }
+        omp_set_num_threads(old_num_threads);
+        puts("... tree rebuild complete, rebuilding metadata ...");
     }
+
+
 
     // sequentially reconstruct metadata
     // from end to beginning
-    puts("rebuilding metadata");
+
 
     lm.used = lm.num_entries;
     lm.next_available = -1;
@@ -117,7 +124,7 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads) {
         }
     }
 
-    omp_set_num_threads(old_num_threads);
+
 }
 
 uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size, void **result, int *pre_set) {
@@ -203,7 +210,7 @@ int log_recover(masstree::masstree *tree, int num_threads) {
     log_meta = (struct log *) malloc(CACHE_LINE_SIZE * num_logs);
 
     // reconstruct tree
-    log_tree_rebuild(tree, num_threads);
+    log_tree_rebuild(tree, num_threads, 1);
 
     // gc
     pthread_mutex_init(&gq.lock, NULL);
