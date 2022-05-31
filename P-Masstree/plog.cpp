@@ -155,7 +155,7 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size, void **result
         die("map error map:%p is_pmem:%d", map, is_pmem);
 
     *result = map;
-    return file_size;
+    return mapped_len;
 }
 
 int log_recover(masstree::masstree *tree, int num_threads) {
