@@ -158,6 +158,9 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size, void **result
         if (use_pmem) memset_func = pmem_memset_persist;
         else memset_func = memset;
 
+        if (mapped_len == 0 || mapped_len % CACHE_LINE_SIZE != 0) {
+            die("cannot memset size:%zu", mapped_len);
+        }
 
 #pragma omp parallel for schedule(dynamic, 1)
         for (uint64_t i = mapped_len; i < mapped_len; i += CACHE_LINE_SIZE) {
