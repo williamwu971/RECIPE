@@ -18,7 +18,7 @@ for var in "$@"; do
     #    fi
 
     # build P-Masstree
-    git pull
+    git pull || exit
     rm -rf build && mkdir build
     cd build || exit
     cmake .. && make -j
