@@ -139,8 +139,7 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size, void **result
             map = pmem_map_file(fn, file_size,
                                 PMEM_FILE_CREATE | PMEM_FILE_EXCL, 00666,
                                 &mapped_len, &is_pmem);
-            if (mapped_len != file_size)
-                die("map error mapped_len:%zu", mapped_len);
+            if (mapped_len != file_size) die("map error mapped_len:%zu", mapped_len);
         }
         is_pmem = is_pmem && pmem_is_pmem(map, mapped_len);
 
@@ -202,26 +201,17 @@ void log_init(uint64_t num_logs) {
     log_structs_size_check();
 
     uint64_t file_size;
-    uint64_t mapped_len;
 
     file_size = num_logs * CACHE_LINE_SIZE;
 
-    mapped_len = log_map(1, INODE_FN, file_size, (void **) inodes);
-    if (mapped_len != file_size) die("inodes mapped_len:%zu", mapped_len);
+    log_map(1, INODE_FN, file_size, (void **) inodes);
     pmem_memset_persist(inodes, 0, file_size);
 
-    mapped_len = log_map(1, META_FN, file_size, (void **) log_meta);
-    if (mapped_len != file_size) die("log_meta mapped_len:%zu", mapped_len);
+    log_map(1, META_FN, file_size, (void **) log_meta);
     pmem_memset_persist(log_meta, 0, file_size);
 
     file_size = num_logs * LOG_SIZE;
-    big_map = (char *) pmem_map_file(LOG_FN, file_size,
-                                     PMEM_FILE_CREATE | PMEM_FILE_EXCL, 00777,
-                                     &mapped_len, &is_pmem);
-    is_pmem = is_pmem && pmem_is_pmem(big_map, file_size);
-    if (big_map == NULL || mapped_len != file_size || !is_pmem) {
-        die("big_map:%p mapped_len:%zu is_pmem:%d", big_map, mapped_len, is_pmem);
-    }
+    log_map(1, LOG_FN, file_size, (void **) big_map);
 
     omp_set_num_threads(23);
 #pragma omp parallel for schedule(dynamic, 10)
