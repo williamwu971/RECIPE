@@ -102,7 +102,7 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads) {
     lm.used = lm.num_entries;
     lm.next_available = -1;
 
-    for (int i = lm.num_entries - 1;; i--) {
+    for (int i = lm.num_entries - 1; i >= 0; i--) {
         struct log *target_log = log_meta + i;
 
         if (target_log->available == 0 ||
@@ -115,7 +115,6 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads) {
                 lm.next_available = i;
             }
         }
-        if (i == 0) break;
     }
 
     omp_set_num_threads(old_num_threads);
