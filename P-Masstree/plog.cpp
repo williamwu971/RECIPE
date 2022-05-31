@@ -105,7 +105,7 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads) {
     for (int i = lm.num_entries - 1; i >= 0; i--) {
         struct log *target_log = log_meta + i;
 
-        if (target_log->available == 0 ||
+        if (target_log->available == LOG_SIZE ||
             target_log->freed.load() == LOG_SIZE - target_log->available) {
 
             if (lm.used == i + 1) {
