@@ -87,7 +87,10 @@ for i in "${index_location[@]}"; do
       #      /home/blepers/linux/tools/perf/perf record -g ./example "$workload" "$n" index="$i" value="$v" key="$key_order"
       ./example "$workload" "$n" index="$i" value="$v" key="$key_order" perf="$use_perf" \
         gc="$num_of_gc" latency="$record_latency" value_size="$value_size"
-      python3 ../graph.py --r latency.csv --ylim 1000000
+
+      if [ "$record_latency" = "yes" ]; then
+        python3 ../graph.py --r latency.csv --ylim 1000000
+      fi
       #      mv out.png out_"$i"_"$v".png
       #      ./example 100 "$n" index="$i" value="$v"
     done
