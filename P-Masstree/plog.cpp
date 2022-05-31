@@ -145,14 +145,13 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size, void **result
         mapped_len = file_size;
 
 //        map = mmap(NULL, file_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS, -1, 0);
-//        if (map == MAP_FAILED) die("map error map:%p", map);
 
         map = malloc(file_size);
 
     }
 
 
-    if (map == NULL || !is_pmem)
+    if (map == NULL || map == MAP_FAILED || !is_pmem)
         die("map error map:%p is_pmem:%d", map, is_pmem);
 
     *result = map;
