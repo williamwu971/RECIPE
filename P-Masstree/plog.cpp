@@ -275,16 +275,6 @@ char *log_acquire(int write_thread_log) {
         i = lm.next_available;
         lm.next_available = lm.entries[i][0];
     }
-    goto end;
-
-//    for (i = 0; i < lm.num_entries; i++) {
-//        if (lm.entries[i][0] == AVAILABLE) {
-//            goto end;
-//        }
-//    }
-
-
-    end:
 
     if (i >= lm.num_entries) die("all logs are occupied");
 
