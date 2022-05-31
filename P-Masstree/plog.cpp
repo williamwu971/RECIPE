@@ -115,7 +115,6 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) 
 
     for (int i = lm.num_entries - 1; i >= 0; i--) {
 
-        printf("debug %d\n", i);
         struct log *target_log = log_meta + i;
 
         if (target_log->available == LOG_SIZE ||
