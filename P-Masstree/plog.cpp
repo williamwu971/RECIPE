@@ -124,6 +124,37 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads) {
     omp_set_num_threads(old_num_threads);
 }
 
+uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size, void **result) {
+
+    void *map;
+
+    if (use_pmem) {
+
+        int is_pmem;
+        size_t mapped_len;
+
+        if (file_size == 0) {
+            map = pmem_map_file(fn, 0, 0, 0, &mapped_len, &is_pmem);
+        } else {
+            map = pmem_map_file(fn, file_size,
+                                PMEM_FILE_CREATE | PMEM_FILE_EXCL, 00777,
+                                &mapped_len, &is_pmem);
+            if (mapped_len != file_size)
+                die("map error mapped_len:%zu", mapped_len);
+        }
+        is_pmem = is_pmem && pmem_is_pmem(map, mapped_len);
+
+        if (map == NULL || !is_pmem)
+            die("map error map:%p is_pmem:%d", map, is_pmem);
+        *result = map;
+
+        return mapped_len;
+
+    } else {
+
+    }
+}
+
 int log_recover(masstree::masstree *tree, int num_threads) {
     log_structs_size_check();
 
