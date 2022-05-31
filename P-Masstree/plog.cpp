@@ -13,7 +13,7 @@ int OCCUPIED;
 pthread_mutex_t lm_lock = PTHREAD_MUTEX_INITIALIZER;
 
 // every thread hold its own log
-char *log_meta;
+struct log *log_meta;
 __thread struct log *thread_log = NULL;
 
 
@@ -46,7 +46,7 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads) {
     printf("... rebuilding tree using %d omp threads ...\n", num_threads);
 
     for (uint64_t i = 0; i < lm.num_entries; i++) {
-        struct log *target_log = (struct log *) (log_meta + CACHE_LINE_SIZE * i);
+        struct log *target_log = log_meta + i;
         target_log->freed.store(0);
         target_log->available = LOG_SIZE;
     }
@@ -58,11 +58,9 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads) {
         // todo: not sure if this has overhead
         auto t = tree->getThreadInfo();
 
-//        if (lm.entries[i][0] == OCCUPIED) {
-
         char *end = big_map + (i + 1) * LOG_SIZE;
         char *curr = big_map + i * LOG_SIZE;
-        struct log *current_log = (struct log *) (log_meta + CACHE_LINE_SIZE * i);
+        struct log *current_log = log_meta + i;
 
         while (curr < end) {
 
@@ -84,7 +82,7 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads) {
                 if (res != NULL && res != lc) {
 
                     uint64_t idx = (uint64_t) ((char *) res - big_map) / LOG_SIZE;
-                    struct log *target_log = (struct log *) (log_meta + CACHE_LINE_SIZE * idx);
+                    struct log *target_log = log_meta + idx;
                     target_log->freed.fetch_add(sizeof(struct log_cell) + res->value_size);
                 }
 
@@ -95,7 +93,6 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads) {
             // todo: should probably update the metadata here
             curr += sizeof(struct log_cell) + lc->value_size;
         }
-//        }
     }
 
     // sequentially reconstruct metadata
@@ -106,7 +103,7 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads) {
     lm.next_available = -1;
 
     for (uint64_t i = lm.num_entries - 1;; i--) {
-        struct log *target_log = (struct log *) (log_meta + CACHE_LINE_SIZE * i);
+        struct log *target_log = log_meta + i;
 
         if (target_log->available == 0 ||
             target_log->freed.load() == LOG_SIZE - target_log->available) {
@@ -182,7 +179,7 @@ int log_recover(masstree::masstree *tree, int num_threads) {
     OCCUPIED = num_logs + 1;
 
     // usage
-    log_meta = (char *) malloc(CACHE_LINE_SIZE * num_logs);
+    log_meta = (struct log *) malloc(CACHE_LINE_SIZE * num_logs);
 
     // reconstruct tree
     log_tree_rebuild(tree, num_threads);
@@ -302,7 +299,7 @@ char *log_acquire(int write_thread_log) {
             }
         }
 
-        thread_log = (struct log *) (log_meta + CACHE_LINE_SIZE * i);
+        thread_log = log_meta + i;
         thread_log->freed.store(0);
         thread_log->available = LOG_SIZE;
         thread_log->index = i;
@@ -385,7 +382,7 @@ void log_free(void *ptr) {
 
     // locate the log and its metadata
     uint64_t idx = (uint64_t) (char_ptr - big_map) / LOG_SIZE;
-    struct log *target_log = (struct log *) (log_meta + CACHE_LINE_SIZE * idx);
+    struct log *target_log = log_meta + idx;
 
     // update metadata and add the log to GC queue if suitable
     uint64_t freed = target_log->freed.fetch_add(sizeof(struct log_cell) + lc->value_size);
@@ -441,7 +438,7 @@ void *log_garbage_collection(void *arg) {
 //            }
 
 
-            struct log *target_log = (struct log *) (log_meta + CACHE_LINE_SIZE * queue->index);
+            struct log *target_log = log_meta + queue->index;
             char *current_ptr = target_log->base;
             char *end_ptr = target_log->curr;
 
@@ -563,7 +560,7 @@ void log_debug_print(int to_file, int show) {
 //            printf("%5lu ", i);
             used++;
             if (to_file) {
-                struct log *target_log = (struct log *) (log_meta + CACHE_LINE_SIZE * i);
+                struct log *target_log = log_meta + i;
                 fprintf(file, "log %lu available:%lu free:%lu\n",
                         i, target_log->available, target_log->freed.load());
 
