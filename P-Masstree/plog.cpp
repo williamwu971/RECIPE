@@ -128,10 +128,9 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) 
         }
     }
 
-
 }
 
-uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size, void **result, int *pre_set) {
+uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size, void **result, int *pre_set, int alignment) {
 
     void *map = NULL;
     size_t mapped_len = 0;
@@ -164,10 +163,13 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size, void **result
     if (map == NULL || map == MAP_FAILED || !is_pmem)
         die("map error map:%p is_pmem:%d", map, is_pmem);
 
+    if (mapped_len == 0 || mapped_len % alignment != 0)
+        die("alignment check error size:%zu", mapped_len);
+
     if (pre_set != NULL) {
         int value = *pre_set;
 
-        if (mapped_len == 0 || (mapped_len % CACHE_LINE_SIZE != 0 && mapped_len % PAGE_SIZE != 0)) {
+        if (mapped_len % CACHE_LINE_SIZE != 0 && mapped_len % PAGE_SIZE != 0) {
             die("cannot memset size:%zu", mapped_len);
         }
 
@@ -192,13 +194,18 @@ int log_recover(masstree::masstree *tree, int num_threads) {
 
     uint64_t mapped_len;
 
-    mapped_len = log_map(1, INODE_FN, 0, (void **) &inodes, NULL);
-    if (mapped_len % CACHE_LINE_SIZE != 0) die("inodes mapped_len:%zu", mapped_len);
+    mapped_len = log_map(1, INODE_FN, 0,
+                         (void **) &inodes, NULL, CACHE_LINE_SIZE);
 
+
+    if (log_map(1, META_FN, 0,
+                (void **) &log_meta, NULL, CACHE_LINE_SIZE) != mapped_len)
+        die("META filesize inconsistent");
 
     uint64_t num_logs = mapped_len / CACHE_LINE_SIZE;
 
-    mapped_len = log_map(1, LOG_FN, 0, (void **) &big_map, NULL);
+    mapped_len = log_map(1, LOG_FN, 0,
+                         (void **) &big_map, NULL, LOG_SIZE);
     if (mapped_len != num_logs * LOG_SIZE) die("big_map mapped_len:%zu", mapped_len);
 
 
@@ -231,11 +238,11 @@ void log_init(uint64_t num_logs) {
     uint64_t file_size = num_logs * CACHE_LINE_SIZE;
     int preset = 0;
 
-    log_map(1, INODE_FN, file_size, (void **) &inodes, &preset);
-    log_map(1, META_FN, file_size, (void **) &log_meta, &preset);
+    log_map(1, INODE_FN, file_size, (void **) &inodes, &preset, CACHE_LINE_SIZE);
+    log_map(1, META_FN, file_size, (void **) &log_meta, &preset, CACHE_LINE_SIZE);
 
     file_size = num_logs * LOG_SIZE;
-    log_map(1, LOG_FN, file_size, (void **) &big_map, &preset);
+    log_map(1, LOG_FN, file_size, (void **) &big_map, &preset, LOG_SIZE);
 
     // inodes
     lm.num_entries = num_logs;
@@ -244,11 +251,9 @@ void log_init(uint64_t num_logs) {
     for (uint64_t i = 0; i < lm.num_entries; i++) {
         lm.entries[i] = (int *) (inodes + CACHE_LINE_SIZE * i);
     }
-    lm.next_available = -1;
-    lm.used = 0;
 
     // usage
-//    log_meta = (char *) malloc(CACHE_LINE_SIZE * num_logs);
+    log_tree_rebuild(NULL, 0, 0);
 
 
     // gc
