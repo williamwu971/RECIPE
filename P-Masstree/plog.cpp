@@ -137,7 +137,7 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size, void **result
             map = pmem_map_file(fn, 0, 0, 0, &mapped_len, &is_pmem);
         } else {
             map = pmem_map_file(fn, file_size,
-                                PMEM_FILE_CREATE | PMEM_FILE_EXCL, 00777,
+                                PMEM_FILE_CREATE | PMEM_FILE_EXCL, 00666,
                                 &mapped_len, &is_pmem);
             if (mapped_len != file_size)
                 die("map error mapped_len:%zu", mapped_len);
@@ -152,30 +152,27 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size, void **result
 
     } else {
 
+        map = mmap(NULL, file_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS, -1, 0);
+        if (map == MAP_FAILED) die("map error map:%p", map);
+
+        return file_size;
     }
 }
 
 int log_recover(masstree::masstree *tree, int num_threads) {
     log_structs_size_check();
 
-    size_t mapped_len;
-    int is_pmem;
+    uint64_t mapped_len;
 
-    inodes = (char *)
-            pmem_map_file(INODE_FN, 0, 0, 0, &mapped_len, &is_pmem);
-    is_pmem = is_pmem && pmem_is_pmem(inodes, mapped_len);
-    if (inodes == NULL || mapped_len == 0 || mapped_len % CACHE_LINE_SIZE != 0 || !is_pmem) {
-        die("inodes:%p mapped_len:%zu is_pmem:%d", inodes, mapped_len, is_pmem);
-    }
+    mapped_len = log_map(1, INODE_FN, 0, (void **) &inodes);
+    if (mapped_len % CACHE_LINE_SIZE != 0) die("inodes mapped_len:%zu", mapped_len);
+
 
     uint64_t num_logs = mapped_len / CACHE_LINE_SIZE;
 
-    big_map = (char *)
-            pmem_map_file(LOG_FN, 0, 0, 0, &mapped_len, &is_pmem);
-    is_pmem = is_pmem && pmem_is_pmem(big_map, mapped_len);
-    if (big_map == NULL || mapped_len != num_logs * LOG_SIZE || !is_pmem) {
-        die("big_map:%p mapped_len:%zu is_pmem:%d", big_map, mapped_len, is_pmem);
-    }
+    mapped_len = log_map(1, LOG_FN, 0, (void **) &big_map);
+    if (mapped_len != num_logs * LOG_SIZE) die("big_map mapped_len:%zu", mapped_len);
+
 
     // inodes
     lm.num_entries = num_logs;
