@@ -49,7 +49,6 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads) {
         struct log *target_log = log_meta + i;
         target_log->freed.store(0);
         target_log->available = LOG_SIZE;
-        target_log->
     }
 
     // process inserts first todo: OCCUPIED ENUM IS WRONG NOW
@@ -122,14 +121,13 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads) {
     omp_set_num_threads(old_num_threads);
 }
 
-uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size, void **result) {
+uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size, void **result, int *pre_set) {
 
     void *map = NULL;
     size_t mapped_len = 0;
     int is_pmem = 1;
 
     if (use_pmem) {
-
 
         if (file_size == 0) {
             map = pmem_map_file(fn, 0, 0, 0, &mapped_len, &is_pmem);
@@ -150,9 +148,23 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size, void **result
 
     }
 
-
     if (map == NULL || map == MAP_FAILED || !is_pmem)
         die("map error map:%p is_pmem:%d", map, is_pmem);
+
+    if (pre_set != NULL) {
+        int value = *pre_set;
+        void *(*memset_func)(void *s, int c, size_t n);
+
+        if (use_pmem) memset_func = pmem_memset_persist;
+        else memset_func = memset;
+
+
+#pragma omp parallel for schedule(dynamic, 1)
+        for (uint64_t i = mapped_len; i < mapped_len; i += CACHE_LINE_SIZE) {
+            memset_func((char *) map + i, value, CACHE_LINE_SIZE);
+        }
+
+    }
 
     *result = map;
     return mapped_len;
@@ -160,6 +172,7 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size, void **result
 
 int log_recover(masstree::masstree *tree, int num_threads) {
     log_structs_size_check();
+    omp_set_num_threads(OMP_NUM_THREAD);
 
     uint64_t mapped_len;
 
@@ -199,26 +212,14 @@ int log_recover(masstree::masstree *tree, int num_threads) {
 void log_init(uint64_t num_logs) {
 
     log_structs_size_check();
+    uint64_t file_size = num_logs * CACHE_LINE_SIZE;
+    int preset = 0;
 
-    uint64_t file_size;
-
-    file_size = num_logs * CACHE_LINE_SIZE;
-
-    log_map(1, INODE_FN, file_size, (void **) inodes);
-    pmem_memset_persist(inodes, 0, file_size);
-
-    log_map(1, META_FN, file_size, (void **) log_meta);
-    pmem_memset_persist(log_meta, 0, file_size);
+    log_map(1, INODE_FN, file_size, (void **) inodes, &preset);
+    log_map(1, META_FN, file_size, (void **) log_meta, &preset);
 
     file_size = num_logs * LOG_SIZE;
-    log_map(1, LOG_FN, file_size, (void **) big_map);
-
-    omp_set_num_threads(23);
-#pragma omp parallel for schedule(dynamic, 10)
-    for (uint64_t fs = 0; fs < file_size; fs += (4 * 1024ULL)) {
-//        pmem_memset_persist(big_map + fs, 0, (4 * 1024ULL));
-    }
-
+    log_map(1, LOG_FN, file_size, (void **) big_map, &preset);
 
     // inodes
     lm.num_entries = num_logs;
