@@ -44,6 +44,10 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) 
         struct log *target_log = log_meta + i;
         target_log->freed.store(0);
         target_log->available = LOG_SIZE;
+        target_log->curr = big_map + i * LOG_SIZE;
+        target_log->index = i;
+        target_log->base = big_map + i * LOG_SIZE;
+        target_log->full.store(0);
     }
 
     if (read_tree) {
