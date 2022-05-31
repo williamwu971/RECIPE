@@ -211,6 +211,7 @@ int log_recover(masstree::masstree *tree, int num_threads) {
 
     // inodes
     lm.num_entries = num_logs;
+    printf("debug: %lu\n",lm.num_entries);
     lm.entries = (int **) malloc(sizeof(int *) * lm.num_entries);
     OCCUPIED = num_logs + 1;
     for (uint64_t i = 0; i < lm.num_entries; i++) {
