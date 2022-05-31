@@ -56,13 +56,14 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) 
 
         int old_num_threads = omp_get_num_threads();
         omp_set_num_threads(num_threads);
+        auto t = tree->getThreadInfo();
 
         // process inserts first todo: OCCUPIED ENUM IS WRONG NOW
 #pragma omp parallel for schedule(dynamic, 1)
         for (uint64_t i = 0; i < lm.num_entries; i++) {
 
             // todo: not sure if this has overhead
-            auto t = tree->getThreadInfo();
+
 
             char *end = big_map + (i + 1) * LOG_SIZE;
             char *curr = big_map + i * LOG_SIZE;
