@@ -114,6 +114,8 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) 
     lm.next_available = -1;
 
     for (int i = lm.num_entries - 1; i >= 0; i--) {
+
+        printf("debug %d\n", i);
         struct log *target_log = log_meta + i;
 
         if (target_log->available == LOG_SIZE ||
@@ -211,7 +213,6 @@ int log_recover(masstree::masstree *tree, int num_threads) {
 
     // inodes
     lm.num_entries = num_logs;
-    printf("debug: %lu\n",lm.num_entries);
     lm.entries = (int **) malloc(sizeof(int *) * lm.num_entries);
     OCCUPIED = num_logs + 1;
     for (uint64_t i = 0; i < lm.num_entries; i++) {
