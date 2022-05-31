@@ -322,12 +322,6 @@ char *log_acquire(int write_thread_log) {
         }
 
         thread_log = log_meta + i;
-        thread_log->freed.store(0);
-        thread_log->available = LOG_SIZE;
-        thread_log->index = i;
-        thread_log->full.store(0);
-        thread_log->base = log_address;
-        thread_log->curr = thread_log->base;
 
 //        pmem_persist(thread_log, CACHE_LINE_SIZE);
     }
@@ -347,6 +341,11 @@ void log_release(uint64_t idx) {
 
     lm.entries[idx][0] = lm.next_available;
     lm.next_available = idx;
+
+    struct log *target_log = log_meta + idx;
+    target_log->curr = target_log->base;
+    target_log->available = LOG_SIZE;
+    target_log->freed.store(0);
 
 //    pmem_persist(lm.entries[idx], sizeof(int));
 
