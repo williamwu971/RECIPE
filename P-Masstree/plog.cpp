@@ -235,11 +235,15 @@ void log_init(uint64_t num_logs) {
     uint64_t file_size = num_logs * CACHE_LINE_SIZE;
     int preset = 0;
 
-    log_map(1, INODE_FN, file_size, (void **) &inodes, &preset, CACHE_LINE_SIZE);
-    log_map(1, META_FN, file_size, (void **) &log_meta, &preset, CACHE_LINE_SIZE);
+    int *pptr = NULL;
+//    int *pptr = &preset;
+
+    // this region controls pre fault?
+    log_map(1, INODE_FN, file_size, (void **) &inodes, pptr, CACHE_LINE_SIZE);
+    log_map(1, META_FN, file_size, (void **) &log_meta, pptr, CACHE_LINE_SIZE);
 
     file_size = num_logs * LOG_SIZE;
-    log_map(1, LOG_FN, file_size, (void **) &big_map, &preset, LOG_SIZE);
+    log_map(1, LOG_FN, file_size, (void **) &big_map, pptr, LOG_SIZE);
 
     // inodes
     lm.num_entries = num_logs;
