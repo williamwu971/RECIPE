@@ -109,7 +109,7 @@ struct log_cell {
     uint64_t key;
 };
 
-int log_recover(masstree::masstree *tree, int num_threads);
+void log_recover(masstree::masstree *tree, int num_threads);
 
 void log_init(uint64_t num_logs);
 

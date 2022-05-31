@@ -191,7 +191,7 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size, void **result
     return mapped_len;
 }
 
-int log_recover(masstree::masstree *tree, int num_threads) {
+void log_recover(masstree::masstree *tree, int num_threads) {
     log_structs_size_check();
 
     uint64_t mapped_len;
