@@ -50,7 +50,7 @@ use_perf="no"
 record_latency="no"
 num_of_gc=6
 
-workload=100000000
+workload=100
 key_order="random"
 #key_order="seq"
 value_size=0
