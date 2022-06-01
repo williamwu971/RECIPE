@@ -59,6 +59,8 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) 
         std::atomic<uint64_t> recovered;
         recovered.store(0);
 
+        auto starttime = std::chrono::system_clock::now();
+
         // process inserts first todo: OCCUPIED ENUM IS WRONG NOW
 #pragma omp parallel for schedule(static, 1)
         for (uint64_t i = 0; i < lm.num_entries; i++) {
@@ -106,8 +108,13 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) 
                 curr += sizeof(struct log_cell) + lc->value_size;
             }
         }
+
+        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
+                std::chrono::system_clock::now() - starttime);
+
         omp_set_num_threads(old_num_threads);
-        printf("... tree rebuild complete, recovered %lu keys ...\n", recovered.load());
+        printf("... rebuild complete, recovered %lu keys throughput %.2f ops/us...\n",
+               recovered.load(), (recovered.load() * 1.0) / duration.count());
     }
 
 
