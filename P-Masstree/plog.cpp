@@ -770,9 +770,9 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed) {
         if (file == NULL) return;
 
 
-        while (fgets(buf, 1024, file)) {
-            printf("%s", buf);
-        }
+//        while (fgets(buf, 1024, file)) {
+//            printf("%s", buf);
+//        }
 
         goto restart;
     }
