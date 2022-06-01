@@ -45,15 +45,15 @@ value_location=("pmem" "log")
 index_location=("dram")
 value_location=("log")
 #value_location=("pmem")
-num_threads=(19)
+num_threads=(1 2 4 8 16)
 use_perf="yes"
 record_latency="no"
-num_of_gc=0
+num_of_gc=8
 
 workload=20000000
 key_order="random"
 #key_order="seq"
-value_size=512
+value_size=1024
 
 file_prefixes=("insert" "update" "lookup")
 
