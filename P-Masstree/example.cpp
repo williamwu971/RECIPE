@@ -281,7 +281,7 @@ void run(char **argv) {
     int num_of_gc = 0;
     int show_log_usage = 0;
     int record_latency = 0;
-    int display_throughput = 0;
+    int display_throughput = 1;
     int value_size = sizeof(struct log_cell) + sizeof(uint64_t);
 
     printf("argv: ");
