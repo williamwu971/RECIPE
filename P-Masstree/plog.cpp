@@ -748,7 +748,19 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed) {
 
                     uint64_t number;
 
-                    sscanf(buf, "%lu %s", &number, no_use);
+                    char num_str[1024];
+                    num_str[0] = '\0';
+
+                    char num_raw[1024];
+                    sscanf(buf, "%s %s", num_raw, no_use);
+
+                    strcat(num_str, strtok(num_raw, ","));
+                    char *curr;
+                    while ((curr = strtok(NULL, ",")) != NULL) {
+                        strcat(num_str, curr);
+                    }
+
+                    sscanf(num_str, "%lu", &number);
 
                     if (strstr(buf, "0xe2")) {
                         if (number > read_b_cycle)read_b_cycle = number;
