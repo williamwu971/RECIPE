@@ -56,6 +56,8 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) 
 
         int old_num_threads = omp_get_num_threads();
         omp_set_num_threads(num_threads);
+        std::atomic<uint64_t> recovered;
+        recovered.store(0);
 
         // process inserts first todo: OCCUPIED ENUM IS WRONG NOW
 #pragma omp parallel for schedule(static, 1)
@@ -85,11 +87,15 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) 
 
                     // insert success and created a new key-value
                     // replaced a value, should free some space in other log
-                    if (res != NULL && res != lc) {
+                    if (res != NULL) {
 
-                        uint64_t idx = (uint64_t) ((char *) res - big_map) / LOG_SIZE;
-                        struct log *target_log = log_meta + idx;
-                        target_log->freed.fetch_add(sizeof(struct log_cell) + res->value_size);
+                        if (res != lc) {
+                            uint64_t idx = (uint64_t) ((char *) res - big_map) / LOG_SIZE;
+                            struct log *target_log = log_meta + idx;
+                            target_log->freed.fetch_add(sizeof(struct log_cell) + res->value_size);
+                        } else {
+                            recovered.fetch_add(1);
+                        }
                     }
 
                 } else {
@@ -101,7 +107,7 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) 
             }
         }
         omp_set_num_threads(old_num_threads);
-        puts("... tree rebuild complete, rebuilding metadata ...");
+        printf("... tree rebuild complete, recovered %lu keys ...\n", recovered.load());
     }
 
 
