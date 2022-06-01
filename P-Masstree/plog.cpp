@@ -739,7 +739,7 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed) {
 
         while (fgets(buf, 1024, file)) {
 
-            printf("%s", buf);
+//            printf("%s", buf);
             char no_use[1024];
 
             for (int i = 0; i < length; i++) {
