@@ -249,8 +249,8 @@ void log_init(uint64_t num_logs) {
     uint64_t file_size = num_logs * CACHE_LINE_SIZE;
     int preset = 0;
 
-    int *pptr = NULL;
-//    int *pptr = &preset;
+//    int *pptr = NULL;
+    int *pptr = &preset;
 
     // this region controls pre fault?
     log_map(1, INODE_FN, file_size, (void **) &inodes, pptr, CACHE_LINE_SIZE);
@@ -771,7 +771,6 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed) {
         while (fgets(buf, 1024, file)) {
             printf("%s", buf);
         }
-        die("elapsed wrong");
     }
 
     double read_b_percent = (double) read_b_cycle / (double) elapsed_cycles * 100.0f;
