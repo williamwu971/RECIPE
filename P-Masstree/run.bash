@@ -45,10 +45,10 @@ value_location=("pmem" "log")
 index_location=("dram")
 value_location=("log")
 #value_location=("pmem")
-num_threads=(18)
+num_threads=(1 2 4 8 16)
 use_perf="yes"
 record_latency="no"
-num_of_gc=6
+num_of_gc=0
 
 workload=100000000
 key_order="random"
