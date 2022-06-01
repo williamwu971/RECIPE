@@ -53,7 +53,7 @@ num_of_gc=6
 workload=20000000
 key_order="random"
 #key_order="seq"
-value_size=1024
+value_size=512
 
 file_prefixes=("insert" "update" "lookup")
 
