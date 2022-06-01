@@ -581,7 +581,8 @@ void run(char **argv) {
         fclose(latency_file);
     }
 
-    log_join_all_gc();
+    if (num_of_gc > 0)
+        log_join_all_gc();
     log_debug_print(2, show_log_usage);
 
     delete[] keys;
