@@ -48,7 +48,7 @@ value_location=("log")
 num_threads=(1 3 5 7 9 11 13 15 17 19)
 use_perf="yes"
 record_latency="no"
-num_of_gc=0
+num_of_gc=6
 
 workload=20000000
 key_order="random"
