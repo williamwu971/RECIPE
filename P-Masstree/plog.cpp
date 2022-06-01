@@ -726,6 +726,7 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed) {
     uint64_t write = 0;
     uint64_t read_b_cycle = 0;
     uint64_t write_b_cycle = 0;
+    double elapsed_perf = 0;
 
     while (fgets(buf, 1024, file)) {
 
@@ -750,9 +751,14 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed) {
                 }
             }
         }
+
+        if (strstr(buf, "elapsed"))
+            sscanf(buf, "%lf %s %s %s", &elapsed_perf, no_use, no_use, no_use);
+
     }
 
     uint64_t elapsed_cycles = perf_stop_rtd - perf_start_rtd;
+    elapsed = elapsed_perf;
 
     double read_b_percent = (double) read_b_cycle / (double) elapsed_cycles * 100.0f;
     double read_bw = (double) read * 64.0f / 1024.0f / 1024.0f / 1024.0f / elapsed;
