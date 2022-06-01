@@ -718,64 +718,60 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed) {
     };
     int length = 4;
 
-    restart:
-
-    FILE *file = fopen(perf_fn, "r");
-    if (file == NULL) return;
     char buf[1024];
-
-    uint64_t read = 0;
-    uint64_t write = 0;
-    uint64_t read_b_cycle = 0;
-    uint64_t write_b_cycle = 0;
     double elapsed_perf = 0;
 
-    while (fgets(buf, 1024, file)) {
+    uint64_t read;
+    uint64_t write;
+    uint64_t read_b_cycle;
+    uint64_t write_b_cycle;
 
-        char no_use[1024];
 
-        for (int i = 0; i < length; i++) {
+    while (elapsed_perf < 0.01) {
 
-            if (strstr(buf, pmem_sticks[i])) {
+        read = 0;
+        write = 0;
+        read_b_cycle = 0;
+        write_b_cycle = 0;
 
-                uint64_t number;
+        FILE *file = fopen(perf_fn, "r");
+        if (file == NULL) return;
 
-                sscanf(buf, "%lu %s", &number, no_use);
+        while (fgets(buf, 1024, file)) {
 
-                if (strstr(buf, "0xe2")) {
-                    if (number > read_b_cycle)read_b_cycle = number;
-                } else if (strstr(buf, "0xe3")) {
-                    read += number;
-                } else if (strstr(buf, "0xe6")) {
-                    if (number > write_b_cycle)write_b_cycle = number;
-                } else if (strstr(buf, "0xe7")) {
-                    write += number;
+            char no_use[1024];
+
+            for (int i = 0; i < length; i++) {
+
+                if (strstr(buf, pmem_sticks[i])) {
+
+                    uint64_t number;
+
+                    sscanf(buf, "%lu %s", &number, no_use);
+
+                    if (strstr(buf, "0xe2")) {
+                        if (number > read_b_cycle)read_b_cycle = number;
+                    } else if (strstr(buf, "0xe3")) {
+                        read += number;
+                    } else if (strstr(buf, "0xe6")) {
+                        if (number > write_b_cycle)write_b_cycle = number;
+                    } else if (strstr(buf, "0xe7")) {
+                        write += number;
+                    }
                 }
             }
+
+            if (strstr(buf, "elapsed"))
+                sscanf(buf, "%lf %s %s %s", &elapsed_perf, no_use, no_use, no_use);
+
         }
-
-        if (strstr(buf, "elapsed"))
-            sscanf(buf, "%lf %s %s %s", &elapsed_perf, no_use, no_use, no_use);
-
+        fclose(file);
     }
+
 
     uint64_t elapsed_cycles = perf_stop_rtd - perf_start_rtd;
     elapsed = elapsed_perf;
 
-
-    if (elapsed < 0.01) {
-
-        fclose(file);
-        file = fopen(perf_fn, "r");
-        if (file == NULL) return;
-
-
-//        while (fgets(buf, 1024, file)) {
-//            printf("%s", buf);
-//        }
-
-        goto restart;
-    }
 
     double read_b_percent = (double) read_b_cycle / (double) elapsed_cycles * 100.0f;
     double read_bw = (double) read * 64.0f / 1024.0f / 1024.0f / 1024.0f / elapsed;
