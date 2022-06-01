@@ -46,7 +46,7 @@ index_location=("dram")
 value_location=("log")
 #value_location=("pmem")
 num_threads=(18)
-use_perf="no"
+use_perf="yes"
 record_latency="no"
 num_of_gc=6
 
