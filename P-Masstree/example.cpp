@@ -279,8 +279,9 @@ void run(char **argv) {
     int shuffle_keys = 0;
     int use_perf = 0;
     int num_of_gc = 0;
-    int show_log_usage = 1;
+    int show_log_usage = 0;
     int record_latency = 0;
+    int display_throughput = 0;
     int value_size = sizeof(struct log_cell) + sizeof(uint64_t);
 
     printf("argv: ");
@@ -437,8 +438,9 @@ void run(char **argv) {
             log_stop_perf();
             log_print_pmem_bandwidth(perf_fn, duration.count() / 1000000.0);
         }
-        printf("Throughput: insert,%ld,%.2f ops/us %.2f sec\n",
-               n, (n * 1.0) / duration.count(), duration.count() / 1000000.0);
+        if (display_throughput)
+            printf("Throughput: insert,%ld,%.2f ops/us %.2f sec\n",
+                   n, (n * 1.0) / duration.count(), duration.count() / 1000000.0);
         insert_throughput = (n * 1.0) / duration.count();
     }
     log_debug_print(1, show_log_usage);
@@ -510,8 +512,9 @@ void run(char **argv) {
             log_print_pmem_bandwidth(perf_fn, duration.count() / 1000000.0);
         }
 
-        printf("Throughput: update,%ld,%.2f ops/us %.2f sec\n",
-               n, (n * 1.0) / duration.count(), duration.count() / 1000000.0);
+        if (display_throughput)
+            printf("Throughput: update,%ld,%.2f ops/us %.2f sec\n",
+                   n, (n * 1.0) / duration.count(), duration.count() / 1000000.0);
         update_throughput = (n * 1.0) / duration.count();
     }
 
@@ -546,8 +549,9 @@ void run(char **argv) {
             log_print_pmem_bandwidth(perf_fn, duration.count() / 1000000.0);
         }
 
-        printf("Throughput: lookup,%ld,%.2f ops/us %.2f sec\n",
-               n, (n * 1.0) / duration.count(), duration.count() / 1000000.0);
+        if (display_throughput)
+            printf("Throughput: lookup,%ld,%.2f ops/us %.2f sec\n",
+                   n, (n * 1.0) / duration.count(), duration.count() / 1000000.0);
         lookup_throughput = (n * 1.0) / duration.count();
     }
 
