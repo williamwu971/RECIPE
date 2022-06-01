@@ -761,7 +761,7 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed) {
     elapsed = elapsed_perf;
 
 
-    if (elapsed < 1) {
+    if (elapsed < 0.01) {
 
         fclose(file);
         file = fopen(perf_fn, "r");
