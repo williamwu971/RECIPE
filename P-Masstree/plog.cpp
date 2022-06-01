@@ -768,12 +768,14 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed) {
     printf("\n");
 
     printf("read: ");
-    printf("%.2f%% ", read_b_percent);
+//    printf("%.2f%% ", read_b_percent);
     printf("%.2fgb/s ", read_bw);
 
     printf("write: ");
-    printf("%.2f%% ", write_b_percent);
+//    printf("%.2f%% ", write_b_percent);
     printf("%.2fgb/s ", write_bw);
+
+    printf("elapsed: %.2f ", elapsed);
 
     printf("\n");
 
