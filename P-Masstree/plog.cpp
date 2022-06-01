@@ -718,6 +718,8 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed) {
     };
     int length = 4;
 
+    restart:
+
     FILE *file = fopen(perf_fn, "r");
     if (file == NULL) return;
     char buf[1024];
@@ -771,6 +773,8 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed) {
         while (fgets(buf, 1024, file)) {
             printf("%s", buf);
         }
+
+        goto restart;
     }
 
     double read_b_percent = (double) read_b_cycle / (double) elapsed_cycles * 100.0f;
