@@ -52,7 +52,7 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) 
 
     if (read_tree) {
 
-        printf("... rebuilding tree using %d omp threads ...\n", num_threads);
+        printf("\n... rebuilding tree using %d omp threads ...\n", num_threads);
 
         int old_num_threads = omp_get_num_threads();
         omp_set_num_threads(num_threads);

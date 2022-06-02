@@ -347,6 +347,8 @@ void run(char **argv) {
     // (TP dropped) shuffle the array todo: random keys (make it faster)
     if (shuffle_keys) {
         printf("shuffle keys... ");
+        fflush(stdout);
+
         srand(time(NULL));
         for (uint64_t i = 0; i < n - 1; i++) {
             uint64_t j = i + rand() / (RAND_MAX / (n - i) + 1);
@@ -364,7 +366,8 @@ void run(char **argv) {
     masstree::masstree *tree = new masstree::masstree();
 
     if (require_log_init) {
-        printf("init log and GC... ");
+        printf("init log... ");
+        fflush(stdout);
 
         if (
                 access(INODE_FN, F_OK) == 0 &&
@@ -377,7 +380,8 @@ void run(char **argv) {
             log_init(10240);
         }
 
-
+        printf("spawn GC... ");
+        fflush(stdout);
         for (int gcc = 0; gcc < num_of_gc; gcc++) {
             log_start_gc(tree);
         }
