@@ -430,8 +430,10 @@ void run(char **argv) {
                 if (require_flush) {
 //                    clflush(raw, raw_size, true, true);
 //                    pmem_persist(raw, raw_size);
-                    pmem_persist(raw, sizeof(struct log_cell) + sizeof(uint64_t));
-                    pmem_memset_persist(value + 1, 7, raw_size - sizeof(struct log_cell) - sizeof(uint64_t));
+//                    pmem_persist(raw, sizeof(struct log_cell) + sizeof(uint64_t));
+//                    pmem_memset_persist(value + 1, 7, raw_size - sizeof(struct log_cell) - sizeof(uint64_t));
+
+                    pmem_persist(raw, raw_size);
                 }
                 tree->put_and_return(keys[i], raw, 1, t);
             }
@@ -493,8 +495,10 @@ void run(char **argv) {
                 if (require_flush) {
 //                    clflush(raw, raw_size, true, true);
 //                    pmem_persist(raw, raw_size);
-                    pmem_persist(raw, sizeof(struct log_cell) + sizeof(uint64_t));
-                    pmem_memset_persist(value + 1, 7, raw_size - sizeof(struct log_cell) - sizeof(uint64_t));
+//                    pmem_persist(raw, sizeof(struct log_cell) + sizeof(uint64_t));
+//                    pmem_memset_persist(value + 1, 7, raw_size - sizeof(struct log_cell) - sizeof(uint64_t));
+
+                    pmem_persist(raw, raw_size);
                 }
 //                if (record_latency) rdtscll(b);
                 if (record_latency) rdtscll_fence(a);
