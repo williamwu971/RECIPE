@@ -260,7 +260,7 @@ void log_init(uint64_t num_logs) {
 
     log_structs_size_check();
     uint64_t file_size = num_logs * CACHE_LINE_SIZE;
-    int preset = 0;
+    int preset = 7;
 
 //    int *pptr = NULL;
     int *pptr = &preset;
