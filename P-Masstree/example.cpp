@@ -420,6 +420,7 @@ void run(char **argv) {
                 lc->is_delete = 0;
                 lc->key = keys[i];
                 rdtscll(lc->version);
+                lc->reference = 0;
 
                 uint64_t *value = (uint64_t *) (raw + sizeof(struct log_cell));
                 *value = rands[i];
@@ -481,6 +482,7 @@ void run(char **argv) {
                 lc->is_delete = 0;
                 lc->key = keys[i];
                 rdtscll(lc->version);
+                lc->reference = 0;
 
                 uint64_t *value = (uint64_t *) (raw + sizeof(struct log_cell));
                 *value = keys[i];
