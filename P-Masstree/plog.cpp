@@ -499,25 +499,25 @@ void *log_garbage_collection(void *arg) {
 
                 // persist this entry to the new log first
                 // todo: two flushes are required here
-                new_lc->key = old_lc->key;
-                new_lc->is_delete = old_lc->is_delete;
-                new_lc->value_size = old_lc->value_size;
+//                new_lc->key = old_lc->key;
+//                new_lc->is_delete = old_lc->is_delete;
+//                new_lc->value_size = old_lc->value_size;
 //                rdtscll(new_lc->version);
-                new_lc->version = old_lc->version + 1; // todo: this is a heck
-                pmem_persist(new_lc, sizeof(struct log_cell));
+//                new_lc->version = old_lc->version + 1; // todo: this is a heck
+//                pmem_persist(new_lc, sizeof(struct log_cell));
 
-                pmem_memcpy_persist(thread_log->curr + sizeof(struct log_cell),
-                                    current_ptr + sizeof(struct log_cell),
-                                    new_lc->value_size);
+//                pmem_memcpy_persist(thread_log->curr + sizeof(struct log_cell),
+//                                    current_ptr + sizeof(struct log_cell),
+//                                    new_lc->value_size);
 
-//                pmem_memcpy_persist(thread_log->curr, current_ptr,
-//                                    sizeof(struct log_cell) + new_lc->value_size);
+                pmem_memcpy_persist(thread_log->curr, current_ptr,
+                                    sizeof(struct log_cell) + old_lc->value_size);
 
 
                 // this step might be buggy if went out of bound of the new log
                 // ignore a cell if it is delete
 
-                if (!new_lc->is_delete) {
+                if (!old_lc->is_delete) {
 
                     // try to commit this entry
                     void *res = tree->put_and_return(new_lc->key, new_lc, 0, t);

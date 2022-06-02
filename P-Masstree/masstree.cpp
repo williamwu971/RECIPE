@@ -1169,7 +1169,7 @@ void* leafnode::assign_value_if_newer(int p,void *value)
     struct log_cell* new_lc = (struct log_cell*)value;
 
     // todo: modification in version number will need another flush. How to avoid?
-    if (new_lc->version>old_lc->version){
+    if (new_lc->version>=old_lc->version){
         entry[p].value = value;
         clflush((char *)&entry[p].value, sizeof(void *), false, true);
         return old_lc;
