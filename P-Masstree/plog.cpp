@@ -192,10 +192,16 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size, void **result
         else step_size = CACHE_LINE_SIZE;
 
         omp_set_num_threads(OMP_NUM_THREAD);
+
+        log_start_perf("pre_fault.perf");
+
 #pragma omp parallel for schedule(dynamic, 1)
         for (uint64_t i = 0; i < mapped_len; i += step_size) {
             memset_func((char *) map + i, value, step_size);
         }
+
+        log_stop_perf();
+        log_print_pmem_bandwidth("pre_fault.perf", 0);
 
     }
 
