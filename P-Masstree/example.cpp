@@ -423,15 +423,15 @@ void run(char **argv) {
 
                 uint64_t *value = (uint64_t *) (raw + sizeof(struct log_cell));
                 *value = rands[i];
-                memset(value + 1, 7, raw_size - sizeof(struct log_cell) - sizeof(uint64_t));
+//                memset(value + 1, 7, raw_size - sizeof(struct log_cell) - sizeof(uint64_t));
 
                 // flush value before inserting todo: should this exist for DRAM+DRAM?
 
                 if (require_flush) {
 //                    clflush(raw, raw_size, true, true);
                     pmem_persist(raw, raw_size);
-//                    pmem_persist(raw, sizeof(struct log_cell) + sizeof(uint64_t));
-//                    pmem_memset_persist(value + 1, 7, raw_size - sizeof(struct log_cell) - sizeof(uint64_t));
+                    pmem_persist(raw, sizeof(struct log_cell) + sizeof(uint64_t));
+                    pmem_memset_persist(value + 1, 7, raw_size - sizeof(struct log_cell) - sizeof(uint64_t));
 
                 }
                 tree->put_and_return(keys[i], raw, 1, t);
@@ -484,7 +484,7 @@ void run(char **argv) {
 
                 uint64_t *value = (uint64_t *) (raw + sizeof(struct log_cell));
                 *value = keys[i];
-                memset(value + 1, 7, raw_size - sizeof(struct log_cell) - sizeof(uint64_t));
+//                memset(value + 1, 7, raw_size - sizeof(struct log_cell) - sizeof(uint64_t));
 
 //                if (record_latency) rdtscll(b);
 //                if (record_latency) rdtscll(a);
@@ -493,9 +493,9 @@ void run(char **argv) {
 
                 if (require_flush) {
 //                    clflush(raw, raw_size, true, true);
-                    pmem_persist(raw, raw_size);
-//                    pmem_persist(raw, sizeof(struct log_cell) + sizeof(uint64_t));
-//                    pmem_memset_persist(value + 1, 7, raw_size - sizeof(struct log_cell) - sizeof(uint64_t));
+//                    pmem_persist(raw, raw_size);
+                    pmem_persist(raw, sizeof(struct log_cell) + sizeof(uint64_t));
+                    pmem_memset_persist(value + 1, 7, raw_size - sizeof(struct log_cell) - sizeof(uint64_t));
 
                 }
 //                if (record_latency) rdtscll(b);
