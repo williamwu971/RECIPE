@@ -786,9 +786,9 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed) {
     elapsed = elapsed_perf;
 
 
-    double read_b_percent = (double) read_b_cycle / (double) elapsed_cycles * 100.0f;
+//    double read_b_percent = (double) read_b_cycle / (double) elapsed_cycles * 100.0f;
     double read_bw = (double) read * 64.0f / 1024.0f / 1024.0f / 1024.0f / elapsed;
-    double write_b_percent = (double) write_b_cycle / (double) elapsed_cycles * 100.0f;
+//    double write_b_percent = (double) write_b_cycle / (double) elapsed_cycles * 100.0f;
     double write_bw = (double) write * 64.0f / 1024.0f / 1024.0f / 1024.0f / elapsed;
 
     printf("\n");
