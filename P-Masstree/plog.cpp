@@ -192,6 +192,7 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size, void **result
         else step_size = CACHE_LINE_SIZE;
 
 //        log_start_perf("pre_fault.perf");
+        auto starttime = std::chrono::system_clock::now();
 
         omp_set_num_threads(OMP_NUM_THREAD);
 #pragma omp parallel for schedule(dynamic, 1)
@@ -201,6 +202,12 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size, void **result
 
 //        log_stop_perf();
 //        log_print_pmem_bandwidth("pre_fault.perf", 0);
+
+        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
+                std::chrono::system_clock::now() - starttime);
+
+        printf("pre-faulted %s %.2f gb/s ",
+               fn, (mapped_len * 1.0 / 1024.0 / 1024.0 / 1024.0) / (duration.count() / 1000000.0));
 
     }
 
