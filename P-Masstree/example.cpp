@@ -455,7 +455,8 @@ void run(char **argv) {
             auto t = tree->getThreadInfo();
             for (uint64_t i = range.begin(); i != range.end(); i++) {
 
-                u_int64_t a = 0, b;
+                u_int64_t a = 0;
+                u_int64_t b = 0;
 
 //                if (record_latency) rdtscll(a);
 
