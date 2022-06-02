@@ -206,7 +206,7 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size, void **result
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
                 std::chrono::system_clock::now() - starttime);
 
-        printf("\t\t\tpre-faulted %s %.2f gb/s %.2f s\n",
+        printf("\n\t\t\tpre-faulted %s %.2f gb/s %.2f s\n",
                fn, (mapped_len * 1.0 / 1024.0 / 1024.0 / 1024.0) / (duration.count() / 1000000.0),
                duration.count() / 1000000.0);
 
