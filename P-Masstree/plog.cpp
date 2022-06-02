@@ -439,7 +439,6 @@ void log_free(void *ptr) {
 
 void *log_garbage_collection(void *arg) {
 
-    // todo Question: do we need to lock the whole tree?
     masstree::masstree *tree = (masstree::masstree *) arg;
     auto t = tree->getThreadInfo();
 
