@@ -760,7 +760,7 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed) {
                     }
 
                     sscanf(num_str, "%lu", &number);
-                    printf("number: %s\n", num_str);
+//                    printf("number: %s\n", num_str);
 
                     if (strstr(buf, "0xe2")) {
                         if (number > read_b_cycle)read_b_cycle = number;
