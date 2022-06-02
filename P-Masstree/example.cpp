@@ -280,7 +280,7 @@ void run(char **argv) {
     int shuffle_keys = 0;
     int use_perf = 0;
     int num_of_gc = 0;
-    int show_log_usage = 0;
+    int show_log_usage = 1;
     int record_latency = 0;
     int display_throughput = 1;
     int value_size = sizeof(struct log_cell) + sizeof(uint64_t);
