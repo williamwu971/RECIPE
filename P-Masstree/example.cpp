@@ -219,6 +219,7 @@ static void _launch_ycsb_e(int test, int nb_requests, int zipfian) {
             } else {
                 uint64_t buf[200];
                 int ret = tree->scan(key, uniform_next() % 99 + 1, buf, t);
+                (void) ret;
             }
 
         }
