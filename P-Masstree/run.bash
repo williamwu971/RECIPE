@@ -45,7 +45,7 @@ value_location=("pmem" "log")
 index_location=("dram")
 value_location=("log")
 #value_location=("pmem")
-num_threads=(1 2 4 8 16)
+num_threads=(16)
 use_perf="yes"
 record_latency="no"
 num_of_gc=8
@@ -83,7 +83,7 @@ for i in "${index_location[@]}"; do
 
       # drop system cache and clear pmem device
       echo 1 >/proc/sys/vm/drop_caches
-#      rm -rf /pmem0/masstree*
+      rm -rf /pmem0/masstree*
       #      /home/blepers/linux/tools/perf/perf record -g ./example "$workload" "$n" index="$i" value="$v" key="$key_order"
       ./example "$workload" "$n" index="$i" value="$v" key="$key_order" perf="$use_perf" \
         gc="$num_of_gc" latency="$record_latency" value_size="$value_size"
