@@ -1158,7 +1158,7 @@ namespace masstree {
         }
 
 
-        old_lc->reference--;
+//        old_lc->reference--;
 
         return NULL;
     }
