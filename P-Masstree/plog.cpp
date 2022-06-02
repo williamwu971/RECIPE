@@ -208,6 +208,7 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size, void **result
 
         printf("pre-faulted %s %.2f gb/s ",
                fn, (mapped_len * 1.0 / 1024.0 / 1024.0 / 1024.0) / (duration.count() / 1000000.0));
+        fflush(stdout);
 
     }
 
