@@ -782,7 +782,7 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed) {
     }
 
 
-    uint64_t elapsed_cycles = perf_stop_rtd - perf_start_rtd;
+//    uint64_t elapsed_cycles = perf_stop_rtd - perf_start_rtd;
     elapsed = elapsed_perf;
 
 
