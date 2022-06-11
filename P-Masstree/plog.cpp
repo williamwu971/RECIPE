@@ -144,6 +144,12 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) 
 
 }
 
+
+// todo: pagefault by reading the file
+void *log_prefault_thread(void *arg) {
+
+}
+
 uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size, void **result, int *pre_set, int alignment) {
 
     void *map = NULL;
