@@ -63,9 +63,9 @@ for fp in "${file_prefixes[@]}"; do
   # the header of csv file
   printf "index,value,threads,rb(gb/s),wb(gb/s),TP,rb(gb/s),wb(gb/s),TP,rb(gb/s),wb(gb/s),TP" >>$fp.csv
 
-#  for n in "${num_threads[@]}"; do
-#    printf 'T=%s,' "$n" >>$fp.csv
-#  done
+  #  for n in "${num_threads[@]}"; do
+  #    printf 'T=%s,' "$n" >>$fp.csv
+  #  done
 
   echo "" >>$fp.csv
 done
@@ -77,7 +77,7 @@ for i in "${index_location[@]}"; do
     for n in "${num_threads[@]}"; do
 
       # the first three columns
-          printf '%s,%s,%s,' "$i" "$v" "$n" >>perf.csv
+      printf '%s,%s,%s,' "$i" "$v" "$n" >>perf.csv
 
       # drop system cache and clear pmem device
       echo 1 >/proc/sys/vm/drop_caches
@@ -91,17 +91,14 @@ for i in "${index_location[@]}"; do
       fi
       #      mv out.png out_"$i"_"$v".png
       #      ./example 100 "$n" index="$i" value="$v"
+
+      # this should result in two csv files insert.csv and lookup.csv
+      # just append a new line to it
+      for fp in "${file_prefixes[@]}"; do
+        echo "" >>$fp.csv
+      done
     done
-
-    # this should result in two csv files insert.csv and lookup.csv
-    # just append a new line to it
-
-    for fp in "${file_prefixes[@]}"; do
-      echo "" >>$fp.csv
-    done
-
   done
-
 done
 
 # move perf files
