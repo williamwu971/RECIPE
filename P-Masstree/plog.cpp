@@ -547,8 +547,8 @@ void *log_garbage_collection(void *arg) {
 //                                    current_ptr + sizeof(struct log_cell),
 //                                    new_lc->value_size);
 
-                pmem_memcpy_persist(thread_log->curr, current_ptr,
-                                    sizeof(struct log_cell) + old_lc->value_size);
+//                pmem_memcpy_persist(thread_log->curr, current_ptr,
+//                                    sizeof(struct log_cell) + old_lc->value_size);
 
 
                 // this step might be buggy if went out of bound of the new log
@@ -556,17 +556,31 @@ void *log_garbage_collection(void *arg) {
 
                 if (!old_lc->is_delete) {
 
-                    auto l = (masstree::leafnode *) tree->put_to_lock(old_lc->key, t);
+                    struct masstree_put_to_pack pack = tree->put_to_lock(old_lc->key, t);
 
+                    masstree::leafnode *l = (masstree::leafnode *) pack.leafnode;
+                    struct log_cell *current_value_in_tree = (struct log_cell *) l->value(pack.p);
+
+
+                    if (current_value_in_tree != NULL && current_value_in_tree->version == old_lc->version) {
+                        pmem_memcpy_persist(thread_log->curr, current_ptr,
+                                            sizeof(struct log_cell) + old_lc->value_size);
+
+                        l->assign_value(pack.p, thread_log->curr);
+                        tree->put_to_unlock(pack.leafnode);
+
+                        thread_log->available -= total_size;
+                        target_log->curr += total_size;
+                    }
 
                     // try to commit this entry
-                    void *res = tree->put_and_return(new_lc->key, new_lc, 0, t);
+//                    void *res = tree->put_and_return(new_lc->key, new_lc, 0, t);
 
                     // the log acquired by gc thread shouldn't need atomic ops
-                    if (res != NULL) {
-                        thread_log->available -= total_size;
-                        thread_log->curr += total_size;
-                    }
+//                    if (res != NULL) {
+//                        thread_log->available -= total_size;
+//                        thread_log->curr += total_size;
+//                    }
                 }
                 current_ptr += total_size;
             }

@@ -19,7 +19,7 @@
 
 struct masstree_put_to_pack {
     void *leafnode;
-    int i;
+    int p;
 };
 
 namespace masstree {

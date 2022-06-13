@@ -707,13 +707,13 @@ namespace masstree {
         kx_ = l->key_lower_bound_by(key);
         struct masstree_put_to_pack pack;
         pack.leafnode = NULL;
-        pack.i = -1;
+        pack.p = -1;
 
         // return True if there is an insert, False otherwise
         if (kx_.p >= 0 && l->key(kx_.p) == key) {
 
             pack.leafnode = l;
-            pack.i = kx_.p;
+            pack.p = kx_.p;
 
         } else {
 
