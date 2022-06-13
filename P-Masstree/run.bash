@@ -58,7 +58,7 @@ value_size=1024 # the size of the value impact performance a lot
 file_prefixes=("perf")
 
 for fp in "${file_prefixes[@]}"; do
-  echo "$fp,workload=$workload,unit=ops/us,key_order=$key_order" >$fp.csv
+  echo "$fp,workload=$workload,value_size=$value_size,key_order=$key_order" >$fp.csv
 
   # the header of csv file
   printf \
