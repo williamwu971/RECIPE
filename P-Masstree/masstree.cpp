@@ -245,7 +245,8 @@ namespace masstree {
         const leafnode *n = this;
 
         leafnode *snapshot_n;
-        if ((snapshot_n = n->next.load(std::memory_order_acquire)) && compare_key(key, snapshot_n->highest) >= 0) {
+        if ((snapshot_n = n->next.load(std::memory_order_acquire)) &&
+            compare_key(key, snapshot_n->highest) >= 0) {
             n = snapshot_n;
         }
 
@@ -332,8 +333,10 @@ namespace masstree {
         }
 
         leafnode *nl = new leafnode(0);
-        nl->assign_initialize(0, kcmp < 0 ? olv->fkey[depth] : nlv->fkey[depth], kcmp < 0 ? SET_LV(olv) : SET_LV(nlv));
-        nl->assign_initialize(1, kcmp < 0 ? nlv->fkey[depth] : olv->fkey[depth], kcmp < 0 ? SET_LV(nlv) : SET_LV(olv));
+        nl->assign_initialize(0, kcmp < 0 ?
+                                 olv->fkey[depth] : nlv->fkey[depth], kcmp < 0 ? SET_LV(olv) : SET_LV(nlv));
+        nl->assign_initialize(1, kcmp < 0 ?
+                                 nlv->fkey[depth] : olv->fkey[depth], kcmp < 0 ? SET_LV(nlv) : SET_LV(olv));
 
         nl->permutation = permuter::make_sorted(2);
 
@@ -391,7 +394,8 @@ namespace masstree {
                 left->writeUnlock(false);
             } else {
                 root = p;
-                t->split(p->entry[pkx_.p].value, root, depth, lv, right->highest, right, left->level() + 1, left,
+                t->split(p->entry[pkx_.p].value, root, depth, lv,
+                         right->highest, right, left->level() + 1, left,
                          false);
             }
         } else {
@@ -403,7 +407,8 @@ namespace masstree {
                 right->writeUnlock(false);
                 left->writeUnlock(false);
             } else {
-                t->split(NULL, NULL, 0, NULL, right->highest, right, left->level() + 1, left, false);
+                t->split(NULL, NULL, 0, NULL, right->highest, right,
+                         left->level() + 1, left, false);
             }
         }
     }
@@ -715,9 +720,11 @@ namespace masstree {
                 goto from_root;
                 // ii)  Atomically update value for the matching key
             } else if (IS_LV(l->value(kx_.p)) && (LV_PTR(l->value(kx_.p)))->key_len == lv->key_len &&
-                       memcmp(lv->fkey, (LV_PTR(l->value(kx_.p)))->fkey, aligned_len(lv->key_len)) == 0) {
+                       memcmp(lv->fkey, (LV_PTR(l->value(kx_.p)))->fkey,
+                              aligned_len(lv->key_len)) == 0) {
                 (LV_PTR(l->value(kx_.p)))->value = value;
-                clflush((char *) &(LV_PTR(l->value(kx_.p)))->value, sizeof(void *), false, true);
+                clflush((char *) &(LV_PTR(l->value(kx_.p)))->value,
+                        sizeof(void *), false, true);
                 l->writeUnlock(false);
                 // iii) Allocate additional layers (B+tree's roots) up to
                 //      the number of common prefixes (8bytes unit).
@@ -1049,7 +1056,8 @@ namespace masstree {
                 goto from_root;
                 // ii)  Checking false-positive result and starting to delete it
             } else if (IS_LV(l->value(kx_.p)) && (LV_PTR(l->value(kx_.p)))->key_len == lv->key_len &&
-                       memcmp(lv->fkey, (LV_PTR(l->value(kx_.p)))->fkey, aligned_len(lv->key_len)) == 0) {
+                       memcmp(lv->fkey, (LV_PTR(l->value(kx_.p)))->fkey,
+                              aligned_len(lv->key_len)) == 0) {
                 if (!(l->leaf_delete(this, root, depth, lv, kx_, threadEpocheInfo))) {
                     free(lv);
                     del(key, threadEpocheInfo);
@@ -1326,7 +1334,8 @@ namespace masstree {
             if (this->next.load(std::memory_order_acquire) != NULL &&
                 this->key(this->permutation[this->permutation.size() - 1]) >
                 this->next.load(std::memory_order_acquire)->highest) {
-                this->next.store(this->next.load(std::memory_order_acquire)->next.load(std::memory_order_acquire),
+                this->next.store(this->next.load(std::memory_order_acquire)->next.
+                                         load(std::memory_order_acquire),
                                  std::memory_order_release);
                 clflush((char *) &this->next, sizeof(leafnode *), false, true);
             }
@@ -1360,7 +1369,8 @@ namespace masstree {
                     p->writeUnlock(false);
                 } else {
                     root = p;
-                    t->split(p->entry[pkx_.p].value, root, depth, lv, split_key, new_sibling, level_ + 1, NULL, false);
+                    t->split(p->entry[pkx_.p].value, root, depth, lv,
+                             split_key, new_sibling, level_ + 1, NULL, false);
                 }
             } else {
                 if (t->root() == this) {
@@ -1368,7 +1378,8 @@ namespace masstree {
                     clflush((char *) new_root, sizeof(leafnode), false, true);
                     t->setNewRoot(new_root);
                 } else {
-                    t->split(NULL, NULL, 0, NULL, split_key, new_sibling, level_ + 1, NULL, false);
+                    t->split(NULL, NULL, 0, NULL,
+                             split_key, new_sibling, level_ + 1, NULL, false);
                 }
             }
 
@@ -1441,8 +1452,10 @@ namespace masstree {
                     return nr;
                 } else {
                     nl = search_for_leftsibling(NULL, &p->entry[pkx_.p].value,
-                                                nr->highest ? nr->highest - 1 : nr->highest, nr->level_, nr);
-                    merge_state = t->merge(p->entry[pkx_.p].value, reinterpret_cast<void *> (p), depth, lv, nr->highest,
+                                                nr->highest ?
+                                                nr->highest - 1 : nr->highest, nr->level_, nr);
+                    merge_state = t->merge(p->entry[pkx_.p].value,
+                                           reinterpret_cast<void *> (p), depth, lv, nr->highest,
                                            nr->level_ + 1, threadInfo);
                     if (merge_state == 16) {
                         p = correct_layer_root(root, lv, depth, pkx_);
@@ -1461,9 +1474,11 @@ namespace masstree {
                     nr->writeUnlock(false);
                     return nr;
                 } else {
-                    nl = search_for_leftsibling(t->root_dp(), NULL, nr->highest ? nr->highest - 1 : nr->highest,
+                    nl = search_for_leftsibling(t->root_dp(), NULL,
+                                                nr->highest ? nr->highest - 1 : nr->highest,
                                                 nr->level_, nr);
-                    merge_state = t->merge(NULL, NULL, 0, NULL, nr->highest, nr->level_ + 1, threadInfo);
+                    merge_state = t->merge(NULL, NULL, 0, NULL,
+                                           nr->highest, nr->level_ + 1, threadInfo);
                     if (merge_state == 16)
                         t->setNewRoot(nr);
                 }
@@ -1550,7 +1565,8 @@ namespace masstree {
             //        reusing the existing split mechanism)
             if (this->next != NULL && this->key(this->permutation[this->permutation.size() - 1]) >
                                       this->next.load(std::memory_order_acquire)->highest) {
-                this->next.store(this->next.load(std::memory_order_acquire)->next.load(std::memory_order_acquire),
+                this->next.store(this->next.load(std::memory_order_acquire)->next.
+                                         load(std::memory_order_acquire),
                                  std::memory_order_release);
                 clflush((char *) &this->next, sizeof(leafnode *), false, true);
             }
@@ -1624,7 +1640,8 @@ namespace masstree {
                     this->writeUnlock(isOverWrite);
                 } else {
                     root = p;
-                    t->split(p->entry[pkx_.p].value, root, depth, lv, split_key, new_sibling, level_ + 1, this,
+                    t->split(p->entry[pkx_.p].value, root, depth, lv, split_key,
+                             new_sibling, level_ + 1, this,
                              isOverWrite);
                 }
             } else {
@@ -1636,7 +1653,8 @@ namespace masstree {
                     this->next.load(std::memory_order_acquire)->writeUnlock(false);
                     this->writeUnlock(isOverWrite);
                 } else {
-                    t->split(NULL, NULL, 0, NULL, split_key, new_sibling, level_ + 1, this, isOverWrite);
+                    t->split(NULL, NULL, 0, NULL, split_key,
+                             new_sibling, level_ + 1, this, isOverWrite);
                 }
             }
         }
@@ -1678,8 +1696,10 @@ namespace masstree {
                     return (ret = kx_.i);
                 } else {
                     nl = search_for_leftsibling(NULL, &p->entry[pkx_.p].value,
-                                                nr->highest ? nr->highest - 1 : nr->highest, nr->level_, nr);
-                    merge_state = t->merge(p->entry[pkx_.p].value, root, depth, lv, nr->highest, nr->level_ + 1,
+                                                nr->highest ? nr->highest - 1 :
+                                                nr->highest, nr->level_, nr);
+                    merge_state = t->merge(p->entry[pkx_.p].value, root, depth, lv,
+                                           nr->highest, nr->level_ + 1,
                                            threadInfo);
                 }
             } else {
@@ -1689,9 +1709,11 @@ namespace masstree {
                     threadInfo.getEpoche().markNodeForDeletion(nr, threadInfo);
                     return (ret = kx_.i);
                 } else {
-                    nl = search_for_leftsibling(t->root_dp(), NULL, nr->highest ? nr->highest - 1 : nr->highest,
+                    nl = search_for_leftsibling(t->root_dp(), NULL,
+                                                nr->highest ? nr->highest - 1 : nr->highest,
                                                 nr->level_, nr);
-                    merge_state = t->merge(NULL, NULL, 0, NULL, nr->highest, nr->level_ + 1, threadInfo);
+                    merge_state = t->merge(NULL, NULL, 0, NULL,
+                                           nr->highest, nr->level_ + 1, threadInfo);
                 }
             }
 
@@ -2122,7 +2144,8 @@ namespace masstree {
         else {
             if (snapshot_v) {
                 if (((leafvalue *) (snapshot_v))->key_len == lv->key_len &&
-                    memcmp(((leafvalue *) (snapshot_v))->fkey, lv->fkey, aligned_len(lv->key_len)) == 0) {
+                    memcmp(((leafvalue *) (snapshot_v))->fkey, lv->fkey,
+                           aligned_len(lv->key_len)) == 0) {
                     snapshot_v = (void *) (((leafvalue *) (snapshot_v))->value);
                 } else {
                     snapshot_v = NULL;
@@ -2238,7 +2261,8 @@ namespace masstree {
                     if (l->key(perm[i]) > lv->fkey[depth]) {
                         buf[count++] = reinterpret_cast<leafvalue *> (snapshot_v)->value;
                     } else if (l->key(perm[i]) == lv->fkey[depth] &&
-                               memcmp((LV_PTR(l->value(perm[i])))->fkey, lv->fkey, aligned_len(lv->key_len)) >= 0) {
+                               memcmp((LV_PTR(l->value(perm[i])))->fkey,
+                                      lv->fkey, aligned_len(lv->key_len)) >= 0) {
                         buf[count++] = reinterpret_cast<leafvalue *> (snapshot_v)->value;
                     }
                 }
@@ -2345,7 +2369,8 @@ namespace masstree {
                     if (l->key(perm[i]) > lv->fkey[depth]) {
                         buf[count++] = reinterpret_cast<leafvalue *> (snapshot_v)->value;
                     } else if (l->key(perm[i]) == lv->fkey[depth] &&
-                               memcmp((LV_PTR(l->value(perm[i])))->fkey, lv->fkey, aligned_len(lv->key_len)) >= 0) {
+                               memcmp((LV_PTR(l->value(perm[i])))->fkey, lv->fkey,
+                                      aligned_len(lv->key_len)) >= 0) {
                         buf[count++] = reinterpret_cast<leafvalue *> (snapshot_v)->value;
                     }
                 }
