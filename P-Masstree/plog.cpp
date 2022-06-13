@@ -144,10 +144,22 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) 
 
 }
 
+void *log_prefault_custom_func(void *s, int c, size_t n) {
 
-// todo: pagefault by reading the file
-void *log_prefault_thread(void *arg) {
+    (void) c;
 
+    uint64_t *sum = (uint64_t *) malloc(sizeof(uint64_t));
+    *sum = 0;
+
+    n /= 8;
+    uint64_t *nums = (uint64_t *) s;
+
+    for (size_t i = 0; i < n; i++) {
+        *sum += nums[i];
+    }
+
+
+    return sum;
 }
 
 uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size, void **result, int *pre_set, int alignment) {
@@ -180,6 +192,9 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size, void **result
 
     }
 
+    //todo: testing pre-fault by reading
+    memset_func = log_prefault_custom_func;
+
     if (map == NULL || map == MAP_FAILED || !is_pmem)
         die("map error map:%p is_pmem:%d", map, is_pmem);
 
@@ -197,13 +212,16 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size, void **result
         if (mapped_len % PAGE_SIZE == 0) step_size = PAGE_SIZE;
         else step_size = CACHE_LINE_SIZE;
 
+        std::atomic<uint64_t> sum;
+        sum.store(0);
+
 //        log_start_perf("pre_fault.perf");
         auto starttime = std::chrono::system_clock::now();
 
         omp_set_num_threads(OMP_NUM_THREAD);
 #pragma omp parallel for schedule(dynamic, 1)
         for (uint64_t i = 0; i < mapped_len; i += step_size) {
-            memset_func((char *) map + i, value, step_size);
+            sum.fetch_add(*(uint64_t *) memset_func((char *) map + i, value, step_size));
         }
 
 //        log_stop_perf();
@@ -212,9 +230,9 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size, void **result
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
                 std::chrono::system_clock::now() - starttime);
 
-        printf("\n\t\t\tpre-faulted %-30s %7.2f gb/s %7.2f s\n",
+        printf("\n\t\t\tpre-faulted %-30s %7.2f gb/s %7.2f s sum:%lu \n",
                fn, (mapped_len * 2.0 / 1024.0 / 1024.0 / 1024.0) / (duration.count() / 1000000.0),
-               duration.count() / 1000000.0);
+               duration.count() / 1000000.0, sum.load());
 
     }
 
