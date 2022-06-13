@@ -45,7 +45,7 @@ value_location=("pmem" "log")
 index_location=("dram")
 value_location=("log")
 #value_location=("pmem")
-num_threads=(16)
+num_threads=(1 3 5 7 9 11 13 15 17)
 use_perf="yes"
 record_latency="no"
 num_of_gc=8
@@ -53,7 +53,7 @@ num_of_gc=8
 workload=20000000
 key_order="random"
 #key_order="seq"
-value_size=0 # the size of the value impact performance a lot
+value_size=1024 # the size of the value impact performance a lot
 
 file_prefixes=("perf")
 
@@ -61,7 +61,7 @@ for fp in "${file_prefixes[@]}"; do
   echo "$fp,workload=$workload,unit=ops/us,key_order=$key_order" >$fp.csv
 
   # the header of csv file
-  printf "index,value,threads,rb,wb,TP,rb,wb,TP,rb,wb,TP" >>$fp.csv
+  printf "index,value,threads,rb(gb/s),wb(gb/s),TP,rb(gb/s),wb(gb/s),TP,rb(gb/s),wb(gb/s),TP" >>$fp.csv
 
 #  for n in "${num_threads[@]}"; do
 #    printf 'T=%s,' "$n" >>$fp.csv
