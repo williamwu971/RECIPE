@@ -618,6 +618,119 @@ namespace masstree {
         }
     }
 
+    kv *masstree::put_to_lock(uint64_t key, MASS::ThreadInfo &threadEpocheInfo) {
+        EpocheGuard epocheGuard(threadEpocheInfo);
+        key_indexed_position kx_;
+        leafnode *next = NULL, *p = NULL;
+        void *snapshot_v = NULL;
+
+        int needRestart;
+        uint64_t v;
+
+        from_root:
+        p = reinterpret_cast<leafnode *> (this->root_.load(std::memory_order_acquire));
+        while (p->level() != 0) {
+            inter_retry:
+            next = p->advance_to_key(key);
+            if (next != p) {
+                // check for recovery
+                if (p->tryLock(needRestart)) {
+                    if (next->tryLock(needRestart))
+                        p->check_for_recovery(this, p, next, NULL, 0, NULL);
+                    else
+                        p->writeUnlock(false);
+                }
+                p = next;
+                goto inter_retry;
+            }
+
+            v = p->readLockOrRestart(needRestart);
+            if (needRestart) {
+                if (needRestart == LOCKED)
+                    goto inter_retry;
+                else
+                    goto from_root;
+            }
+
+            p->prefetch();
+            fence();
+
+            kx_ = p->key_lower_bound(key);
+
+            if (kx_.i >= 0)
+                snapshot_v = p->value(kx_.p);
+            else
+                snapshot_v = p->leftmost();
+
+            p->checkOrRestart(v, needRestart);
+            if (needRestart)
+                goto inter_retry;
+            else
+                p = reinterpret_cast<leafnode *> (snapshot_v);
+        }
+
+        leafnode *l = reinterpret_cast<leafnode *> (p);
+        leaf_retry:
+        next = l->advance_to_key(key);
+        if (next != l) {
+            //check for recovery
+            if (l->tryLock(needRestart)) {
+                if (next->tryLock(needRestart))
+                    l->check_for_recovery(this, l, next, NULL, 0, NULL);
+                else
+                    l->writeUnlock(false);
+            }
+
+            l = next;
+            goto leaf_retry;
+        }
+
+        l->writeLockOrRestart(needRestart);
+        if (needRestart) {
+            if (needRestart == LOCKED)
+                goto leaf_retry;
+            else // needRestart == OBSOLETE
+                goto from_root;
+        }
+
+        next = l->advance_to_key(key);
+        if (next != l) {
+            l->writeUnlock(false);
+            l = next;
+            goto leaf_retry;
+        }
+
+        l->prefetch();
+        fence();
+
+
+        kx_ = l->key_lower_bound_by(key);
+
+        // return True if there is an insert, False otherwise
+        if (kx_.p >= 0 && l->key(kx_.p) == key) {
+
+//            return l.
+
+            l->value(kx_.p);
+
+            void *res = l->assign_value_if_newer(kx_.p, value);
+            l->writeUnlock(false);
+            return res;
+        } else if (create) {
+
+            if (!(l->leaf_insert(this, NULL, 0, NULL, key, value, kx_))) {
+                return put_and_return(key, value, create, threadEpocheInfo);
+            }
+
+            return value;
+
+        } else {
+
+            l->writeUnlock(false);
+            return NULL;
+        }
+    }
+
     void masstree::put(char *key, uint64_t value, ThreadInfo &threadEpocheInfo) {
         EpocheGuard epocheGuard(threadEpocheInfo);
         void *root = NULL;
@@ -1169,7 +1282,7 @@ namespace masstree {
 
 
         // about to reject an incoming value, decrement the reference count
-        entry[p].reference--;
+//        entry[p].reference--;
 
         return NULL;
     }

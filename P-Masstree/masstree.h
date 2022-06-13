@@ -94,8 +94,13 @@ namespace masstree {
 
         void put(uint64_t key, void *value, MASS::ThreadInfo &threadEpocheInfo);
 
-        void *
-        put_and_return(uint64_t key, void *value, int create, MASS::ThreadInfo &threadEpocheInfo); // todo: new, for gc
+        // todo: new, for gc
+        void *put_and_return(
+                uint64_t key, void *value, int create, MASS::ThreadInfo &threadEpocheInfo
+        );
+
+        // todo: lock the node
+        kv *put_to_lock(uint64_t key, MASS::ThreadInfo &threadEpocheInfo);
 
         void put(char *key, uint64_t value, MASS::ThreadInfo &threadEpocheInfo);
 
@@ -366,7 +371,9 @@ namespace masstree {
     };
 
     class leafnode {
-    private:
+
+        // todo: private was changed to public here
+    public:
         permuter permutation;                                   // 8bytes
         std::atomic<leafnode *> next;                           // 8bytes
         std::atomic<uint64_t> typeVersionLockObsolete{0b100};   // 8bytes
