@@ -531,7 +531,7 @@ void *log_garbage_collection(void *arg) {
                 }
 
 
-                struct log_cell *new_lc = (struct log_cell *) thread_log->curr;
+//                struct log_cell *new_lc = (struct log_cell *) thread_log->curr;
 
 
                 // persist this entry to the new log first
@@ -555,6 +555,9 @@ void *log_garbage_collection(void *arg) {
                 // ignore a cell if it is delete
 
                 if (!old_lc->is_delete) {
+
+                    auto l = (masstree::leafnode *) tree->put_to_lock(old_lc->key, t);
+
 
                     // try to commit this entry
                     void *res = tree->put_and_return(new_lc->key, new_lc, 0, t);

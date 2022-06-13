@@ -17,6 +17,11 @@
 
 #include "Epoche.h"
 
+struct masstree_put_to_pack {
+    void *leafnode;
+    int i;
+};
+
 namespace masstree {
 
 #define LEAF_WIDTH          15
@@ -99,8 +104,10 @@ namespace masstree {
                 uint64_t key, void *value, int create, MASS::ThreadInfo &threadEpocheInfo
         );
 
-        // todo: lock the node
-        kv *put_to_lock(uint64_t key, MASS::ThreadInfo &threadEpocheInfo);
+        // todo: lock and unlock the node (write lock)
+        struct masstree_put_to_pack put_to_lock(uint64_t key, MASS::ThreadInfo &threadEpocheInfo);
+
+        void put_to_unlock(void *ln);
 
         void put(char *key, uint64_t value, MASS::ThreadInfo &threadEpocheInfo);
 
@@ -371,9 +378,7 @@ namespace masstree {
     };
 
     class leafnode {
-
-        // todo: private was changed to public here
-    public:
+    private:
         permuter permutation;                                   // 8bytes
         std::atomic<leafnode *> next;                           // 8bytes
         std::atomic<uint64_t> typeVersionLockObsolete{0b100};   // 8bytes
@@ -463,6 +468,9 @@ namespace masstree {
         uint64_t key(int i) { return entry[i].key; }
 
         void *value(int i) { return entry[i].value; }
+
+        // todo: get a kv pair and return
+        kv *get_kv(int i) { return entry + i; }
 
         leafnode *leftmost() { return leftmost_ptr; }
 

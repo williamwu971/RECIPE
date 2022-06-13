@@ -618,7 +618,7 @@ namespace masstree {
         }
     }
 
-    kv *masstree::put_to_lock(uint64_t key, MASS::ThreadInfo &threadEpocheInfo) {
+    struct masstree_put_to_pack masstree::put_to_lock(uint64_t key, MASS::ThreadInfo &threadEpocheInfo) {
         EpocheGuard epocheGuard(threadEpocheInfo);
         key_indexed_position kx_;
         leafnode *next = NULL, *p = NULL;
@@ -705,30 +705,28 @@ namespace masstree {
 
 
         kx_ = l->key_lower_bound_by(key);
+        struct masstree_put_to_pack pack;
+        pack.leafnode = NULL;
+        pack.i = -1;
 
         // return True if there is an insert, False otherwise
         if (kx_.p >= 0 && l->key(kx_.p) == key) {
 
-//            return l.
-
-            l->value(kx_.p);
-
-            void *res = l->assign_value_if_newer(kx_.p, value);
-            l->writeUnlock(false);
-            return res;
-        } else if (create) {
-
-            if (!(l->leaf_insert(this, NULL, 0, NULL, key, value, kx_))) {
-                return put_and_return(key, value, create, threadEpocheInfo);
-            }
-
-            return value;
+            pack.leafnode = l;
+            pack.i = kx_.p;
 
         } else {
 
             l->writeUnlock(false);
-            return NULL;
         }
+
+        return pack;
+    }
+
+    void put_to_unlock(void *ln) {
+
+        leafnode *l = (leafnode *) ln;
+        l->writeUnlock(false);
     }
 
     void masstree::put(char *key, uint64_t value, ThreadInfo &threadEpocheInfo) {
