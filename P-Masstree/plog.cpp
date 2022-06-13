@@ -569,7 +569,7 @@ void *log_garbage_collection(void *arg) {
                             pmem_memcpy_persist(thread_log->curr, current_ptr,
                                                 sizeof(struct log_cell) + old_lc->value_size);
 
-                            l->assign_value(pack.p, thread_log->curr);
+//                            l->assign_value(pack.p, thread_log->curr);
                             thread_log->available -= total_size;
                             target_log->curr += total_size;
 
