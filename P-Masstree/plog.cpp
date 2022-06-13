@@ -763,7 +763,7 @@ int log_stop_perf() {
 }
 
 
-void log_print_pmem_bandwidth(const char *perf_fn, double elapsed) {
+void log_print_pmem_bandwidth(const char *perf_fn, double elapsed, FILE *f) {
 
     if (!perf_stat) return;
 
@@ -870,5 +870,9 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed) {
     printf("elapsed: %.2f ", elapsed);
 
     printf("\n");
+
+    if (f != NULL) {
+        fprintf(f, "%.2f,%.2f,", read_bw, write_bw);
+    }
 
 }

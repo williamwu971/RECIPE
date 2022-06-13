@@ -284,6 +284,7 @@ void run(char **argv) {
     int record_latency = 0;
     int display_throughput = 1;
     int value_size = sizeof(struct log_cell) + sizeof(uint64_t);
+    FILE *throughput_file = fopen("perf.csv", "a");
 
     printf("argv: ");
     for (int ac = 0; ac < 10; ac++) {
@@ -443,12 +444,15 @@ void run(char **argv) {
 
         if (use_perf) {
             log_stop_perf();
-            log_print_pmem_bandwidth(perf_fn, duration.count() / 1000000.0);
+            log_print_pmem_bandwidth(perf_fn, duration.count() / 1000000.0, throughput_file);
         }
         if (display_throughput)
             printf("Throughput: insert,%ld,%.2f ops/us %.2f sec\n",
                    n, (n * 1.0) / duration.count(), duration.count() / 1000000.0);
         insert_throughput = (n * 1.0) / duration.count();
+
+
+        fprintf(throughput_file, "%.2f,", insert_throughput);
     }
     log_debug_print(1, show_log_usage);
     {
@@ -519,13 +523,15 @@ void run(char **argv) {
 
         if (use_perf) {
             log_stop_perf();
-            log_print_pmem_bandwidth(perf_fn, duration.count() / 1000000.0);
+            log_print_pmem_bandwidth(perf_fn, duration.count() / 1000000.0, throughput_file);
         }
 
         if (display_throughput)
             printf("Throughput: update,%ld,%.2f ops/us %.2f sec\n",
                    n, (n * 1.0) / duration.count(), duration.count() / 1000000.0);
         update_throughput = (n * 1.0) / duration.count();
+
+        fprintf(throughput_file, "%.2f,", update_throughput);
     }
 
     lookup:
@@ -568,31 +574,21 @@ void run(char **argv) {
 
         if (use_perf) {
             log_stop_perf();
-            log_print_pmem_bandwidth(perf_fn, duration.count() / 1000000.0);
+            log_print_pmem_bandwidth(perf_fn, duration.count() / 1000000.0, throughput_file);
         }
 
         if (display_throughput)
             printf("Throughput: lookup,%ld,%.2f ops/us %.2f sec\n",
                    n, (n * 1.0) / duration.count(), duration.count() / 1000000.0);
         lookup_throughput = (n * 1.0) / duration.count();
+
+        fprintf(throughput_file, "%.2f,", lookup_throughput);
     }
 
     log_debug_print(0, show_log_usage);
     // logging throughput to files
 
-    FILE *insert_throughput_file = fopen("insert.csv", "a");
-    FILE *update_throughput_file = fopen("update.csv", "a");
-    FILE *lookup_throughput_file = fopen("lookup.csv", "a");
-
-
-    fprintf(insert_throughput_file, "%.2f,", insert_throughput);
-    fprintf(update_throughput_file, "%.2f,", update_throughput);
-    fprintf(lookup_throughput_file, "%.2f,", lookup_throughput);
-
-
-    fclose(insert_throughput_file);
-    fclose(update_throughput_file);
-    fclose(lookup_throughput_file);
+    fclose(throughput_file);
 
 
     if (record_latency) {

@@ -128,6 +128,6 @@ int log_start_perf(const char *perf_fn);
 
 int log_stop_perf();
 
-void log_print_pmem_bandwidth(const char *perf_fn, double elapsed);
+void log_print_pmem_bandwidth(const char *perf_fn, double elapsed, FILE* f);
 
 #endif
