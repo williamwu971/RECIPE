@@ -591,7 +591,7 @@ void *log_garbage_collection(void *arg) {
             }
 
 
-            log_release(queue->index);
+//            log_release(queue->index);
 
             queue = queue->next;
 //            counter++;
