@@ -570,12 +570,11 @@ void *log_garbage_collection(void *arg) {
                                                 sizeof(struct log_cell) + old_lc->value_size);
 
                             l->assign_value(pack.p, thread_log->curr);
-                            tree->put_to_unlock(pack.leafnode);
-
                             thread_log->available -= total_size;
                             target_log->curr += total_size;
                         }
 
+                        tree->put_to_unlock(pack.leafnode);
                     }
 
                     // try to commit this entry
