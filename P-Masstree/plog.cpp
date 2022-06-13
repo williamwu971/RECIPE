@@ -820,6 +820,10 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed) {
         fclose(file);
     }
 
+    if (repeat == 3 && elapsed_perf < 0.01) {
+        printf("time too short to display bandwidth!\n");
+    }
+
 
 //    uint64_t elapsed_cycles = perf_stop_rtd - perf_start_rtd;
     elapsed = elapsed_perf;
@@ -841,10 +845,6 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed) {
     printf("%.2fgb/s ", write_bw);
 
     printf("elapsed: %.2f ", elapsed);
-
-    if (repeat == 3 && elapsed_perf < 0.01) {
-        printf("time too short! ");
-    }
 
     printf("\n");
 
