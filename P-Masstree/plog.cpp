@@ -763,7 +763,9 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed) {
     uint64_t write_b_cycle;
 
 
-    while (elapsed_perf < 0.01) {
+    for (int repeat = 0; repeat < 3 && elapsed_perf < 0.01; repeat++) {
+
+        if (repeat != 0)sleep(1);
 
         read = 0;
         write = 0;
