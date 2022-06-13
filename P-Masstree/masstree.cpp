@@ -723,7 +723,7 @@ namespace masstree {
         return pack;
     }
 
-    void put_to_unlock(void *ln) {
+    void masstree::put_to_unlock(void *ln) {
 
         leafnode *l = (leafnode *) ln;
         l->writeUnlock(false);
