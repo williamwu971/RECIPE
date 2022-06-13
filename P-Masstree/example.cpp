@@ -378,7 +378,7 @@ void run(char **argv) {
             log_recover(tree, 20);
             goto lookup;
         } else {
-            log_init(1024);
+            log_init(10240);
         }
 
         printf("spawn GC... ");
