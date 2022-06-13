@@ -565,7 +565,7 @@ void *log_garbage_collection(void *arg) {
                         masstree::leafnode *l = (masstree::leafnode *) pack.leafnode;
                         struct log_cell *current_value_in_tree = (struct log_cell *) l->value(pack.p);
 
-                        if (current_value_in_tree->version == old_lc->version) {
+                        if (current_value_in_tree->version <= old_lc->version) {
                             pmem_memcpy_persist(thread_log->curr, current_ptr,
                                                 sizeof(struct log_cell) + old_lc->value_size);
 
