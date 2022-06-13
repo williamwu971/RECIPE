@@ -39,7 +39,8 @@ namespace masstree {
         uint64_t key;
         void *value;
 
-        uint64_t reference; // todo: xiaoxiang
+        // todo: xiaoxiang, investigate if this impact performance
+        uint64_t reference;
 
     public:
         kv() {
