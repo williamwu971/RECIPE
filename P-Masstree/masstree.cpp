@@ -1153,7 +1153,7 @@ namespace masstree {
         // todo: modification in version number will need another flush. How to avoid?
         if (new_lc->version >= old_lc->version) {
             entry[p].value = value;
-            entry[p].reference++;
+//            entry[p].reference++;
 
             clflush((char *) &entry[p].value, sizeof(void *), false, true);
             return old_lc;
