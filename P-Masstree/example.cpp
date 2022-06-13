@@ -325,7 +325,7 @@ void run(char **argv) {
         } else if (strcasestr(argv[ac], "gc=")) {
             num_of_gc = atoi(strcasestr(argv[ac], "=") + 1);
         } else if (strcasestr(argv[ac], "latency=")) {
-            if (strcasestr(argv[ac], "y")) {
+            if (strcasestr(argv[ac], "yes")) {
                 record_latency = 1;
             }
         } else if (strcasestr(argv[ac], "value_size=")) {
