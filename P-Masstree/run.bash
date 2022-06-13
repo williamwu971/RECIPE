@@ -55,7 +55,7 @@ key_order="random"
 #key_order="seq"
 value_size=1024 # the size of the value impact performance a lot
 
-file_prefixes=("perf.csv")
+file_prefixes=("perf")
 
 for fp in "${file_prefixes[@]}"; do
   echo "$fp,workload=$workload,unit=ops/us,key_order=$key_order" >$fp.csv
