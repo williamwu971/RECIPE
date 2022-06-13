@@ -55,17 +55,17 @@ key_order="random"
 #key_order="seq"
 value_size=1024 # the size of the value impact performance a lot
 
-file_prefixes=("insert" "update" "lookup")
+file_prefixes=("perf.csv")
 
 for fp in "${file_prefixes[@]}"; do
   echo "$fp,workload=$workload,unit=ops/us,key_order=$key_order" >$fp.csv
 
   # the header of csv file
-  printf "index,value," >>$fp.csv
+  printf "index,value,threads" >>$fp.csv
 
-  for n in "${num_threads[@]}"; do
-    printf 'T=%s,' "$n" >>$fp.csv
-  done
+#  for n in "${num_threads[@]}"; do
+#    printf 'T=%s,' "$n" >>$fp.csv
+#  done
 
   echo "" >>$fp.csv
 done
@@ -74,12 +74,10 @@ rm -f latency.csv out.png
 
 for i in "${index_location[@]}"; do
   for v in "${value_location[@]}"; do
-
-    # the first two columns
-    printf '%s,%s,' "$i" "$v" >>insert.csv
-    printf '%s,%s,' "$i" "$v" >>lookup.csv
-
     for n in "${num_threads[@]}"; do
+
+      # the first three columns
+          printf '%s,%s,%s,' "$i" "$v" "$n" >>perf.csv
 
       # drop system cache and clear pmem device
       echo 1 >/proc/sys/vm/drop_caches
