@@ -39,14 +39,14 @@ namespace masstree {
         uint64_t key;
         void *value;
 
-//        uint64_t reference; // todo: xiaoxiang
+        uint64_t reference; // todo: xiaoxiang
 
     public:
         kv() {
             key = UINT64_MAX;
             value = NULL;
 
-//            reference = 0; // todo: xiaoxiang
+            reference = 0; // todo: xiaoxiang
         }
 
         friend class leafnode;
