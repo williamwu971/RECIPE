@@ -565,15 +565,14 @@ void *log_garbage_collection(void *arg) {
                         masstree::leafnode *l = (masstree::leafnode *) pack.leafnode;
                         struct log_cell *current_value_in_tree = (struct log_cell *) l->value(pack.p);
 
-//                        if (current_value_in_tree->version <= old_lc->version) {
-//                            pmem_memcpy_persist(thread_log->curr, current_ptr,
-//                                                sizeof(struct log_cell) + old_lc->value_size);
-//
-//                            l->assign_value(pack.p, thread_log->curr);
-//                            thread_log->available -= total_size;
-//                            target_log->curr += total_size;
-//
-//                        }
+                        if (current_value_in_tree->version <= old_lc->version) {
+                            pmem_memcpy_persist(thread_log->curr, current_ptr, total_size);
+
+                            l->assign_value(pack.p, thread_log->curr);
+                            thread_log->available -= total_size;
+                            thread_log->curr += total_size;
+
+                        }
 
                         tree->put_to_unlock(pack.leafnode);
                     }
@@ -591,7 +590,7 @@ void *log_garbage_collection(void *arg) {
             }
 
 
-//            log_release(queue->index);
+            log_release(queue->index);
 
             queue = queue->next;
 //            counter++;
