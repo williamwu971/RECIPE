@@ -765,7 +765,11 @@ int log_stop_perf() {
 
 void log_print_pmem_bandwidth(const char *perf_fn, double elapsed, FILE *f) {
 
-    if (!perf_stat) return;
+    if (!perf_stat) {
+
+        if (f != NULL)fprintf(f, ",,");
+        return;
+    }
 
     const char *pmem_sticks[] = {
             "uncore_imc_1/",
@@ -794,7 +798,7 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed, FILE *f) {
         write_b_cycle = 0;
 
         FILE *file = fopen(perf_fn, "r");
-        if (file == NULL) return;
+        if (file == NULL) continue;
 
         while (fgets(buf, 1024, file)) {
 
@@ -856,6 +860,7 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed, FILE *f) {
 
     if (repeat == 3 && elapsed_perf < 0.01) {
         printf("time too short to display bandwidth!\n");
+        if (f != NULL)fprintf(f, ",,");
         return;
     }
 
