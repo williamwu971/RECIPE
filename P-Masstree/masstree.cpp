@@ -1168,7 +1168,8 @@ namespace masstree {
         }
 
 
-//        old_lc->reference--;
+        // about to reject an incoming value, decrement the reference count
+        entry[p].reference--;
 
         return NULL;
     }
