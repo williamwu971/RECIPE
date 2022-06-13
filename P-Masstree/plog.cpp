@@ -558,19 +558,24 @@ void *log_garbage_collection(void *arg) {
 
                     struct masstree_put_to_pack pack = tree->put_to_lock(old_lc->key, t);
 
-                    masstree::leafnode *l = (masstree::leafnode *) pack.leafnode;
-                    struct log_cell *current_value_in_tree = (struct log_cell *) l->value(pack.p);
+
+                    if (pack.leafnode != NULL && pack.p != -1) {
 
 
-                    if (current_value_in_tree != NULL && current_value_in_tree->version == old_lc->version) {
-                        pmem_memcpy_persist(thread_log->curr, current_ptr,
-                                            sizeof(struct log_cell) + old_lc->value_size);
+                        masstree::leafnode *l = (masstree::leafnode *) pack.leafnode;
+                        struct log_cell *current_value_in_tree = (struct log_cell *) l->value(pack.p);
 
-                        l->assign_value(pack.p, thread_log->curr);
-                        tree->put_to_unlock(pack.leafnode);
+                        if (current_value_in_tree->version == old_lc->version) {
+                            pmem_memcpy_persist(thread_log->curr, current_ptr,
+                                                sizeof(struct log_cell) + old_lc->value_size);
 
-                        thread_log->available -= total_size;
-                        target_log->curr += total_size;
+                            l->assign_value(pack.p, thread_log->curr);
+                            tree->put_to_unlock(pack.leafnode);
+
+                            thread_log->available -= total_size;
+                            target_log->curr += total_size;
+                        }
+
                     }
 
                     // try to commit this entry
