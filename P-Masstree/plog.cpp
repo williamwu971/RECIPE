@@ -573,9 +573,6 @@ void *log_garbage_collection(void *arg) {
                             thread_log->available -= total_size;
                             target_log->curr += total_size;
 
-                            if (l->key(pack.p)!=old_lc->key){
-                                die("key check incorrect %lu %lu",l->key(pack.p),old_lc->key);
-                            }
                         }
 
                         tree->put_to_unlock(pack.leafnode);
