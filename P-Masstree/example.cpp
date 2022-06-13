@@ -543,9 +543,14 @@ void run(char **argv) {
 
 
                 char *raw = (char *) tree->get(keys[i], t);
+
+                struct log_cell *lc = (struct log_cell *) raw;
+
                 uint64_t *ret = reinterpret_cast<uint64_t *> (raw + sizeof(struct log_cell));
                 if (*ret != keys[i]) {
                     std::cout << "wrong value read: " << *ret << " expected:" << keys[i] << std::endl;
+                    printf("version:%lu, key:%lu, value_size:%lu, is_delete:%lu\n",
+                           lc->version, lc->key, lc->value_size, lc->is_delete);
                     throw;
                 }
             }
