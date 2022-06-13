@@ -843,7 +843,7 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed) {
     printf("elapsed: %.2f ", elapsed);
 
     if (repeat == 3 && elapsed_perf < 0.01) {
-        printf("elapsed time too short! ");
+        printf("time too short! ");
     }
 
     printf("\n");
