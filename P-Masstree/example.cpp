@@ -548,9 +548,16 @@ void run(char **argv) {
 
                 uint64_t *ret = reinterpret_cast<uint64_t *> (raw + sizeof(struct log_cell));
                 if (*ret != keys[i]) {
-                    std::cout << "wrong value read: " << *ret << " expected:" << keys[i] << std::endl;
-                    printf("version:%lu, key:%lu, value_size:%lu, is_delete:%lu\n",
-                           lc->version, lc->key, lc->value_size, lc->is_delete);
+                    std::cout
+                            << "wrong value read: " << *ret
+                            << " expected:" << keys[i]
+                            << " version:" << lc->version
+                            << " key:" << lc->key
+                            << " value_size:" << lc->value_size
+                            << " is_delete:" << lc->is_delete
+                            << std::endl;
+//                    printf("version:%lu, key:%lu, value_size:%lu, is_delete:%lu\n",
+//                           lc->version, lc->key, lc->value_size, lc->is_delete);
                     throw;
                 }
             }
