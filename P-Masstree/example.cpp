@@ -586,8 +586,45 @@ void run(char **argv) {
     }
 
     log_debug_print(0, show_log_usage);
-    // logging throughput to files
 
+    {
+
+        const char *perf_fn = "delete.perf";
+        if (use_perf)log_start_perf(perf_fn);
+
+        // Update
+        auto starttime = std::chrono::system_clock::now();
+        tbb::parallel_for(tbb::blocked_range<uint64_t>(0, n), [&](const tbb::blocked_range<uint64_t> &range) {
+            auto t = tree->getThreadInfo();
+            for (uint64_t i = range.begin(); i != range.end(); i++) {
+
+
+                void *old = tree->del_and_return(keys[i], 0, 0,
+                                                 log_get_tombstone, t);
+
+                which_free(old);
+            }
+        });
+
+        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
+                std::chrono::system_clock::now() - starttime);
+
+        if (use_perf) {
+            log_stop_perf();
+            log_print_pmem_bandwidth(perf_fn, duration.count() / 1000000.0, throughput_file);
+        }
+
+        if (display_throughput)
+            printf("Throughput: delete,%ld,%.2f ops/us %.2f sec\n",
+                   n, (n * 1.0) / duration.count(), duration.count() / 1000000.0);
+        update_throughput = (n * 1.0) / duration.count();
+
+        fprintf(throughput_file, "%.2f,", update_throughput);
+    }
+    log_debug_print(0, show_log_usage);
+
+
+    // logging throughput to files
     fclose(throughput_file);
 
 

@@ -590,8 +590,14 @@ void *log_garbage_collection(void *arg) {
                             // if this entry is ignored, then decrease the reference counter by 1
                             // no lock is needed, the leaf node is already locked
 
-                            if (l->reference(pack.p) > 0) {
+                            int ref = l->reference(pack.p);
+                            if (ref > 0) {
                                 l->modify_reference(pack.p, -1);
+                            }
+
+                            // free if it's a tombstone
+                            if (ref == 1 && current_value_in_tree->is_delete) {
+                                log_free(current_value_in_tree);
                             }
                         }
 
@@ -608,7 +614,8 @@ void *log_garbage_collection(void *arg) {
                             // we have a tombstone and the reference is 0, attempt to delete again
                             tree->put_to_unlock(pack.leafnode);
 
-//                            tree->
+                            tree->del_and_return(old_lc->key, 1,
+                                                 old_lc->version, log_get_tombstone, t);
 
                         } else {
                             pmem_memcpy_persist(thread_log->curr, current_ptr, total_size);
