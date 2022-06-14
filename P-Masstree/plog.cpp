@@ -626,7 +626,7 @@ void *log_garbage_collection(void *arg) {
                             // a tombstone with old version will not be accepted
 
                             tree->del_and_return(old_lc->key, 1,
-                                                 old_lc->version, log_get_tombstone, t);
+                                                 old_lc->version, NULL, t);
 
                         } else {
                             pmem_memcpy_persist(thread_log->curr, current_ptr, total_size);
