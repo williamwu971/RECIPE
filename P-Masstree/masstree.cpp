@@ -950,7 +950,8 @@ namespace masstree {
         }
     }
 
-    void *masstree::del_and_return(uint64_t key, int check_version, uint64_t version, ThreadInfo &threadEpocheInfo) {
+    void *masstree::del_and_return(uint64_t key, int check_version, uint64_t version,
+                                   void *(*tombstone_callback)(uint64_t key), ThreadInfo &threadEpocheInfo) {
         EpocheGuard epocheGuard(threadEpocheInfo);
         void *root = NULL;
         key_indexed_position kx_;
@@ -1039,7 +1040,8 @@ namespace masstree {
 
         kx_ = l->key_lower_bound_by(key);
 
-        if (kx_.p >= 0) {
+        // mine
+        if (kx_.p >= 0 && l->key(kx_.p) == key) {
             snapshot_v = l->value(kx_.p);
 
             struct log_cell *lc = (struct log_cell *) snapshot_v;
@@ -1047,10 +1049,17 @@ namespace masstree {
                 return NULL;
             }
 
+            if (l->reference(kx_.p) > 0) {
+                void *tombstone = tombstone_callback(key);
+                l->assign_value(kx_.p, tombstone);
+
+                l->writeUnlock(false);
+                return snapshot_v;
+            }
+
         } else {
             snapshot_v = NULL;
         }
-
 
         if (kx_.p < 0) {
             l->writeUnlock(false);
@@ -1544,7 +1553,9 @@ namespace masstree {
             fence();
             this->permutation = cp.value();
             clflush((char *) (&this->permutation), sizeof(permuter), false, true);
-            if (lv != NULL) threadInfo.getEpoche().markNodeForDeletion((LV_PTR(this->value(kx_.p))), threadInfo);
+            if (lv != NULL)
+                threadInfo.getEpoche().markNodeForDeletion((LV_PTR(this->value(kx_.p))),
+                                                           threadInfo);
             this->writeUnlock(false);
             ret = this;
         } else {

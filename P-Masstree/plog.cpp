@@ -443,6 +443,20 @@ int log_memalign(void **memptr, size_t alignment, size_t size) {
     return 0;
 }
 
+void *log_get_tombstone(uint64_t key) {
+
+    struct log_cell *lc = (struct log_cell *) log_malloc(sizeof(struct log_cell));
+
+    rdtscll(lc->version);
+    lc->value_size = 0;
+    lc->key = key;
+    lc->is_delete = 1;
+
+    pmem_persist(lc, sizeof(struct log_cell));
+
+    return lc;
+}
+
 void log_free(void *ptr) {
 
     char *char_ptr = (char *) ptr;
@@ -581,6 +595,7 @@ void *log_garbage_collection(void *arg) {
                             }
                         }
 
+                        tree->put_to_unlock(pack.leafnode);
 
                     } else {
 
@@ -588,18 +603,25 @@ void *log_garbage_collection(void *arg) {
                         // if ref=0 then the tombstone is not protecting anything
                         // do we need to check version?
 
-                        if (l->reference(pack.p) != 0) {
+                        if (l->reference(pack.p) == 0) {
 
+                            // we have a tombstone and the reference is 0, attempt to delete again
+                            tree->put_to_unlock(pack.leafnode);
+
+//                            tree->
+
+                        } else {
                             pmem_memcpy_persist(thread_log->curr, current_ptr, total_size);
 
                             l->assign_value(pack.p, thread_log->curr);
                             thread_log->available -= total_size;
                             thread_log->curr += total_size;
+
+                            tree->put_to_unlock(pack.leafnode);
                         }
                     }
 
-                    // unlock the node
-                    tree->put_to_unlock(pack.leafnode);
+
 
                     // try to commit this entry
 //                    void *res = tree->put_and_return(new_lc->key, new_lc, 0, t);
