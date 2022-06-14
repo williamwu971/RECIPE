@@ -1050,7 +1050,8 @@ namespace masstree {
                 return NULL;
             }
 
-            if (l->reference(kx_.p) > 0) {
+            if (l->reference(kx_.p) > 0 && tombstone_callback != NULL) {
+
                 void *tombstone = tombstone_callback(key);
                 l->assign_value(kx_.p, tombstone);
 
