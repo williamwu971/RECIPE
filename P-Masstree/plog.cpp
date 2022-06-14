@@ -585,8 +585,17 @@ void *log_garbage_collection(void *arg) {
                     } else {
 
                         // if process a delete-type entry, check if the reference is at 0 first
+                        // if ref=0 then the tombstone is not protecting anything
+                        // do we need to check version?
 
+                        if (l->reference(pack.p) != 0) {
 
+                            pmem_memcpy_persist(thread_log->curr, current_ptr, total_size);
+
+                            l->assign_value(pack.p, thread_log->curr);
+                            thread_log->available -= total_size;
+                            thread_log->curr += total_size;
+                        }
                     }
 
                     // unlock the node
