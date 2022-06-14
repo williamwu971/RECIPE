@@ -61,9 +61,11 @@ for fp in "${file_prefixes[@]}"; do
   echo "$fp,workload=$workload,value_size=$value_size,key_order=$key_order,num_of_gc=$num_of_gc" >$fp.csv
 
   # the header of csv file
-  printf \
-    "index,value,threads,insert_rb(gb/s),insert_wb(gb/s),insert_TP(ops/us),update_rb(gb/s),update_wb(gb/s),update_TP(ops/us),delete_rb(gb/s),delete_wb(gb/s),delete_TP(ops/us)" \
-    >>$fp.csv
+  printf "index,value,threads," >>$fp.csv
+  printf "insert_rb(gb/s),insert_wb(gb/s),insert_TP(ops/us)," >>$fp.csv
+  printf "update_rb(gb/s),update_wb(gb/s),update_TP(ops/us)," >>$fp.csv
+  printf "get_rb(gb/s),get_wb(gb/s),get_TP(ops/us)," >>$fp.csv
+  printf "delete_rb(gb/s),delete_wb(gb/s),delete_TP(ops/us)," >>$fp.csv
 
   #  for n in "${num_threads[@]}"; do
   #    printf 'T=%s,' "$n" >>$fp.csv
