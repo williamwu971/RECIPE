@@ -622,6 +622,9 @@ void *log_garbage_collection(void *arg) {
                             // we have a tombstone and the reference is 0, attempt to delete again
                             tree->put_to_unlock(pack.leafnode);
 
+                            // the version trick should solve the put-del-put situation
+                            // a tombstone with old version will not be accepted
+
                             tree->del_and_return(old_lc->key, 1,
                                                  old_lc->version, log_get_tombstone, t);
 
