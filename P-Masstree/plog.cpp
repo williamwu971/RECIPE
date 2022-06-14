@@ -554,16 +554,15 @@ void *log_garbage_collection(void *arg) {
                 // this step might be buggy if went out of bound of the new log
                 // ignore a cell if it is delete
 
-                if (!old_lc->is_delete) {
+                // lock the node
+                struct masstree_put_to_pack pack = tree->put_to_lock(old_lc->key, t);
+                if (pack.leafnode != NULL && pack.p != -1) {
 
-                    struct masstree_put_to_pack pack = tree->put_to_lock(old_lc->key, t);
+                    // now we have the lock
+                    masstree::leafnode *l = (masstree::leafnode *) pack.leafnode;
+                    struct log_cell *current_value_in_tree = (struct log_cell *) l->value(pack.p);
 
-
-                    if (pack.leafnode != NULL && pack.p != -1) {
-
-
-                        masstree::leafnode *l = (masstree::leafnode *) pack.leafnode;
-                        struct log_cell *current_value_in_tree = (struct log_cell *) l->value(pack.p);
+                    if (!old_lc->is_delete) {
 
                         if (current_value_in_tree->version <= old_lc->version) {
                             pmem_memcpy_persist(thread_log->curr, current_ptr, total_size);
@@ -572,10 +571,26 @@ void *log_garbage_collection(void *arg) {
                             thread_log->available -= total_size;
                             thread_log->curr += total_size;
 
+                        } else {
+
+                            // if this entry is ignored, then decrease the reference counter by 1
+                            // no lock is needed, the leaf node is already locked
+
+                            if (l->reference(pack.p) > 0) {
+                                l->modify_reference(pack.p, -1);
+                            }
                         }
 
-                        tree->put_to_unlock(pack.leafnode);
+
+                    } else {
+
+                        // if process a delete-type entry, check if the reference is at 0 first
+
+
                     }
+
+                    // unlock the node
+                    tree->put_to_unlock(pack.leafnode);
 
                     // try to commit this entry
 //                    void *res = tree->put_and_return(new_lc->key, new_lc, 0, t);

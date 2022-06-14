@@ -1285,6 +1285,10 @@ namespace masstree {
         return NULL;
     }
 
+    void leafnode::modify_reference(int p, int value) {
+        entry[p].reference += value;
+    }
+
     void *leafnode::entry_addr(int p) {
         return &entry[p];
     }

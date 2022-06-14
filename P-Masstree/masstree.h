@@ -45,7 +45,7 @@ namespace masstree {
         void *value;
 
         // todo: xiaoxiang, investigate if this impact performance
-        uint64_t reference;
+        int reference;
 
     public:
         kv() {
@@ -437,7 +437,9 @@ namespace masstree {
 
         void assign_value(int p, void *value);
 
-        void *assign_value_if_newer(int p, void *value);
+        void *assign_value_if_newer(int p, void *value); // new
+
+        void modify_reference(int p, int value); // new
 
         inline void assign_initialize(int p, const uint64_t &key, void *value);
 
@@ -468,6 +470,8 @@ namespace masstree {
         uint64_t key(int i) { return entry[i].key; }
 
         void *value(int i) { return entry[i].value; }
+
+        int reference(int i) { return entry[i].reference; }
 
         // todo: get a kv pair and return
         kv *get_kv(int i) { return entry + i; }
