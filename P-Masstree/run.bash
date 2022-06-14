@@ -62,7 +62,10 @@ for fp in "${file_prefixes[@]}"; do
 
   # the header of csv file
   printf \
-    "index,value,threads,rb(gb/s),wb(gb/s),TP(ops/us),rb(gb/s),wb(gb/s),TP(ops/us),rb(gb/s),wb(gb/s),TP(ops/us)" \
+    "index,value,threads,
+    insert_rb(gb/s),insert_wb(gb/s),insert_TP(ops/us),
+    update_rb(gb/s),update_wb(gb/s),update_TP(ops/us),
+    delete_rb(gb/s),delete_wb(gb/s),delete_TP(ops/us)" \
     >>$fp.csv
 
   #  for n in "${num_threads[@]}"; do
