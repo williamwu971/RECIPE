@@ -101,7 +101,9 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) 
                     }
 
                 } else {
-                    tree->del_and_return(lc->key, 1, lc->version, t);
+
+                    //todo: this is incorrect now
+                    tree->del_and_return(lc->key, 1, lc->version, log_get_tombstone, t);
                 }
 
                 // todo: should probably update the metadata here
