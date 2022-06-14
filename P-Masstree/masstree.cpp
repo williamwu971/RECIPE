@@ -1067,7 +1067,7 @@ namespace masstree {
         }
 
         if (!(l->leaf_delete(this, NULL, 0, NULL, kx_, threadEpocheInfo))) {
-            return del_and_return(key, check_version, version, threadEpocheInfo);
+            return del_and_return(key, check_version, version, tombstone_callback, threadEpocheInfo);
         }
 
         return snapshot_v;
