@@ -1046,6 +1046,7 @@ namespace masstree {
 
             struct log_cell *lc = (struct log_cell *) snapshot_v;
             if (check_version && lc->version >= version) {
+                l->writeUnlock(false);
                 return NULL;
             }
 
