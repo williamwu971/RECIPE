@@ -196,7 +196,7 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size, void **result
     }
 
     //todo: testing pre-fault by reading
-//    memset_func = log_prefault_custom_func;
+    memset_func = log_prefault_custom_func;
 
     if (map == NULL || map == MAP_FAILED || !is_pmem)
         die("map error map:%p is_pmem:%d", map, is_pmem);
