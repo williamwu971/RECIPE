@@ -294,8 +294,8 @@ void log_init(uint64_t num_logs) {
     uint64_t file_size = num_logs * CACHE_LINE_SIZE;
     int preset = 7;
 
-    int *pptr = NULL;
-//    int *pptr = &preset;
+//    int *pptr = NULL;
+    int *pptr = &preset;
 
     // this region controls pre fault?
     log_map(1, INODE_FN, file_size, (void **) &inodes, pptr, CACHE_LINE_SIZE);
@@ -788,10 +788,10 @@ int log_start_perf(const char *perf_fn) {
             perf_fn
     );
 
-    sprintf(command,
-            "/home/blepers/linux/tools/perf/perf record --call-graph dwarf -p %d -o %s -g >> perf.out 2>&1 &",
-            getpid(), perf_fn);
-    perf_stat = 0;
+//    sprintf(command,
+//            "/home/blepers/linux/tools/perf/perf record --call-graph dwarf -p %d -o %s -g >> perf.out 2>&1 &",
+//            getpid(), perf_fn);
+//    perf_stat = 0;
 
 //    sprintf(command,
 //            "sudo /home/blepers/linux/tools/perf/perf stat "
