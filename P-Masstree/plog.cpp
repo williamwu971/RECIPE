@@ -220,7 +220,7 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
         sum.store(0);
 
 //        log_start_perf("pre_fault.perf");
-//        auto starttime = std::chrono::system_clock::now();
+        auto starttime = std::chrono::system_clock::now();
 
         log_start_perf("fault.perf");
 
@@ -236,12 +236,12 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
 //        log_stop_perf();
 //        log_print_pmem_bandwidth("pre_fault.perf", 0);
 
-//        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
-//                std::chrono::system_clock::now() - starttime);
-//
-//        printf("\n\t\t\tpre-faulted %-30s %7.2f gb/s %7.2f s sum:%lu \n",
-//               fn, (mapped_len * 2.0 / 1024.0 / 1024.0 / 1024.0) / (duration.count() / 1000000.0),
-//               duration.count() / 1000000.0, sum.load());
+        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
+                std::chrono::system_clock::now() - starttime);
+
+        printf("\n\t\t\tpre-faulted %-30s %7.2f gb/s %7.2f s sum:%lu \n",
+               fn, (mapped_len * 2.0 / 1024.0 / 1024.0 / 1024.0) / (duration.count() / 1000000.0),
+               duration.count() / 1000000.0, sum.load());
 
     }
 
