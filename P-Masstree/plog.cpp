@@ -246,36 +246,36 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
 
         log_start_perf("fault.perf");
 
-//        omp_set_num_threads(pre_fault_threads);
-//#pragma omp parallel for schedule(dynamic, 1)
-//        for (uint64_t i = 0; i < mapped_len; i += step_size) {
-//            sum.fetch_add(*(uint64_t *) memset_func((char *) map + i, value, step_size));
+        omp_set_num_threads(pre_fault_threads);
+#pragma omp parallel for schedule(dynamic, 1)
+        for (uint64_t i = 0; i < mapped_len; i += step_size) {
+            sum.fetch_add(*(uint64_t *) memset_func((char *) map + i, value, step_size));
+        }
+
+//        pthread_t *threads = (pthread_t *)
+//                malloc(sizeof(pthread_t) * pre_fault_threads);
+//        struct log_prefault_struct *lpss = (struct log_prefault_struct *)
+//                malloc(sizeof(struct log_prefault_struct) * pre_fault_threads);
+//
+//        size_t per_thread = mapped_len / pre_fault_threads;
+//
+//        for (int t_idx = 0; t_idx < pre_fault_threads; t_idx++) {
+//
+//            lpss[t_idx].s = (char *) map + t_idx * per_thread;
+//            lpss[t_idx].c = value;
+//            lpss[t_idx].n = per_thread;
+//            lpss[t_idx].memset_func = memset_func;
+//
+//            pthread_create(threads + t_idx, NULL,
+//                           log_prefault_thread, lpss + t_idx);
 //        }
-
-        pthread_t *threads = (pthread_t *)
-                malloc(sizeof(pthread_t) * pre_fault_threads);
-        struct log_prefault_struct *lpss = (struct log_prefault_struct *)
-                malloc(sizeof(struct log_prefault_struct) * pre_fault_threads);
-
-        size_t per_thread = mapped_len / pre_fault_threads;
-
-        for (int t_idx = 0; t_idx < pre_fault_threads; t_idx++) {
-
-            lpss[t_idx].s = (char *) map + t_idx * per_thread;
-            lpss[t_idx].c = value;
-            lpss[t_idx].n = per_thread;
-            lpss[t_idx].memset_func = memset_func;
-
-            pthread_create(threads + t_idx, NULL,
-                           log_prefault_thread, lpss + t_idx);
-        }
-        for (int t_idx = 0; t_idx < pre_fault_threads; t_idx++) {
-            uint64_t *local_sum;
-            pthread_join(threads[t_idx], (void **) &local_sum);
-            sum.fetch_add(*local_sum);
-        }
-        free(threads);
-        free(lpss);
+//        for (int t_idx = 0; t_idx < pre_fault_threads; t_idx++) {
+//            uint64_t *local_sum;
+//            pthread_join(threads[t_idx], (void **) &local_sum);
+//            sum.fetch_add(*local_sum);
+//        }
+//        free(threads);
+//        free(lpss);
 
         log_stop_perf();
         log_print_pmem_bandwidth("fault.perf", 0, NULL);
