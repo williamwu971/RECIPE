@@ -268,11 +268,12 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
 
             pthread_create(threads + t_idx, NULL,
                            log_prefault_thread, lpss + t_idx);
-        }
-        for (int t_idx = 0; t_idx < pre_fault_threads; t_idx++) {
             uint64_t *local_sum;
             pthread_join(threads[t_idx], (void **) &local_sum);
             sum.fetch_add(*local_sum);
+        }
+        for (int t_idx = 0; t_idx < pre_fault_threads; t_idx++) {
+
         }
         free(threads);
         free(lpss);
