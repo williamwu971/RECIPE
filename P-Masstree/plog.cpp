@@ -161,6 +161,8 @@ void *log_prefault_thread(void *arg) {
     struct log_prefault_struct *lps =
             (struct log_prefault_struct *) arg;
 
+    printf("thread: %p %d %lu\n",
+           lps->s, lps->c, lps->n);
 
     return lps->memset_func(
             lps->s, lps->c, lps->n
