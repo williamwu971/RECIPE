@@ -240,7 +240,7 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
         if (mapped_len % PAGE_SIZE == 0) step_size = PAGE_SIZE;
         else step_size = CACHE_LINE_SIZE;
 
-        step_size = (2 * 1024 * 1024ULL);
+        step_size = (2 * 1024 * 1024ULL); // to remove
 
         std::atomic<uint64_t> sum;
         sum.store(0);
