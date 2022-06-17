@@ -186,7 +186,7 @@ static inline void *log_prefault_custom_func(void *s, int c, size_t n) {
     }
 
 
-    return (void*)sum;
+    return (void *) sum;
 }
 
 uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
@@ -240,6 +240,8 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
         if (mapped_len % PAGE_SIZE == 0) step_size = PAGE_SIZE;
         else step_size = CACHE_LINE_SIZE;
 
+        step_size = (2 * 1024 * 1024ULL);
+
         std::atomic<uint64_t> sum;
         sum.store(0);
 
@@ -256,7 +258,7 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
 //            printf("visiting %p\n", (char *) map + i);
             visit_log[i / step_size] += 1;
 //            sum.fetch_add(*(uint64_t *) memset_func((char *) map + i, value, step_size));
-            sum.fetch_add((uint64_t ) memset_func((char *) map + i, value, step_size));
+            sum.fetch_add((uint64_t) memset_func((char *) map + i, value, step_size));
         }
 
         for (int i = 0; i < mapped_len / step_size; i++) {
