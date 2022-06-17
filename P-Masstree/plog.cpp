@@ -262,6 +262,7 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
             lpss[t_idx].s = (char *) map + t_idx * per_thread;
             lpss[t_idx].c = value;
             lpss[t_idx].n = per_thread;
+            lpss[t_idx].memset_func = memset_func;
 
             pthread_create(threads + t_idx, NULL,
                            log_prefault_thread, lpss + t_idx);
