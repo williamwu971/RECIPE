@@ -165,7 +165,8 @@ void *log_prefault_custom_func(void *s, int c, size_t n) {
     return sum;
 }
 
-uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size, void **result, int *pre_set, int alignment) {
+uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
+                 void **result, int *pre_set, int alignment, int pre_fault_threads) {
 
     void *map = NULL;
     size_t mapped_len = 0;
@@ -223,8 +224,8 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size, void **result
 
         log_start_perf("fault.perf");
 
-        omp_set_num_threads(OMP_NUM_THREAD);
-#pragma omp parallel for schedule(dynamic, 1)
+        omp_set_num_threads(pre_fault_threads);
+#pragma omp parallel for schedule(static, 1)
         for (uint64_t i = 0; i < mapped_len; i += step_size) {
             sum.fetch_add(*(uint64_t *) memset_func((char *) map + i, value, step_size));
         }
@@ -254,17 +255,19 @@ void log_recover(masstree::masstree *tree, int num_threads) {
     uint64_t mapped_len;
 
     mapped_len = log_map(1, INODE_FN, 0,
-                         (void **) &inodes, NULL, CACHE_LINE_SIZE);
+                         (void **) &inodes, NULL, CACHE_LINE_SIZE,
+                         num_threads);
 
 
     if (log_map(1, META_FN, 0,
-                (void **) &log_meta, NULL, CACHE_LINE_SIZE) != mapped_len)
+                (void **) &log_meta, NULL,
+                CACHE_LINE_SIZE, num_threads) != mapped_len)
         die("META filesize inconsistent");
 
     uint64_t num_logs = mapped_len / CACHE_LINE_SIZE;
 
     mapped_len = log_map(1, LOG_FN, 0,
-                         (void **) &big_map, NULL, LOG_SIZE);
+                         (void **) &big_map, NULL, LOG_SIZE, num_threads);
     if (mapped_len != num_logs * LOG_SIZE) die("big_map mapped_len:%zu", mapped_len);
 
 
@@ -288,21 +291,25 @@ void log_recover(masstree::masstree *tree, int num_threads) {
     inited = 1;
 }
 
-void log_init(uint64_t num_logs) {
+void log_init(uint64_t num_logs, int pre_fault_threads) {
 
     log_structs_size_check();
     uint64_t file_size = num_logs * CACHE_LINE_SIZE;
     int preset = 7;
 
-//    int *pptr = NULL;
-    int *pptr = &preset;
+
+    int *pptr = NULL;
+    if (pre_fault_threads > 0)pptr = &preset;
 
     // this region controls pre fault?
-    log_map(1, INODE_FN, file_size, (void **) &inodes, pptr, CACHE_LINE_SIZE);
-    log_map(1, META_FN, file_size, (void **) &log_meta, pptr, CACHE_LINE_SIZE);
+    log_map(1, INODE_FN, file_size, (void **) &inodes, pptr, CACHE_LINE_SIZE,
+            pre_fault_threads);
+    log_map(1, META_FN, file_size, (void **) &log_meta, pptr, CACHE_LINE_SIZE,
+            pre_fault_threads);
 
     file_size = num_logs * LOG_SIZE;
-    log_map(1, LOG_FN, file_size, (void **) &big_map, pptr, LOG_SIZE);
+    log_map(1, LOG_FN, file_size, (void **) &big_map, pptr, LOG_SIZE,
+            pre_fault_threads);
 
     // inodes
     lm.num_entries = num_logs;
