@@ -173,18 +173,20 @@ static inline void *log_prefault_custom_func(void *s, int c, size_t n) {
 
     (void) c;
 
-    uint64_t *sum = (uint64_t *) malloc(sizeof(uint64_t));
-    *sum = 0;
+//    uint64_t *sum = (uint64_t *) malloc(sizeof(uint64_t));
+//    *sum = 0;
+    uint64_t sum = 0;
 
     n /= 8;
     uint64_t *nums = (uint64_t *) s;
 
     for (size_t i = 0; i < n; i++) {
-        *sum += nums[i];
+//        *sum += nums[i];
+        sum += nums[i];
     }
 
 
-    return sum;
+    return (void*)sum;
 }
 
 uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
@@ -253,7 +255,8 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
 
 //            printf("visiting %p\n", (char *) map + i);
             visit_log[i / step_size] += 1;
-            sum.fetch_add(*(uint64_t *) memset_func((char *) map + i, value, step_size));
+//            sum.fetch_add(*(uint64_t *) memset_func((char *) map + i, value, step_size));
+            sum.fetch_add((uint64_t ) memset_func((char *) map + i, value, step_size));
         }
 
         for (int i = 0; i < mapped_len / step_size; i++) {
