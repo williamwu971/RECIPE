@@ -169,7 +169,7 @@ void *log_prefault_thread(void *arg) {
     );
 }
 
-void *log_prefault_custom_func(void *s, int c, size_t n) {
+static inline void *log_prefault_custom_func(void *s, int c, size_t n) {
 
     (void) c;
 
@@ -249,6 +249,8 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
         omp_set_num_threads(pre_fault_threads);
 #pragma omp parallel for schedule(dynamic, 1)
         for (uint64_t i = 0; i < mapped_len; i += step_size) {
+
+//            printf("visiting %p")
             sum.fetch_add(*(uint64_t *) memset_func((char *) map + i, value, step_size));
         }
 
