@@ -246,12 +246,13 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
 
         log_start_perf("fault.perf");
 
-        omp_set_num_threads(pre_fault_threads);
-#pragma omp parallel for schedule(dynamic, 1)
-        for (uint64_t i = 0; i < mapped_len; i += step_size) {
-            sum.fetch_add(*(uint64_t *) memset_func((char *) map + i, value, step_size));
-        }
+//        omp_set_num_threads(pre_fault_threads);
+//#pragma omp parallel for schedule(dynamic, 1)
+//        for (uint64_t i = 0; i < mapped_len; i += step_size) {
+//            sum.fetch_add(*(uint64_t *) memset_func((char *) map + i, value, step_size));
+//        }
 
+        sum.fetch_add(*(uint64_t *) memset_func((char *) map, value, mapped_len));
 //        pthread_t *threads = (pthread_t *)
 //                malloc(sizeof(pthread_t) * pre_fault_threads);
 //        struct log_prefault_struct *lpss = (struct log_prefault_struct *)
