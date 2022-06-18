@@ -20,6 +20,7 @@
 #include <atomic>
 #include <libpmem.h>
 #include <omp.h>
+#include <unistd.h>
 
 #define LOG_SIZE (4*1024*1024ULL)
 #define LOG_MERGE_THRESHOLD (2*1024*1024ULL)
