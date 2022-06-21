@@ -5,4 +5,9 @@
 #ifndef RECIPE_POBJ_H
 #define RECIPE_POBJ_H
 
+#include <libpmemobj.h>
+
+// Global pool pointer
+PMEMobjpool *pop;
+
 #endif //RECIPE_POBJ_H
