@@ -7,7 +7,14 @@
 
 #include <libpmemobj.h>
 
+struct pobj_masstree{
+    int dummy;
+};
+
+// Global pool uuid
+uint64_t pool_uuid;
+
 // Global pool pointer
-PMEMobjpool *pop;
+PMEMobjpool *pop = NULL;
 
 #endif //RECIPE_POBJ_H
