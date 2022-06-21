@@ -25,4 +25,6 @@ pmdk
 .idea/
 cmake-build-debug/
 *.csv
+*.perf
+*.perf.old
 
