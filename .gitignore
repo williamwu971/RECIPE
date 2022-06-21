@@ -21,6 +21,9 @@ pmdk
 *tags
 *cscope.out
 *cscope.files
+
 .idea/
 cmake-build-debug/
 *.csv
+*.perf
+*.perf.old
