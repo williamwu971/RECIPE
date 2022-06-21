@@ -230,10 +230,10 @@ clht_create(uint64_t num_buckets)
 
     // Open the PMEMpool if it exists, otherwise create it
     size_t pool_size = 32*1024*1024*1024UL;
-    if (access("/dev/shm/pool", F_OK) != -1)
-        pop = pmemobj_open("/dev/shm/pool", POBJ_LAYOUT_NAME(clht));
+    if (access("/pmem0/clht_pool", F_OK) != -1)
+        pop = pmemobj_open("/pmem0/clht_pool", POBJ_LAYOUT_NAME(clht));
     else
-        pop = pmemobj_create("/dev/shm/pool", POBJ_LAYOUT_NAME(clht), pool_size, 0666);
+        pop = pmemobj_create("/pmem0/clht_pool", POBJ_LAYOUT_NAME(clht), pool_size, 0666);
 
     if (pop == NULL)
         perror("failed to open the pool\n");
