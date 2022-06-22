@@ -110,7 +110,7 @@ int main(int argc, char **argv) {
 
 
     size_t file_size = num_of_gb * 1024 * 1024 * 1024;
-
+    printf("file_size:%zu \n",file_size);
     size_t mapped_len;
     int is_pmem;
 
