@@ -120,6 +120,7 @@ int main(int argc, char **argv) {
 
     if (file_map == NULL || mapped_len != file_size || !is_pmem) {
         printf("mapped_len:%zu is_pmem:%d\n", mapped_len, is_pmem);
+        return 1;
     }
 
     pthread_t *threads = malloc(sizeof(pthread_t) * num_of_thread);
