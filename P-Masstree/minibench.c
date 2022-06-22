@@ -109,7 +109,7 @@ int main(int argc, char **argv) {
     int step_size = atoi(argv[3]);
 
 
-    u_int64_t file_size = (u_int64_t)num_of_gb * 1024 * 1024 * 1024;
+    u_int64_t file_size = (u_int64_t)num_of_gb * 1024 * 1024 * 1024ULL;
     size_t mapped_len;
     int is_pmem;
 
