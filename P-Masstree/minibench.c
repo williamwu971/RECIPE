@@ -71,7 +71,7 @@ void *minibench_thread(void *ptr) {
     start_timer
 
     if (arg.i == 0) {
-        printf("elapsed: %.2fs", (double) elapsed / 1000000.0);
+        printf("elapsed: %.2fs\n", (double) elapsed / 1000000.0);
     }
 
 
@@ -90,7 +90,7 @@ void *minibench_thread(void *ptr) {
     stop_timer
 
     if (arg.i == 0) {
-        printf("elapsed: %.2fs", (double) elapsed / 1000000.0);
+        printf("elapsed: %.2fs\n", (double) elapsed / 1000000.0);
     }
 
     return NULL;
