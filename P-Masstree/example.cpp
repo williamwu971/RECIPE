@@ -338,7 +338,7 @@ void run(char **argv) {
     if (require_RP_init) {
         printf("init RP... ");
         int preset = 0;
-        RP_init("masstree", 64 * 1024 * 1024 * 1024ULL,&preset);
+        RP_init("masstree", 64 * 1024 * 1024 * 1024ULL, &preset);
     }
 
     if (use_perf)printf("WARNING: PERF is enabled!\n");
@@ -382,12 +382,13 @@ void run(char **argv) {
             log_init(1024, num_thread);
         }
 
-        printf("spawn GC... ");
-        fflush(stdout);
-        for (int gcc = 0; gcc < num_of_gc; gcc++) {
-            log_start_gc(tree);
+        if (which_malloc == log_malloc) {
+            printf("spawn GC... ");
+            fflush(stdout);
+            for (int gcc = 0; gcc < num_of_gc; gcc++) {
+                log_start_gc(tree);
+            }
         }
-
     }
 
 
@@ -455,7 +456,7 @@ void run(char **argv) {
 
         fprintf(throughput_file, "%.2f,", insert_throughput);
     }
-    if (which_malloc==log_malloc) log_debug_print(1, show_log_usage);
+    if (which_malloc == log_malloc) log_debug_print(1, show_log_usage);
     {
 
         const char *perf_fn = num_of_gc ? "update_gc.perf" : "update.perf";
@@ -536,7 +537,7 @@ void run(char **argv) {
     }
 
     lookup:
-    if (which_malloc==log_malloc) log_debug_print(0, show_log_usage);
+    if (which_malloc == log_malloc) log_debug_print(0, show_log_usage);
 
     {
         const char *perf_fn = "lookup.perf";
@@ -586,7 +587,7 @@ void run(char **argv) {
         fprintf(throughput_file, "%.2f,", lookup_throughput);
     }
 
-    if (which_malloc==log_malloc) log_debug_print(0, show_log_usage);
+    if (which_malloc == log_malloc) log_debug_print(0, show_log_usage);
 
     {
 
@@ -622,7 +623,7 @@ void run(char **argv) {
 
         fprintf(throughput_file, "%.2f,", update_throughput);
     }
-    if (which_malloc==log_malloc) log_debug_print(0, show_log_usage);
+    if (which_malloc == log_malloc) log_debug_print(0, show_log_usage);
 
 
     // logging throughput to files
@@ -639,7 +640,7 @@ void run(char **argv) {
 
     if (num_of_gc > 0)
         log_join_all_gc();
-    if (which_malloc==log_malloc) log_debug_print(2, show_log_usage);
+    if (which_malloc == log_malloc) log_debug_print(2, show_log_usage);
 
     delete[] keys;
 }
