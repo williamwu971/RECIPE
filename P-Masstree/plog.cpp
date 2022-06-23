@@ -221,7 +221,7 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
     }
 
     //todo: testing pre-fault by reading
-    memset_func = log_prefault_custom_func;
+//    memset_func = log_prefault_custom_func;
 
     if (map == NULL || map == MAP_FAILED || !is_pmem)
         die("map error map:%p is_pmem:%d", map, is_pmem);
@@ -249,23 +249,23 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
         auto starttime = std::chrono::system_clock::now();
 
         log_start_perf("fault.perf");
-        int *visit_log = (int *) calloc((mapped_len / step_size), sizeof(int));
+//        int *visit_log = (int *) calloc((mapped_len / step_size), sizeof(int));
 
         omp_set_num_threads(pre_fault_threads);
 #pragma omp parallel for schedule(dynamic, 1)
         for (uint64_t i = 0; i < mapped_len; i += step_size) {
 
 //            printf("visiting %p\n", (char *) map + i);
-            visit_log[i / step_size] += 1;
+//            visit_log[i / step_size] += 1;
 //            sum.fetch_add(*(uint64_t *) memset_func((char *) map + i, value, step_size));
             sum.fetch_add((uint64_t) memset_func((char *) map + i, value, step_size));
         }
 
-        for (int i = 0; i < mapped_len / step_size; i++) {
-            if (visit_log[i] != 1) {
-                printf("visit log %d %d\n", i, visit_log[i]);
-            }
-        }
+//        for (int i = 0; i < mapped_len / step_size; i++) {
+//            if (visit_log[i] != 1) {
+//                printf("visit log %d %d\n", i, visit_log[i]);
+//            }
+//        }
 
 //        sum.fetch_add(*(uint64_t *) memset_func((char *) map, value, mapped_len));
 //        pthread_t *threads = (pthread_t *)
