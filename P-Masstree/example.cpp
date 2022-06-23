@@ -638,7 +638,7 @@ void run(char **argv) {
         fclose(latency_file);
     }
 
-    if (num_of_gc > 0)
+    if (num_of_gc > 0 && which_malloc == log_malloc)
         log_join_all_gc();
     if (which_malloc == log_malloc) log_debug_print(2, show_log_usage);
 
