@@ -258,7 +258,8 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
 //            printf("visiting %p\n", (char *) map + i);
 //            visit_log[i / step_size] += 1;
 //            sum.fetch_add(*(uint64_t *) memset_func((char *) map + i, value, step_size));
-            sum.fetch_add((uint64_t) memset_func((char *) map + i, value, step_size));
+//            sum.fetch_add((uint64_t) memset_func((char *) map + i, value, step_size));
+            ((char *) map)[i]=value;
         }
 
 //        for (int i = 0; i < mapped_len / step_size; i++) {
