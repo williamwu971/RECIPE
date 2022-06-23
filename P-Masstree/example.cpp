@@ -379,7 +379,7 @@ void run(char **argv) {
             log_recover(tree, 20);
             goto lookup;
         } else {
-            log_init(1024, num_thread);
+            log_init(10240, num_thread);
         }
 
         if (which_malloc == log_malloc) {
