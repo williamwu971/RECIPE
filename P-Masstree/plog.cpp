@@ -358,7 +358,7 @@ void log_init(uint64_t num_logs, int pre_fault_threads) {
 
     log_structs_size_check();
     uint64_t file_size = num_logs * CACHE_LINE_SIZE;
-    int preset = 7;
+    int preset = 0;
 
 
     int *pptr = NULL;
