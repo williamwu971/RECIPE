@@ -337,7 +337,8 @@ void run(char **argv) {
 
     if (require_RP_init) {
         printf("init RP... ");
-        RP_init("masstree", 64 * 1024 * 1024 * 1024ULL);
+        int preset = 0;
+        RP_init("masstree", 64 * 1024 * 1024 * 1024ULL,&preset);
     }
 
     if (use_perf)printf("WARNING: PERF is enabled!\n");
