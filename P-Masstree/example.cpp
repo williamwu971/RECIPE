@@ -594,6 +594,11 @@ void run(char **argv) {
         const char *perf_fn = "delete.perf";
         if (use_perf)log_start_perf(perf_fn);
 
+        void *(*tombstone_callback_func)(uint64_t key) = NULL;
+        if (which_malloc == log_malloc) {
+            tombstone_callback_func = log_get_tombstone;
+        }
+
         // Update
         auto starttime = std::chrono::system_clock::now();
         tbb::parallel_for(tbb::blocked_range<uint64_t>(0, n), [&](const tbb::blocked_range<uint64_t> &range) {
@@ -602,7 +607,7 @@ void run(char **argv) {
 
 
                 void *old = tree->del_and_return(keys[i], 0, 0,
-                                                 log_get_tombstone, t);
+                                                 tombstone_callback_func, t);
 
                 which_free(old);
             }
