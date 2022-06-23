@@ -864,7 +864,7 @@ int log_start_perf(const char *perf_fn) {
     perf_stat = 0;
 
 
-    sleep(1);
+//    sleep(1);
 
 //    sprintf(command,
 //            "sudo /home/blepers/linux/tools/perf/perf stat "

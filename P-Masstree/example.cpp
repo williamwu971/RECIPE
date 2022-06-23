@@ -455,7 +455,7 @@ void run(char **argv) {
 
         fprintf(throughput_file, "%.2f,", insert_throughput);
     }
-    log_debug_print(1, show_log_usage);
+    if (which_malloc==log_malloc) log_debug_print(1, show_log_usage);
     {
 
         const char *perf_fn = num_of_gc ? "update_gc.perf" : "update.perf";
@@ -536,7 +536,7 @@ void run(char **argv) {
     }
 
     lookup:
-    log_debug_print(0, show_log_usage);
+    if (which_malloc==log_malloc) log_debug_print(0, show_log_usage);
 
     {
         const char *perf_fn = "lookup.perf";
@@ -586,7 +586,7 @@ void run(char **argv) {
         fprintf(throughput_file, "%.2f,", lookup_throughput);
     }
 
-    log_debug_print(0, show_log_usage);
+    if (which_malloc==log_malloc) log_debug_print(0, show_log_usage);
 
     {
 
@@ -622,7 +622,7 @@ void run(char **argv) {
 
         fprintf(throughput_file, "%.2f,", update_throughput);
     }
-    log_debug_print(0, show_log_usage);
+    if (which_malloc==log_malloc) log_debug_print(0, show_log_usage);
 
 
     // logging throughput to files
@@ -639,7 +639,7 @@ void run(char **argv) {
 
     if (num_of_gc > 0)
         log_join_all_gc();
-    log_debug_print(2, show_log_usage);
+    if (which_malloc==log_malloc) log_debug_print(2, show_log_usage);
 
     delete[] keys;
 }
