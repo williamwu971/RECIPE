@@ -43,8 +43,8 @@ cd build || exit
 index_location=("dram" "pmem")
 value_location=("pmem" "log")
 index_location=("dram")
-value_location=("log")
-#value_location=("pmem")
+#value_location=("log")
+value_location=("pmem")
 num_threads=(17)
 use_perf="yes"
 record_latency="no"
