@@ -32,12 +32,6 @@ for var in "$@"; do
   fi
 done
 
-# backup perf files
-for pfn in *.perf; do
-  [ -f "$pfn" ] || break
-  cp "$pfn" "$pfn".old
-done
-
 cd build || exit
 
 index_location=("dram" "pmem")
@@ -79,6 +73,12 @@ rm -f latency.csv out.png
 for i in "${index_location[@]}"; do
   for v in "${value_location[@]}"; do
     for n in "${num_threads[@]}"; do
+
+      # backup perf files
+      for pfn in *.perf; do
+        [ -f "$pfn" ] || break
+        cp "$pfn" "$pfn".old
+      done
 
       # the first three columns
       printf '%s,%s,%s,' "$i" "$v" "$n" >>perf.csv
