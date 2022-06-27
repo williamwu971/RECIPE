@@ -457,6 +457,7 @@ void run(char **argv) {
                                            value_size - sizeof(struct masstree_obj)
                                     );
 
+                                    printf("pointer: %p\n",D_RW(objToid));
                                     tree->put_and_return(keys[i], D_RW(objToid), 1, t);
 
                                 }
