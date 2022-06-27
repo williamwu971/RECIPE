@@ -85,7 +85,7 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) 
                 if (!lc->is_delete) {
 
                     struct log_cell *res = (struct log_cell *)
-                            tree->put_and_return(lc->key, lc, 1, t);
+                            tree->put_and_return(lc->key, lc, 1, 1, t);
 
                     // insert success and created a new key-value
                     // replaced a value, should free some space in other log
@@ -240,7 +240,7 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
         if (mapped_len % PAGE_SIZE == 0) step_size = PAGE_SIZE;
         else step_size = CACHE_LINE_SIZE;
 
-        if (mapped_len>2 * 1024 * 1024ULL)step_size = (2 * 1024 * 1024ULL); // to remove
+        if (mapped_len > 2 * 1024 * 1024ULL)step_size = (2 * 1024 * 1024ULL); // to remove
 
         std::atomic<uint64_t> sum;
         sum.store(0);
@@ -259,7 +259,7 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
 //            visit_log[i / step_size] += 1;
 //            sum.fetch_add(*(uint64_t *) memset_func((char *) map + i, value, step_size));
 //            sum.fetch_add((uint64_t) memset_func((char *) map + i, value, step_size));
-            ((char *) map)[i]=value;
+            ((char *) map)[i] = value;
         }
 
 //        for (int i = 0; i < mapped_len / step_size; i++) {

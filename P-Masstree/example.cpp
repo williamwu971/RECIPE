@@ -458,7 +458,7 @@ void run(char **argv) {
 //                                    );
 
 
-                                    tree->put_and_return(keys[i], D_RW(objToid), 1, t);
+                                    tree->put_and_return(keys[i], D_RW(objToid), 1, 0, t);
 
                                 }
                                     TX_ONABORT {
@@ -498,7 +498,7 @@ void run(char **argv) {
                     pmem_memset_persist(value + 1, 7, raw_size - sizeof(struct log_cell) - sizeof(uint64_t));
 
                 }
-                tree->put_and_return(keys[i], raw, 1, t);
+                tree->put_and_return(keys[i], raw, 1, 1, t);
             }
         });
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
@@ -543,10 +543,10 @@ void run(char **argv) {
 //                                    );
 
                                     printf("key: %lu pointer: %p\n", keys[i],
-                                           tree->get(keys[i],t));
+                                           tree->get(keys[i], t));
 
                                     struct masstree_obj *obj = (struct masstree_obj *)
-                                            tree->put_and_return(keys[i], D_RW(objToid), 0, t);
+                                            tree->put_and_return(keys[i], D_RW(objToid), 0, 0, t);
 
 
                                     printf("key: %lu pointer: %p\n", keys[i], obj);
@@ -603,7 +603,7 @@ void run(char **argv) {
 //                if (record_latency) rdtscll(b);
                 if (record_latency) rdtscll_fence(a);
 
-                void *old = (char *) tree->put_and_return(keys[i], raw, 0, t);
+                void *old = (char *) tree->put_and_return(keys[i], raw, 0, 1, t);
 
                 if (record_latency) rdtscll_fence(b);
 

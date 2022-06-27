@@ -509,7 +509,8 @@ namespace masstree {
         }
     }
 
-    void *masstree::put_and_return(uint64_t key, void *value, int create, ThreadInfo &threadEpocheInfo) {
+    void *masstree::put_and_return(uint64_t key, void *value, int create, int check_version,
+                                   ThreadInfo &threadEpocheInfo) {
         EpocheGuard epocheGuard(threadEpocheInfo);
         key_indexed_position kx_;
         leafnode *next = NULL, *p = NULL;
@@ -600,13 +601,22 @@ namespace masstree {
         // return True if there is an insert, False otherwise
         if (kx_.p >= 0 && l->key(kx_.p) == key) {
 
-            void *res = l->assign_value_if_newer(kx_.p, value);
+            void *res;
+
+            if (check_version) {
+                res = l->assign_value_if_newer(kx_.p, value);
+            } else {
+                res = l->value(kx_.p);
+                l->assign_value(kx_.p, value);
+            }
+
+
             l->writeUnlock(false);
             return res;
         } else if (create) {
 
             if (!(l->leaf_insert(this, NULL, 0, NULL, key, value, kx_))) {
-                return put_and_return(key, value, create, threadEpocheInfo);
+                return put_and_return(key, value, create, check_version, threadEpocheInfo);
             }
 
             return value;

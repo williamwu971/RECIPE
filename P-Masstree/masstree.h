@@ -101,7 +101,7 @@ namespace masstree {
 
         // todo: new, for gc
         void *put_and_return(
-                uint64_t key, void *value, int create, MASS::ThreadInfo &threadEpocheInfo
+                uint64_t key, void *value, int create,int check_version, MASS::ThreadInfo &threadEpocheInfo
         );
 
         // todo: lock and unlock the node (write lock)
