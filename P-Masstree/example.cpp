@@ -542,14 +542,14 @@ void run(char **argv) {
 //                                           value_size - sizeof(struct masstree_obj)
 //                                    );
 
-                                    printf("key: %lu pointer: %p\n", keys[i],
-                                           tree->get(keys[i], t));
+//                                    printf("key: %lu pointer: %p\n", keys[i],
+//                                           tree->get(keys[i], t));
 
                                     struct masstree_obj *obj = (struct masstree_obj *)
                                             tree->put_and_return(keys[i], D_RW(objToid), 0, 0, t);
 
 
-                                    printf("key: %lu pointer: %p\n", keys[i], obj);
+//                                    printf("key: %lu pointer: %p\n", keys[i], obj);
 
                                     TX_FREE(obj->objToid);
 
