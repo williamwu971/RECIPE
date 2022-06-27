@@ -561,7 +561,7 @@ void run(char **argv) {
 
 //                                    printf("key: %lu pointer: %p\n", keys[i], obj);
 
-                                    TX_FREE(obj->objToid);
+//                                    TX_FREE(obj->objToid);
 
                                 }
                                     TX_ONABORT {
