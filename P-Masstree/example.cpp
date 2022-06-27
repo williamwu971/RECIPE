@@ -543,7 +543,7 @@ void run(char **argv) {
                                     );
 
                                     struct masstree_obj *obj = (struct masstree_obj *)
-                                            tree->put_and_return(keys[i], D_RW(objToid), 1, t);
+                                            tree->put_and_return(keys[i], D_RW(objToid), 0, t);
 
                                     TX_FREE(obj->objToid);
 
