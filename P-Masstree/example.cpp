@@ -359,7 +359,7 @@ void run(char **argv) {
         uint64_t data;
     };
 
-#define OBJ_FN "masstree_obj"
+#define OBJ_FN "/pmem0/masstree_obj"
     PMEMobjpool *pop = NULL;
 
     if (use_obj) {
