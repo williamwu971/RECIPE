@@ -370,6 +370,12 @@ void run(char **argv) {
                                  64 * 1024 * 1024 * 1024ULL, 0666);
         }
 
+        // Enable prefault
+        int arg_open = 1, arg_create = 1;
+        if ((pmemobj_ctl_set(pop, "prefault.at_open", &arg_open)) != 0)
+            perror("failed to configure prefaults at open\n");
+        if ((pmemobj_ctl_set(pop, "prefault.at_create", &arg_create)) != 0)
+            perror("failed to configure prefaults at create\n");
     }
 
 
