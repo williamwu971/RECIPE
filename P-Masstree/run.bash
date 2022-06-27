@@ -39,6 +39,7 @@ value_location=("pmem" "log")
 index_location=("dram")
 #value_location=("log")
 #value_location=("pmem")
+value_location=("obj")
 num_threads=(15)
 use_perf="yes"
 record_latency="no"
