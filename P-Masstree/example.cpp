@@ -453,9 +453,9 @@ void run(char **argv) {
                                             D_RW(objToid)->objToid = objToid;
                                             D_RW(objToid)->data = rands[i];
 
-                                    memset(((uint64_t *) (&D_RW(objToid)->data)) + 1, 7,
-                                           value_size - sizeof(struct masstree_obj)
-                                    );
+//                                    memset(((uint64_t *) (&D_RW(objToid)->data)) + 1, 7,
+//                                           value_size - sizeof(struct masstree_obj)
+//                                    );
 
 
                                     tree->put_and_return(keys[i], D_RW(objToid), 1, t);
@@ -538,11 +538,11 @@ void run(char **argv) {
                                             D_RW(objToid)->objToid = objToid;
                                             D_RW(objToid)->data = keys[i];
 
-                                    memset(((uint64_t *) (&D_RW(objToid)->data)) + 1, 7,
-                                           value_size - sizeof(struct masstree_obj)
-                                    );
+//                                    memset(((uint64_t *) (&D_RW(objToid)->data)) + 1, 7,
+//                                           value_size - sizeof(struct masstree_obj)
+//                                    );
 
-                                    printf("pointer: %p\n",tree->get(keys[i],t));
+//                                    printf("pointer: %p\n",tree->get(keys[i],t));
                                     struct masstree_obj *obj = (struct masstree_obj *)
                                             tree->put_and_return(keys[i], D_RW(objToid), 0, t);
 
