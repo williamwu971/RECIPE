@@ -1,6 +1,7 @@
 #include <iostream>
 #include <chrono>
 #include <random>
+#include <libpmemobj.h>
 #include "tbb/tbb.h"
 #include "plog.cpp"
 
@@ -283,6 +284,9 @@ void run(char **argv) {
     int show_log_usage = 1;
     int record_latency = 0;
     int display_throughput = 1;
+
+    int use_obj = 0;
+
     int value_size = sizeof(struct log_cell) + sizeof(uint64_t);
     FILE *throughput_file = fopen("perf.csv", "a");
 
@@ -310,6 +314,8 @@ void run(char **argv) {
                 which_free = log_free;
                 require_log_init = 1;
                 require_flush = 1;
+            } else if (strcasestr(argv[ac], "obj")) {
+                use_obj = 1;
             }
         } else if (strcasestr(argv[ac], "key=")) {
             if (strcasestr(argv[ac], "rand")) {
@@ -340,6 +346,32 @@ void run(char **argv) {
         int preset = 0;
         RP_init("masstree", 64 * 1024 * 1024 * 1024ULL, &preset);
     }
+
+
+    // todo: obj
+
+    POBJ_LAYOUT_BEGIN(masstree);
+    POBJ_LAYOUT_TOID(masstree, struct masstree_obj);
+    POBJ_LAYOUT_END(masstree);
+
+    struct masstree_obj {
+        TOID(struct masstree_obj) objToid;
+        uint64_t data;
+    };
+
+#define OBJ_FN "masstree_obj"
+    PMEMobjpool *pop = NULL;
+
+    if (use_obj) {
+        if (access(OBJ_FN, F_OK) != -1) {
+            pop = pmemobj_open(OBJ_FN, POBJ_LAYOUT_NAME(masstree));
+        } else {
+            pop = pmemobj_create(OBJ_FN, POBJ_LAYOUT_NAME(masstree),
+                                 64 * 1024 * 1024 * 1024ULL, 0666);
+        }
+
+    }
+
 
     if (use_perf)printf("WARNING: PERF is enabled!\n");
     if (num_of_gc)printf("WARNING: GC is enabled %d\n", num_of_gc);
@@ -409,6 +441,33 @@ void run(char **argv) {
         tbb::parallel_for(tbb::blocked_range<uint64_t>(0, n), [&](const tbb::blocked_range<uint64_t> &range) {
             auto t = tree->getThreadInfo();
             for (uint64_t i = range.begin(); i != range.end(); i++) {
+
+
+                if (use_obj) {
+
+                    TX_BEGIN(pop) {
+
+                                    TOID(struct masstree_obj) objToid =
+                                            TX_ALLOC(struct masstree_obj, value_size);
+
+                                            D_RW(objToid)->objToid = objToid;
+                                            D_RW(objToid)->data = rands[i];
+
+                                    memset(((uint64_t *) (&D_RW(objToid)->data)) + 1, 7,
+                                           value_size - sizeof(struct masstree_obj)
+                                    );
+
+                                    tree->put_and_return(keys[i], D_RW(objToid), 1, t);
+
+                                }
+                                    TX_ONABORT {
+                                    throw;
+                                }
+                    TX_END
+
+                    continue;
+                }
+
 //                tree->put(keys[i], &keys[i], t);
 
                 // todo: size randomize (YCSB/Facebook workload)
@@ -467,6 +526,34 @@ void run(char **argv) {
         tbb::parallel_for(tbb::blocked_range<uint64_t>(0, n), [&](const tbb::blocked_range<uint64_t> &range) {
             auto t = tree->getThreadInfo();
             for (uint64_t i = range.begin(); i != range.end(); i++) {
+
+                if (use_obj) {
+
+                    TX_BEGIN(pop) {
+
+                                    TOID(struct masstree_obj) objToid =
+                                            TX_ALLOC(struct masstree_obj, value_size);
+
+                                            D_RW(objToid)->objToid = objToid;
+                                            D_RW(objToid)->data = keys[i];
+
+                                    memset(((uint64_t *) (&D_RW(objToid)->data)) + 1, 7,
+                                           value_size - sizeof(struct masstree_obj)
+                                    );
+
+                                    struct masstree_obj *obj = (struct masstree_obj *)
+                                            tree->put_and_return(keys[i], D_RW(objToid), 1, t);
+
+                                    TX_FREE(obj->objToid);
+
+                                }
+                                    TX_ONABORT {
+                                    throw;
+                                }
+                    TX_END
+
+                    continue;
+                }
 
                 u_int64_t a = 0;
                 u_int64_t b = 0;
@@ -549,6 +636,21 @@ void run(char **argv) {
             auto t = tree->getThreadInfo();
             for (uint64_t i = range.begin(); i != range.end(); i++) {
 
+                if (use_obj) {
+
+                    struct masstree_obj *obj = (struct masstree_obj *) tree->get(keys[i], t);
+                    if (obj->data != keys[i]) {
+                        std::cout
+                                << "wrong value read: " << obj->data
+                                << " expected:" << keys[i]
+                                << std::endl;
+//                    printf("version:%lu, key:%lu, value_size:%lu, is_delete:%lu\n",
+//                           lc->version, lc->key, lc->value_size, lc->is_delete);
+                        throw;
+                    }
+
+                    continue;
+                }
 
                 char *raw = (char *) tree->get(keys[i], t);
 
@@ -599,17 +701,38 @@ void run(char **argv) {
             tombstone_callback_func = log_get_tombstone;
         }
 
-        // Update
+        // Delete
         auto starttime = std::chrono::system_clock::now();
         tbb::parallel_for(tbb::blocked_range<uint64_t>(0, n), [&](const tbb::blocked_range<uint64_t> &range) {
             auto t = tree->getThreadInfo();
             for (uint64_t i = range.begin(); i != range.end(); i++) {
 
 
+                if (use_obj) {
+
+                    TX_BEGIN(pop) {
+
+                                    struct masstree_obj *obj = (struct masstree_obj *)
+                                            tree->del_and_return(keys[i], 0, 0,
+                                                                 tombstone_callback_func, t);
+
+                                    TX_FREE(obj->objToid);
+
+                                }
+                                    TX_ONABORT {
+                                    throw;
+                                }
+                    TX_END
+
+                    continue;
+                }
+
                 void *old = tree->del_and_return(keys[i], 0, 0,
                                                  tombstone_callback_func, t);
 
                 which_free(old);
+
+                // todo: write -1 here
             }
         });
 

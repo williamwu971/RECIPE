@@ -33,12 +33,8 @@ void pobj_init(const char *fn, size_t pool_size) {
 }
 
 void *pobj_malloc(size_t size) {
+//    TX_
 
-    TX_BEGIN(pop)
-    {
-
-    }
-    TX_END
 
     return NULL;
 }
