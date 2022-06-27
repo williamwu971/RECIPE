@@ -37,4 +37,4 @@ find_library(TbbLib tbb)
 set(P_MASS_TEST example.cpp masstree.cpp)
 add_executable(example ${P_MASS_TEST})
 
-target_link_libraries(example ${JemallocLib} ${TbbLib} atomic boost_system boost_thread pmem /home/xiaoxiang/ralloc/test/libralloc.a pthread)
+target_link_libraries(example ${JemallocLib} ${TbbLib} atomic boost_system boost_thread pmemobj pmem /home/xiaoxiang/ralloc/test/libralloc.a pthread)
