@@ -363,12 +363,6 @@ void run(char **argv) {
     PMEMobjpool *pop = NULL;
 
     if (use_obj) {
-        if (access(OBJ_FN, F_OK) != -1) {
-            pop = pmemobj_open(OBJ_FN, POBJ_LAYOUT_NAME(masstree));
-        } else {
-            pop = pmemobj_create(OBJ_FN, POBJ_LAYOUT_NAME(masstree),
-                                 64 * 1024 * 1024 * 1024ULL, 0666);
-        }
 
         // Enable prefault
         int arg_open = 1, arg_create = 1;
@@ -376,6 +370,16 @@ void run(char **argv) {
             perror("failed to configure prefaults at open\n");
         if ((pmemobj_ctl_set(pop, "prefault.at_create", &arg_create)) != 0)
             perror("failed to configure prefaults at create\n");
+
+
+        if (access(OBJ_FN, F_OK) != -1) {
+            pop = pmemobj_open(OBJ_FN, POBJ_LAYOUT_NAME(masstree));
+        } else {
+            pop = pmemobj_create(OBJ_FN, POBJ_LAYOUT_NAME(masstree),
+                                 64 * 1024 * 1024 * 1024ULL, 0666);
+        }
+
+
     }
 
 
