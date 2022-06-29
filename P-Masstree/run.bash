@@ -37,10 +37,11 @@ cd build || exit
 index_location=("dram" "pmem")
 value_location=("pmem" "log")
 index_location=("dram")
-#value_location=("log")
+value_location=("log")
 #value_location=("pmem")
-value_location=("obj")
+#value_location=("obj")
 num_threads=(1 3 5 7 9 11 13 15 17)
+num_threads=(17)
 use_perf="yes"
 record_latency="no"
 num_of_gc=8

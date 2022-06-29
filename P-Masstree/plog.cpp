@@ -572,6 +572,7 @@ void *log_garbage_collection(void *arg) {
     masstree::masstree *tree = (masstree::masstree *) arg;
     auto t = tree->getThreadInfo();
 
+    uint64_t tombstones = 0; // todo: remove this
 
     while (!gc_stopped) {
 
@@ -688,6 +689,8 @@ void *log_garbage_collection(void *arg) {
                         // if ref=0 then the tombstone is not protecting anything
                         // do we need to check version?
 
+                        tombstones++;
+
                         if (l->reference(pack.p) == 0) {
 
                             // we have a tombstone and the reference is 0, attempt to delete again
@@ -739,6 +742,8 @@ void *log_garbage_collection(void *arg) {
         printf("\n");
 #endif
     }
+
+    printf("tombstone: %lu\n",tombstones);
 
     return NULL;
 }
