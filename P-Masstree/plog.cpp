@@ -677,6 +677,7 @@ void *log_garbage_collection(void *arg) {
 
                             // free if it's a tombstone
                             if (ref == 1 && current_value_in_tree->is_delete) {
+                                tombstones++;
                                 log_free(current_value_in_tree);
                             }
                         }
@@ -689,7 +690,7 @@ void *log_garbage_collection(void *arg) {
                         // if ref=0 then the tombstone is not protecting anything
                         // do we need to check version?
 
-                        tombstones++;
+
 
                         if (l->reference(pack.p) == 0) {
 
