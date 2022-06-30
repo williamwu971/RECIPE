@@ -354,8 +354,10 @@ void log_recover(masstree::masstree *tree, int num_threads) {
 
     inited = 1;
 }
-
+std::atomic<uint64_t> count = 0;
 void log_init(uint64_t num_logs, int pre_fault_threads) {
+
+    count.store(0);
 
     log_structs_size_check();
     uint64_t file_size = num_logs * CACHE_LINE_SIZE;
@@ -521,7 +523,7 @@ int log_memalign(void **memptr, size_t alignment, size_t size) {
 
     return 0;
 }
-std::atomic<uint64_t> count = 0;
+
 void *log_get_tombstone(uint64_t key) {
 
     count.fetch_add(1);
