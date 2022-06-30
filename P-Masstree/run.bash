@@ -82,7 +82,7 @@ for i in "${index_location[@]}"; do
     fi
 
     for n in "${num_threads[@]}"; do
-      for g in "${num_of_gc[@]}"; do
+      for g in "${actual_num_of_gc[@]}"; do
 
         # backup perf files
         for pfn in *.perf; do
