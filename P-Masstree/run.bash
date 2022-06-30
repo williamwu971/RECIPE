@@ -77,7 +77,7 @@ for i in "${index_location[@]}"; do
 
     actual_num_of_gc = $num_of_gc
 
-    if [ "v" = "pmem" ]; then
+    if [ "$v" = "pmem" ]; then
       actual_num_of_gc=(0)
     fi
 
