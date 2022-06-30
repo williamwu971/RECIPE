@@ -29,6 +29,7 @@
 #define OMP_NUM_THREAD (23)
 #define PAGE_SIZE (4096)
 #define NUM_LOG_PER_COLLECTION (10)
+//#define NO_PERSIST
 
 #define likely(x)       __builtin_expect((x),1)
 #define unlikely(x)     __builtin_expect((x),0)

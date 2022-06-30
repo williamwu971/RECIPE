@@ -35,6 +35,10 @@ void log_structs_size_check() {
 //        die("struct garbage_queue size %ld", sizeof(struct garbage_queue));
 //    if (sizeof(struct log_cell) == sizeof(uint64_t)) die("log cell size");
 
+#ifdef NO_PERSIST
+    puts("NO PERSIST");
+#endif
+
 }
 
 
@@ -534,7 +538,9 @@ void *log_get_tombstone(uint64_t key) {
     lc->key = key;
     lc->is_delete = 1;
 
+#ifndef NO_PERSIST
     pmem_persist(lc, sizeof(struct log_cell));
+#endif
 
     return lc;
 }
