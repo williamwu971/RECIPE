@@ -585,6 +585,7 @@ void *log_garbage_collection(void *arg) {
         if (!gc_stopped) {
             pthread_cond_wait(&gq.cond, &gq.lock);
         } else if (gq.num == 0) {
+            pthread_mutex_unlock(&gq.lock);
             break;
         }
 
