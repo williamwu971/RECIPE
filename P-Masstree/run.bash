@@ -44,7 +44,7 @@ num_threads=(1 3 5 7 9 11 13 15 17)
 num_threads=(17)
 use_perf="yes"
 record_latency="no"
-num_of_gc=(0 2 4 6 8)
+num_of_gc=(8)
 
 workload=20000000
 key_order="random"
@@ -74,15 +74,8 @@ rm -f latency.csv out.png
 
 for i in "${index_location[@]}"; do
   for v in "${value_location[@]}"; do
-
-    actual_num_of_gc=$num_of_gc
-
-    if [ "$v" = "pmem" ]; then
-      actual_num_of_gc=(0)
-    fi
-
     for n in "${num_threads[@]}"; do
-      for g in "${actual_num_of_gc[@]}"; do
+      for g in "${num_of_gc[@]}"; do
 
         # backup perf files
         for pfn in *.perf; do
