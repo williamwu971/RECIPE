@@ -746,9 +746,9 @@ void *log_garbage_collection(void *arg) {
 #endif
     }
 
-    printf("tombstone: %lu\n", tombstones);
+//    printf("tombstone: %lu\n", tombstones);
 
-    return NULL;
+    return (void *) tombstones;
 }
 
 void log_start_gc(masstree::masstree *t) {
@@ -785,9 +785,16 @@ void log_join_all_gc() {
 //        pthread_mutex_unlock(&gq.lock);
 //    }
 
+    uint64_t tombstone = 0;
     for (int i = 0; i < num_gcs; i++) {
-        pthread_join(gc_ids[i], NULL);
+
+        uint64_t local;
+        pthread_join(gc_ids[i], (void **) &local);
+
+        tombstone += local;
     }
+
+    printf("total collected: %lu\n", tombstone);
 }
 
 
