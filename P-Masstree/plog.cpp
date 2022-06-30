@@ -773,7 +773,7 @@ void *log_garbage_collection(void *arg) {
 #endif
     }
 
-//    printf("tombstone: %lu\n", tombstones);
+    printf("tombstone: %lu\n", tombstones);
 
     return (void *) tombstones;
 }
