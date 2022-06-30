@@ -577,18 +577,44 @@ void *log_garbage_collection(void *arg) {
 
     uint64_t tombstones = 0; // todo: remove this
 
-    while (!gc_stopped) {
+    while (1) {
 
         // wait for other threads to wait me up
         pthread_mutex_lock(&gq.lock);
-        pthread_cond_wait(&gq.cond, &gq.lock);
+
+        if (!gc_stopped) {
+            pthread_cond_wait(&gq.cond, &gq.lock);
+        } else if (gq.num == 0) {
+            break;
+        }
+
 
         // gc takes the entire queue and release the lock instantly
         struct garbage_queue_node *queue = gq.head;
 //        uint64_t queue_length = gq.num;
 
-        gq.head = NULL;
-        gq.num = 0;
+        if (gq.head != NULL) {
+            gq.head = gq.head->next;
+            gq.num--;
+        }
+
+        struct garbage_queue_node *tail = queue;
+
+        for (int tmp = 1; tmp < NUM_LOG_PER_COLLECTION; tmp++) {
+
+            if (gq.head == NULL) break;
+            gq.head = gq.head->next;
+            gq.num--;
+
+            tail = tail->next;
+        }
+
+        if (tail != NULL)tail->next = NULL;
+
+        if (gq.head != NULL) pthread_cond_signal(&gq.cond);
+
+//        gq.head = NULL;
+//        gq.num = 0;
 
         pthread_mutex_unlock(&gq.lock);
 
@@ -770,24 +796,24 @@ void log_end_gc() {
 void log_join_all_gc() {
 
     puts("waiting gc");
-
+    gc_stopped = 1;
     pthread_cond_broadcast(&gq.cond);
 
-    int collected = 0;
-    while (!collected) {
-        pthread_mutex_lock(&gq.lock);
-
-
-        if (gq.num == 0) {
+//    int collected = 0;
+//    while (!collected) {
+//        pthread_mutex_lock(&gq.lock);
+//
+//
+//        if (gq.num == 0) {
 
 //        } else {
-            gc_stopped = 1;
-            collected = 1;
-        }
 
-        pthread_cond_broadcast(&gq.cond);
-        pthread_mutex_unlock(&gq.lock);
-    }
+//            collected = 1;
+//        }
+//
+//        pthread_cond_broadcast(&gq.cond);
+//        pthread_mutex_unlock(&gq.lock);
+//    }
 
     uint64_t tombstone = 0;
     for (int i = 0; i < num_gcs; i++) {
