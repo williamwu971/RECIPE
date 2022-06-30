@@ -617,7 +617,7 @@ void run(char **argv) {
 
                 if (record_latency) rdtscll_fence(b);
 
-//                which_free(old);
+                which_free(old);
 
                 if (record_latency)latencies[i] = b - a;
 
