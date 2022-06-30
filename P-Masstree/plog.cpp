@@ -769,7 +769,6 @@ void log_end_gc() {
 
 void log_join_all_gc() {
 
-    gc_stopped = 1;
     puts("waiting gc");
 
     pthread_cond_broadcast(&gq.cond);
@@ -778,11 +777,15 @@ void log_join_all_gc() {
     while (!collected) {
         pthread_mutex_lock(&gq.lock);
 
-        if (gq.num != 0) {
-            pthread_cond_broadcast(&gq.cond);
-        } else {
+
+        if (gq.num == 0) {
+
+//        } else {
+            gc_stopped = 1;
             collected = 1;
         }
+
+        pthread_cond_broadcast(&gq.cond);
         pthread_mutex_unlock(&gq.lock);
     }
 
