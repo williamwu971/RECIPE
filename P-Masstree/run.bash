@@ -74,6 +74,13 @@ rm -f latency.csv out.png
 
 for i in "${index_location[@]}"; do
   for v in "${value_location[@]}"; do
+
+    actual_num_of_gc = $num_of_gc
+
+    if [ "v" = "pmem" ]; then
+      actual_num_of_gc=(0)
+    fi
+
     for n in "${num_threads[@]}"; do
       for g in "${num_of_gc[@]}"; do
 
