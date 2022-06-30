@@ -680,6 +680,7 @@ void *log_garbage_collection(void *arg) {
 
                             // free if it's a tombstone
                             if (ref == 1 && current_value_in_tree->is_delete) {
+                                tombstones++;
                                 log_free(current_value_in_tree);
                             }
                         }
@@ -698,7 +699,7 @@ void *log_garbage_collection(void *arg) {
 
                             // we have a tombstone and the reference is 0, attempt to delete again
                             tree->put_to_unlock(pack.leafnode);
-                            tombstones++;
+
                             // the version trick should solve the put-del-put situation
                             // a tombstone with old version will not be accepted
 
