@@ -52,7 +52,7 @@ namespace masstree {
             key = UINT64_MAX;
             value = NULL;
 
-            reference = 0; // todo: xiaoxiang
+            reference = 1; // todo: xiaoxiang
         }
 
         friend class leafnode;
