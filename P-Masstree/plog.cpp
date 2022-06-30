@@ -521,8 +521,10 @@ int log_memalign(void **memptr, size_t alignment, size_t size) {
 
     return 0;
 }
-
+std::atomic<uint64_t> count = 0;
 void *log_get_tombstone(uint64_t key) {
+
+    count.fetch_add(1);
 
     struct log_cell *lc = (struct log_cell *) log_malloc(sizeof(struct log_cell));
 
@@ -744,7 +746,7 @@ void *log_garbage_collection(void *arg) {
 #endif
     }
 
-    printf("tombstone: %lu\n",tombstones);
+    printf("tombstone: %lu\n", tombstones);
 
     return NULL;
 }
@@ -786,6 +788,8 @@ void log_join_all_gc() {
     for (int i = 0; i < num_gcs; i++) {
         pthread_join(gc_ids[i], NULL);
     }
+
+    printf("tomb count: %lu\n",count.load());
 }
 
 
