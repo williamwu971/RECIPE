@@ -575,7 +575,7 @@ void *log_garbage_collection(void *arg) {
     masstree::masstree *tree = (masstree::masstree *) arg;
     auto t = tree->getThreadInfo();
 
-    uint64_t tombstones = 0; // todo: remove this
+//    uint64_t tombstones = 0; // todo: remove this
 
     while (1) {
 
@@ -726,7 +726,7 @@ void *log_garbage_collection(void *arg) {
 
                             // we have a tombstone and the reference is 0, attempt to delete again
                             tree->put_to_unlock(pack.leafnode);
-                            tombstones++;
+//                            tombstones++;
                             // the version trick should solve the put-del-put situation
                             // a tombstone with old version will not be accepted
 
@@ -774,9 +774,9 @@ void *log_garbage_collection(void *arg) {
 #endif
     }
 
-    printf("tombstone: %lu\n", tombstones);
-
-    return (void *) tombstones;
+//    printf("tombstone: %lu\n", tombstones);
+//    return (void *) tombstones;
+    return NULL;
 }
 
 void log_start_gc(masstree::masstree *t) {
@@ -816,16 +816,17 @@ void log_join_all_gc() {
 //        pthread_mutex_unlock(&gq.lock);
 //    }
 
-    uint64_t tombstone = 0;
+//    uint64_t tombstone = 0;
     for (int i = 0; i < num_gcs; i++) {
 
-        uint64_t local;
-        pthread_join(gc_ids[i], (void **) &local);
+//        uint64_t local;
+//        pthread_join(gc_ids[i], (void **) &local);
+        pthread_join(gc_ids[i], NULL);
 
-        tombstone += local;
+//        tombstone += local;
     }
 
-    printf("total collected: %lu\n", tombstone);
+//    printf("total collected: %lu\n", tombstone);
 }
 
 
