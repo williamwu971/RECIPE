@@ -774,17 +774,17 @@ void log_join_all_gc() {
 
     pthread_cond_broadcast(&gq.cond);
 
-//    int collected = 0;
-//    while (!collected) {
-//        pthread_mutex_lock(&gq.lock);
-//
-//        if (gq.num != 0) {
-//            pthread_cond_broadcast(&gq.cond);
-//        } else {
-//            collected = 1;
-//        }
-//        pthread_mutex_unlock(&gq.lock);
-//    }
+    int collected = 0;
+    while (!collected) {
+        pthread_mutex_lock(&gq.lock);
+
+        if (gq.num != 0) {
+            pthread_cond_broadcast(&gq.cond);
+        } else {
+            collected = 1;
+        }
+        pthread_mutex_unlock(&gq.lock);
+    }
 
     uint64_t tombstone = 0;
     for (int i = 0; i < num_gcs; i++) {
