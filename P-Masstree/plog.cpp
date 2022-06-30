@@ -354,10 +354,10 @@ void log_recover(masstree::masstree *tree, int num_threads) {
 
     inited = 1;
 }
-std::atomic<uint64_t> count = 0;
+
+
 void log_init(uint64_t num_logs, int pre_fault_threads) {
 
-    count.store(0);
 
     log_structs_size_check();
     uint64_t file_size = num_logs * CACHE_LINE_SIZE;
@@ -526,7 +526,6 @@ int log_memalign(void **memptr, size_t alignment, size_t size) {
 
 void *log_get_tombstone(uint64_t key) {
 
-    count.fetch_add(1);
 
     struct log_cell *lc = (struct log_cell *) log_malloc(sizeof(struct log_cell));
 
@@ -681,7 +680,6 @@ void *log_garbage_collection(void *arg) {
 
                             // free if it's a tombstone
                             if (ref == 1 && current_value_in_tree->is_delete) {
-                                tombstones++;
                                 log_free(current_value_in_tree);
                             }
                         }
@@ -700,7 +698,7 @@ void *log_garbage_collection(void *arg) {
 
                             // we have a tombstone and the reference is 0, attempt to delete again
                             tree->put_to_unlock(pack.leafnode);
-
+                            tombstones++;
                             // the version trick should solve the put-del-put situation
                             // a tombstone with old version will not be accepted
 
@@ -790,8 +788,6 @@ void log_join_all_gc() {
     for (int i = 0; i < num_gcs; i++) {
         pthread_join(gc_ids[i], NULL);
     }
-
-    printf("tomb count: %lu\n",count.load());
 }
 
 
