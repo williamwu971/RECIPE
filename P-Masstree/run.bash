@@ -44,7 +44,7 @@ num_threads=(1 3 5 7 9 11 13 15 17)
 num_threads=(17)
 use_perf="yes"
 record_latency="no"
-num_of_gc=8
+num_of_gc=(1 3 5 7 9)
 
 workload=20000000
 key_order="random"
@@ -54,10 +54,10 @@ value_size=0 # the size of the value impact performance a lot
 file_prefixes=("perf")
 
 for fp in "${file_prefixes[@]}"; do
-  echo "$fp,workload=$workload,value_size=$value_size,key_order=$key_order,num_of_gc=$num_of_gc" >$fp.csv
+  echo "$fp,workload=$workload,value_size=$value_size,key_order=$key_order" >$fp.csv
 
   # the header of csv file
-  printf "index,value,threads," >>$fp.csv
+  printf "index,value,threads,gc," >>$fp.csv
   printf "insert_rb(gb/s),insert_wb(gb/s),insert_TP(ops/us)," >>$fp.csv
   printf "update_rb(gb/s),update_wb(gb/s),update_TP(ops/us)," >>$fp.csv
   printf "get_rb(gb/s),get_wb(gb/s),get_TP(ops/us)," >>$fp.csv
@@ -75,33 +75,35 @@ rm -f latency.csv out.png
 for i in "${index_location[@]}"; do
   for v in "${value_location[@]}"; do
     for n in "${num_threads[@]}"; do
+      for g in "${num_of_gc[@]}"; do
 
-      # backup perf files
-      for pfn in *.perf; do
-        [ -f "$pfn" ] || break
-        cp "$pfn" "$pfn".old
-      done
+        # backup perf files
+        for pfn in *.perf; do
+          [ -f "$pfn" ] || break
+          cp "$pfn" "$pfn".old
+        done
 
-      # the first three columns
-      printf '%s,%s,%s,' "$i" "$v" "$n" >>perf.csv
+        # the first three columns
+        printf '%s,%s,%s,%s' "$i" "$v" "$n" "$g" >>perf.csv
 
-      # drop system cache and clear pmem device
-      echo 1 >/proc/sys/vm/drop_caches
-      rm -rf /pmem0/masstree*
-      #      /home/blepers/linux/tools/perf/perf record -g ./example "$workload" "$n" index="$i" value="$v" key="$key_order"
-      ./example "$workload" "$n" index="$i" value="$v" key="$key_order" perf="$use_perf" \
-        gc="$num_of_gc" latency="$record_latency" value_size="$value_size"
+        # drop system cache and clear pmem device
+        echo 1 >/proc/sys/vm/drop_caches
+        rm -rf /pmem0/masstree*
+        #      /home/blepers/linux/tools/perf/perf record -g ./example "$workload" "$n" index="$i" value="$v" key="$key_order"
+        ./example "$workload" "$n" index="$i" value="$v" key="$key_order" perf="$use_perf" \
+          gc="$g" latency="$record_latency" value_size="$value_size"
 
-      if [ "$record_latency" = "yes" ]; then
-        python3 ../graph.py --r latency.csv --ylim 1000000
-      fi
-      #      mv out.png out_"$i"_"$v".png
-      #      ./example 100 "$n" index="$i" value="$v"
+        if [ "$record_latency" = "yes" ]; then
+          python3 ../graph.py --r latency.csv --ylim 1000000
+        fi
+        #      mv out.png out_"$i"_"$v".png
+        #      ./example 100 "$n" index="$i" value="$v"
 
-      # this should result in two csv files insert.csv and lookup.csv
-      # just append a new line to it
-      for fp in "${file_prefixes[@]}"; do
-        echo "" >>$fp.csv
+        # this should result in two csv files insert.csv and lookup.csv
+        # just append a new line to it
+        for fp in "${file_prefixes[@]}"; do
+          echo "" >>$fp.csv
+        done
       done
     done
   done
