@@ -372,9 +372,9 @@ void log_init(uint64_t num_logs, int pre_fault_threads) {
     if (pre_fault_threads > 0)pptr = &preset;
 
     // this region controls pre fault?
-    log_map(1, INODE_FN, file_size, (void **) &inodes, pptr, CACHE_LINE_SIZE,
+    log_map(0, INODE_FN, file_size, (void **) &inodes, pptr, CACHE_LINE_SIZE,
             pre_fault_threads);
-    log_map(1, META_FN, file_size, (void **) &log_meta, pptr, CACHE_LINE_SIZE,
+    log_map(0, META_FN, file_size, (void **) &log_meta, pptr, CACHE_LINE_SIZE,
             pre_fault_threads);
 
     file_size = num_logs * LOG_SIZE;
