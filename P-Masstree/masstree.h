@@ -10,17 +10,11 @@
 #include <atomic>
 #include <assert.h>
 #include <emmintrin.h>
-
 #ifdef LOCK_INIT
 #include "tbb/concurrent_vector.h"
 #endif
 
 #include "Epoche.h"
-
-struct masstree_put_to_pack {
-    void *leafnode;
-    int p;
-};
 
 namespace masstree {
 
@@ -35,48 +29,38 @@ namespace masstree {
 #define LV_PTR(x)           (leafvalue*)((void*)((uintptr_t)x & ~LV_BITS))
 #define SET_LV(x)           ((void*)((uintptr_t)x | LV_BITS))
 
-    enum state {
-        UNLOCKED = 0, LOCKED = 1, OBSOLETE = 2
-    };
+enum state {UNLOCKED = 0, LOCKED = 1, OBSOLETE = 2};
 
-    class kv {
+class kv {
     private:
         uint64_t key;
         void *value;
-
-        // todo: xiaoxiang, investigate if this impact performance
-        int reference;
-
     public:
         kv() {
             key = UINT64_MAX;
             value = NULL;
-
-            reference = 1; // todo: xiaoxiang
         }
 
         friend class leafnode;
-    };
+};
 
-    typedef struct leafvalue {
-        uint64_t value;
-        size_t key_len;
-        uint64_t fkey[];
-    } leafvalue;
+typedef struct leafvalue {
+    uint64_t value;
+    size_t key_len;
+    uint64_t fkey[];
+} leafvalue;
 
-    typedef struct key_indexed_position {
-        int i;
-        int p;
+typedef struct key_indexed_position {
+    int i;
+    int p;
+    inline key_indexed_position() {
+    }
+    inline constexpr key_indexed_position(int i_, int p_)
+        : i(i_), p(p_) {
+    }
+} key_indexed_position;
 
-        inline key_indexed_position() {
-        }
-
-        inline constexpr key_indexed_position(int i_, int p_)
-                : i(i_), p(p_) {
-        }
-    } key_indexed_position;
-
-    class masstree {
+class masstree {
     private:
         std::atomic<void *> root_;
 
@@ -84,39 +68,24 @@ namespace masstree {
     public:
         masstree();
 
-        masstree(void *new_root);
+        masstree (void *new_root);
 
         ~masstree() {
         }
 
         MASS::ThreadInfo getThreadInfo();
 
-        void *root() { return root_.load(std::memory_order_acquire); }
+        void *root() {return root_.load(std::memory_order_acquire);}
 
-        std::atomic<void *> *root_dp() { return &root_; }
+        std::atomic<void *>*root_dp() {return &root_;}
 
         void setNewRoot(void *new_root);
 
         void put(uint64_t key, void *value, MASS::ThreadInfo &threadEpocheInfo);
 
-        // todo: new, for gc
-        void *put_and_return(
-                uint64_t key, void *value, int create,int check_version, MASS::ThreadInfo &threadEpocheInfo
-        );
-
-        // todo: lock and unlock the node (write lock)
-        struct masstree_put_to_pack put_to_lock(uint64_t key, MASS::ThreadInfo &threadEpocheInfo);
-
-        void put_to_unlock(void *ln);
-
         void put(char *key, uint64_t value, MASS::ThreadInfo &threadEpocheInfo);
 
         void del(uint64_t key, MASS::ThreadInfo &threadEpocheInfo);
-
-        // new
-        void *del_and_return(uint64_t key, int check_version, uint64_t version,
-                             void *(*tombstone_callback)(uint64_t key),
-                             MASS::ThreadInfo &threadEpocheInfo);
 
         void del(char *key, MASS::ThreadInfo &threadEpocheInfo);
 
@@ -124,22 +93,20 @@ namespace masstree {
 
         void *get(char *key, MASS::ThreadInfo &threadEpocheInfo);
 
-        void split(void *left, void *root, uint32_t depth, leafvalue *lv, uint64_t key, void *right, uint32_t level,
-                   void *child, bool isOverWrite);
+        void split(void *left, void *root, uint32_t depth, leafvalue *lv, uint64_t key, void *right, uint32_t level, void *child, bool isOverWrite);
 
-        int merge(void *left, void *root, uint32_t depth, leafvalue *lv, uint64_t key, uint32_t level,
-                  MASS::ThreadInfo &threadInfo);
+        int merge(void *left, void *root, uint32_t depth, leafvalue *lv, uint64_t key, uint32_t level, MASS::ThreadInfo &threadInfo);
 
         leafvalue *make_leaf(char *key, size_t key_len, uint64_t value);
 
         int scan(uint64_t min, int num, uint64_t *buf, MASS::ThreadInfo &threadEpocheInfo);
 
         int scan(char *min, int num, uint64_t *buf, MASS::ThreadInfo &threadEpocheInfo);
-    };
+};
 
-    class permuter {
+class permuter {
     public:
-        permuter() : x_(0ULL) {
+        permuter(): x_(0ULL) {
         }
 
         permuter(uint64_t x) : x_(x) {
@@ -161,7 +128,6 @@ namespace masstree {
             uint64_t p = (uint64_t) INITIAL_VALUE;
             return p & ~(uint64_t) (LEAF_WIDTH);
         }
-
         /** @brief Return a permuter with size @a n.
 
           The returned permutation has size() @a n. For 0 <= i < @a n,
@@ -170,8 +136,8 @@ namespace masstree {
         static inline uint64_t make_sorted(int n) {
             uint64_t mask = (n == LEAF_WIDTH ? (uint64_t) 0 : (uint64_t) 16 << (n << 2)) - 1;
             return (make_empty() << (n << 2))
-                   | ((uint64_t) FULL_VALUE & mask)
-                   | n;
+                | ((uint64_t) FULL_VALUE & mask)
+                | n;
         }
 
         /** @brief Return the permuter's size. */
@@ -198,7 +164,7 @@ namespace masstree {
         }
 
         void set_size(int n) {
-            x_.store((x_.load(std::memory_order_acquire) & ~(uint64_t) LEAF_WIDTH) | n, std::memory_order_release);
+            x_.store( (x_.load(std::memory_order_acquire) & ~(uint64_t)LEAF_WIDTH) | n, std::memory_order_release);
         }
 
         /** @brief Allocate a new element and insert it at position @a i.
@@ -222,12 +188,12 @@ namespace masstree {
         int insert_from_back(int i) {
             int value = back();
             // increment size, leave lower slots unchanged
-            x_.store(((x_.load(std::memory_order_acquire) + 1) & (((uint64_t) 16 << (i << 2)) - 1))
-                     // insert slot
-                     | ((uint64_t) value << ((i << 2) + 4))
-                     // shift up unchanged higher entries & empty slots
-                     | ((x_.load(std::memory_order_acquire) << 4) & ~(((uint64_t) 256 << (i << 2)) - 1)),
-                     std::memory_order_release);
+            x_.store( ((x_.load(std::memory_order_acquire) + 1) & (((uint64_t) 16 << (i << 2)) - 1))
+                // insert slot
+                | ((uint64_t) value << ((i << 2) + 4))
+                // shift up unchanged higher entries & empty slots
+                | ((x_.load(std::memory_order_acquire) << 4) & ~(((uint64_t) 256 << (i << 2)) - 1)),
+                std::memory_order_release);
             return value;
         }
 
@@ -240,16 +206,15 @@ namespace masstree {
             int value = (*this)[si];
             uint64_t mask = ((uint64_t) 256 << (si << 2)) - 1;
             // increment size, leave lower slots unchanged
-            x_.store(((x_.load(std::memory_order_acquire) + 1) & (((uint64_t) 16 << (di << 2)) - 1))
-                     // insert slot
-                     | ((uint64_t) value << ((di << 2) + 4))
-                     // shift up unchanged higher entries & empty slots
-                     | ((x_.load(std::memory_order_acquire) << 4) & mask & ~(((uint64_t) 256 << (di << 2)) - 1))
-                     // leave uppermost slots alone
-                     | (x_.load(std::memory_order_acquire) & ~mask),
-                     std::memory_order_release);
+            x_.store( ((x_.load(std::memory_order_acquire) + 1) & (((uint64_t) 16 << (di << 2)) - 1))
+                // insert slot
+                | ((uint64_t) value << ((di << 2) + 4))
+                // shift up unchanged higher entries & empty slots
+                | ((x_.load(std::memory_order_acquire) << 4) & mask & ~(((uint64_t) 256 << (di << 2)) - 1))
+                // leave uppermost slots alone
+                | (x_.load(std::memory_order_acquire) & ~mask),
+                std::memory_order_release);
         }
-
         /** @brief Remove the element at position @a i.
           @pre 0 <= @a i < @a size()
           @pre size() < @a width
@@ -273,17 +238,16 @@ namespace masstree {
             else {
                 int rot_amount = ((x_.load(std::memory_order_acquire) & 15) - i - 1) << 2;
                 uint64_t rot_mask =
-                        (((uint64_t) 16 << rot_amount) - 1) << ((i + 1) << 2);
+                    (((uint64_t) 16 << rot_amount) - 1) << ((i + 1) << 2);
                 // decrement size, leave lower slots unchanged
-                x_.store(((x_.load(std::memory_order_acquire) - 1) & ~rot_mask)
-                         // shift higher entries down
-                         | (((x_.load(std::memory_order_acquire) & rot_mask) >> 4) & rot_mask)
-                         // shift value up
-                         | (((x_.load(std::memory_order_acquire) & rot_mask) << rot_amount) & rot_mask),
-                         std::memory_order_release);
+                x_.store( ((x_.load(std::memory_order_acquire) - 1) & ~rot_mask)
+                    // shift higher entries down
+                    | (((x_.load(std::memory_order_acquire) & rot_mask) >> 4) & rot_mask)
+                    // shift value up
+                    | (((x_.load(std::memory_order_acquire) & rot_mask) << rot_amount) & rot_mask),
+                    std::memory_order_release);
             }
         }
-
         /** @brief Remove the element at position @a i to the back.
           @pre 0 <= @a i < @a size()
           @pre size() < @a width
@@ -306,14 +270,13 @@ namespace masstree {
             // clear unused slots
             uint64_t x = x_.load(std::memory_order_acquire) & (((uint64_t) 16 << (LEAF_WIDTH << 2)) - 1);
             // decrement size, leave lower slots unchanged
-            x_.store(((x - 1) & ~mask)
-                     // shift higher entries down
-                     | ((x >> 4) & mask)
-                     // shift removed element up
-                     | ((x & mask) << ((LEAF_WIDTH - i - 1) << 2)),
-                     std::memory_order_release);
+            x_.store( ((x - 1) & ~mask)
+                // shift higher entries down
+                | ((x >> 4) & mask)
+                // shift removed element up
+                | ((x & mask) << ((LEAF_WIDTH - i - 1) << 2)),
+                std::memory_order_release);
         }
-
         /** @brief Rotate the permuter's elements between @a i and size().
           @pre 0 <= @a i <= @a j <= size()
 
@@ -333,19 +296,16 @@ namespace masstree {
             uint64_t mask = (i == LEAF_WIDTH ? (uint64_t) 0 : (uint64_t) 16 << (i << 2)) - 1;
             // clear unused slots
             uint64_t x = x_.load(std::memory_order_acquire) & (((uint64_t) 16 << (LEAF_WIDTH << 2)) - 1);
-            x_.store((x & mask)
-                     | ((x >> ((j - i) << 2)) & ~mask)
-                     | ((x & ~mask) << ((LEAF_WIDTH - j) << 2)),
-                     std::memory_order_release);
+            x_.store( (x & mask)
+                | ((x >> ((j - i) << 2)) & ~mask)
+                | ((x & ~mask) << ((LEAF_WIDTH - j) << 2)),
+                std::memory_order_release);
         }
-
         /** @brief Exchange the elements at positions @a i and @a j. */
         void exchange(int i, int j) {
-            uint64_t diff = ((x_.load(std::memory_order_acquire) >> (i << 2)) ^
-                             (x_.load(std::memory_order_acquire) >> (j << 2))) & 240;
-            x_.fetch_xor((diff << (i << 2)) | (diff << (j << 2)), std::memory_order_acq_rel);
+            uint64_t diff = ((x_.load(std::memory_order_acquire) >> (i << 2)) ^ (x_.load(std::memory_order_acquire) >> (j << 2))) & 240;
+            x_.fetch_xor( (diff << (i << 2)) | (diff << (j << 2)), std::memory_order_acq_rel);
         }
-
         /** @brief Exchange positions of values @a x and @a y. */
         void exchange_values(int x, int y) {
             uint64_t diff = 0, p = x_.load(std::memory_order_acquire);
@@ -353,14 +313,13 @@ namespace masstree {
                 int v = (p >> (LEAF_WIDTH << 2)) & 15;
                 diff ^= -((v == x) | (v == y)) & (x ^ y);
             }
-            x_.fetch_xor(diff, std::memory_order_acq_rel);
+            x_.fetch_xor( diff, std::memory_order_acq_rel);
         }
 
-        bool operator==(const permuter &x) const {
+        bool operator==(const permuter& x) const {
             return x_.load(std::memory_order_acquire) == x.x_.load(std::memory_order_acquire);
         }
-
-        bool operator!=(const permuter &x) const {
+        bool operator!=(const permuter& x) const {
             return !(*this == x);
         }
 
@@ -369,7 +328,7 @@ namespace masstree {
         }
 
         void operator>>=(uint64_t mask) {
-            x_.store((x_.load(std::memory_order_acquire) >> mask), std::memory_order_release);
+            x_.store( (x_.load(std::memory_order_acquire) >> mask), std::memory_order_release);
         }
 
         static inline int size(uint64_t p) {
@@ -378,9 +337,9 @@ namespace masstree {
 
     private:
         std::atomic<uint64_t> x_;
-    };
+};
 
-    class leafnode {
+class leafnode {
     private:
         permuter permutation;                                   // 8bytes
         std::atomic<leafnode *> next;                           // 8bytes
@@ -396,7 +355,7 @@ namespace masstree {
 
         leafnode(void *left, uint64_t key, void *right, uint32_t level);
 
-        ~leafnode() {}
+        ~leafnode () {}
 
         void *operator new(size_t size);
 
@@ -434,56 +393,43 @@ namespace masstree {
 
         int compare_key(const uint64_t a, const uint64_t b);
 
-        leafnode *advance_to_key(const uint64_t &key);
+        leafnode *advance_to_key(const uint64_t& key);
 
-        void assign(int p, const uint64_t &key, void *value);
+        void assign(int p, const uint64_t& key, void *value);
 
         void assign_value(int p, void *value);
 
-        void *assign_value_if_newer(int p, void *value); // new
-
-        void modify_reference(int p, int value); // new
-
-        inline void assign_initialize(int p, const uint64_t &key, void *value);
+        inline void assign_initialize(int p, const uint64_t& key, void *value);
 
         inline void assign_initialize(int p, leafnode *x, int xp);
 
-        inline void assign_initialize_for_layer(int p, const uint64_t &key);
+        inline void assign_initialize_for_layer(int p, const uint64_t& key);
 
-        int split_into(leafnode *nr, int p, const uint64_t &key, void *value, uint64_t &split_key);
+        int split_into(leafnode *nr, int p, const uint64_t& key, void *value, uint64_t& split_key);
 
-        void split_into_inter(leafnode *nr, uint64_t &split_key);
+        void split_into_inter(leafnode *nr, uint64_t& split_key);
 
-        void *leaf_insert(masstree *t, void *root, uint32_t depth, leafvalue *lv, uint64_t key, void *value,
-                          key_indexed_position &kx_);
+        void *leaf_insert(masstree *t, void *root, uint32_t depth, leafvalue *lv, uint64_t key, void *value, key_indexed_position &kx_);
 
-        void *leaf_delete(masstree *t, void *root, uint32_t depth, leafvalue *lv, key_indexed_position &kx_,
-                          MASS::ThreadInfo &threadInfo);
+        void *leaf_delete(masstree *t, void *root, uint32_t depth, leafvalue *lv, key_indexed_position &kx_, MASS::ThreadInfo &threadInfo);
 
-        void *inter_insert(masstree *t, void *root, uint32_t depth, leafvalue *lv, uint64_t key, void *value,
-                           key_indexed_position &kx_, leafnode *child, bool child_isOverWrite);
+        void *inter_insert(masstree *t, void *root, uint32_t depth, leafvalue *lv, uint64_t key, void *value, key_indexed_position &kx_, leafnode *child, bool child_isOverWrite);
 
-        int inter_delete(masstree *t, void *root, uint32_t depth, leafvalue *lv, key_indexed_position &kx_,
-                         MASS::ThreadInfo &threadInfo);
+        int inter_delete(masstree *t, void *root, uint32_t depth, leafvalue *lv, key_indexed_position &kx_, MASS::ThreadInfo &threadInfo);
 
         void prefetch() const;
 
-        uint32_t level() { return level_; }
+        uint32_t level() {return level_;}
 
-        uint64_t key(int i) { return entry[i].key; }
+        uint64_t key(int i) {return entry[i].key;}
 
-        void *value(int i) { return entry[i].value; }
+        void *value(int i) {return entry[i].value;}
 
-        int reference(int i) { return entry[i].reference; }
+        leafnode *leftmost() {return leftmost_ptr;}
 
-        // todo: get a kv pair and return
-        kv *get_kv(int i) { return entry + i; }
+        leafnode *next_() {return next.load(std::memory_order_acquire);}
 
-        leafnode *leftmost() { return leftmost_ptr; }
-
-        leafnode *next_() { return next.load(std::memory_order_acquire); }
-
-        uint64_t highest_() { return highest; }
+        uint64_t highest_() {return highest;}
 
         void make_new_layer(leafnode *p, key_indexed_position &kx_, leafvalue *olv, leafvalue *nlv, uint32_t depth);
 
@@ -491,16 +437,14 @@ namespace masstree {
 
         void *entry_addr(int p);
 
-        void
-        check_for_recovery(masstree *t, leafnode *left, leafnode *right, void *root, uint32_t depth, leafvalue *lv);
+        void check_for_recovery(masstree *t, leafnode *left, leafnode *right, void *root, uint32_t depth, leafvalue *lv);
 
-        void get_range(leafvalue *&lv, int num, int &count, uint64_t *buf, leafnode *root, uint32_t depth);
+        void get_range(leafvalue * &lv, int num, int &count, uint64_t *buf, leafnode *root, uint32_t depth);
 
         leafvalue *smallest_leaf(size_t key_len, uint64_t value);
 
-        leafnode *
-        search_for_leftsibling(std::atomic<void *> *root1, void **root, uint64_t key, uint32_t level, leafnode *right);
-    };
+        leafnode *search_for_leftsibling(std::atomic<void*> *root1, void **root, uint64_t key, uint32_t level, leafnode *right);
+};
 
 }
 #endif

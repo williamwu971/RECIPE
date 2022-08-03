@@ -13,9 +13,8 @@ KEY_TYPE=randint
 for WORKLOAD_TYPE in a b c e; do
   echo workload${WORKLOAD_TYPE} > workload_config.inp
   echo ${KEY_TYPE} >> workload_config.inp
-  python3 gen_workload.py workload_config.inp
-  mv workloads/load_${KEY_TYPE}_workload${WORKLOAD_TYPE} workloads/load${WORKLOAD_TYPE}_unif_int.dat || exit
-  mv workloads/txn_${KEY_TYPE}_workload${WORKLOAD_TYPE} workloads/txns${WORKLOAD_TYPE}_unif_int.dat || exit
+  python gen_workload.py workload_config.inp
+  mv workloads/load_${KEY_TYPE}_workload${WORKLOAD_TYPE} workloads/load${WORKLOAD_TYPE}_unif_int.dat
+  mv workloads/txn_${KEY_TYPE}_workload${WORKLOAD_TYPE} workloads/txns${WORKLOAD_TYPE}_unif_int.dat
 done
 
-echo "DONE"
