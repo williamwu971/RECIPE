@@ -70,7 +70,8 @@ namespace masstree {
     }
 
     void obj_free(void *ptr){
-        printf("free!\n");
+//        printf("free!\n");
+        (void)ptr;
         return;
     }
 
