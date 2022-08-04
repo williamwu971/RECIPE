@@ -474,6 +474,8 @@ void run(char **argv) {
 
                                     tree->put_and_return(keys[i], D_RW(objToid), 1, 0, t);
 
+
+
                                 }
                                     TX_ONABORT {
                                     throw;

@@ -36,6 +36,19 @@ namespace masstree {
 
         *memptr = NULL;
 
+        if (pmemobj_tx_stage()!=TX_STAGE_WORK){
+            printf("wrong stage\n");
+            throw;
+        }else{
+
+            PMEMoid ht_oid = pmemobj_tx_alloc(size,TOID_TYPE_NUM(leafvalue));
+            *memptr = pmemobj_direct(ht_oid);
+
+            return 0;
+
+        }
+
+
         // hack
         PMEMoid ht_oid;
         if (pmemobj_alloc(pop, &ht_oid, size, TOID_TYPE_NUM(leafvalue), 0, 0)) {
