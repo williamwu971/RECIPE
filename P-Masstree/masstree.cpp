@@ -170,7 +170,7 @@ namespace masstree {
 
     void *leafnode::operator new(size_t size) {
         void *ptr;
-        int ret = posix_memalign(&ptr, CACHE_LINE_SIZE, size);
+        int ret = which_memalign(&ptr, CACHE_LINE_SIZE, size);
         if (ret != 0) {
             printf("%s Allocation error by posix_memalign\n", __func__);
             exit(ret);
