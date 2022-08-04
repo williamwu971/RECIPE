@@ -58,6 +58,7 @@ namespace masstree {
         }
 
         *memptr=pmemobj_direct(bucket_oid);
+        return 0;
 
     }
 
