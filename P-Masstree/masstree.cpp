@@ -35,29 +35,26 @@ namespace masstree {
         size = (size / alignment + 1) * alignment;
 
         *memptr = NULL;
+        PMEMoid ht_oid;
 
+        // hack
         if (pmemobj_tx_stage()!=TX_STAGE_WORK){
-            printf("wrong stage\n");
-            throw;
+            if (pmemobj_alloc(pop, &ht_oid, size, TOID_TYPE_NUM(leafvalue), 0, 0)) {
+                fprintf(stderr, "pmemobj_alloc failed for obj_memalign\n");
+                assert(0);
+            }
+            *memptr = pmemobj_direct(ht_oid);
+
+            return 0;
         }else{
 
-            PMEMoid ht_oid = pmemobj_tx_alloc(size,TOID_TYPE_NUM(leafvalue));
+            printf("hit!\n");
+            ht_oid = pmemobj_tx_alloc(size,TOID_TYPE_NUM(leafvalue));
             *memptr = pmemobj_direct(ht_oid);
 
             return 0;
 
         }
-
-
-        // hack
-        PMEMoid ht_oid;
-        if (pmemobj_alloc(pop, &ht_oid, size, TOID_TYPE_NUM(leafvalue), 0, 0)) {
-            fprintf(stderr, "pmemobj_alloc failed for obj_memalign\n");
-            assert(0);
-        }
-        *memptr = pmemobj_direct(ht_oid);
-
-        return 0;
 
     }
 
