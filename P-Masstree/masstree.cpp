@@ -47,13 +47,14 @@ namespace masstree {
 
         // hack
         if (unlikely(pmemobj_tx_stage()!=TX_STAGE_WORK)){
-            if (pmemobj_alloc(pop, &ht_oid, size, TOID_TYPE_NUM(leafvalue), 0, 0)) {
-                fprintf(stderr, "pmemobj_alloc failed for obj_memalign\n");
-                assert(0);
-            }
-            *memptr = pmemobj_direct(ht_oid);
-
-            return 0;
+//            if (pmemobj_alloc(pop, &ht_oid, size, TOID_TYPE_NUM(leafvalue), 0, 0)) {
+//                fprintf(stderr, "pmemobj_alloc failed for obj_memalign\n");
+//                assert(0);
+//            }
+//            *memptr = pmemobj_direct(ht_oid);
+//
+//            return 0;
+            return posix_memalign(memptr,alignment,size);
         }else{
 
 //            printf("hit!\n");
