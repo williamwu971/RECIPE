@@ -382,6 +382,7 @@ void run(char **argv) {
                                  64 * 1024 * 1024 * 1024ULL, 0666);
         }
 
+        masstree::obj_init(pop);
 
     }
 
