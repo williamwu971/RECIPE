@@ -348,7 +348,7 @@ void run(char **argv) {
     if (require_RP_init) {
         printf("init RP... ");
         int preset = 0;
-        RP_init("masstree", 64 * 1024 * 1024 * 1024ULL, &preset);
+        RP_init("masstree", 4 * 1024 * 1024 * 1024ULL, &preset);
     }
 
 
