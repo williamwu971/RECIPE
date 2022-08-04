@@ -48,7 +48,7 @@ namespace masstree {
             return 0;
         }else{
 
-            printf("hit!\n");
+//            printf("hit!\n");
             ht_oid = pmemobj_tx_alloc(size,TOID_TYPE_NUM(leafvalue));
             *memptr = pmemobj_direct(ht_oid);
 
