@@ -37,8 +37,12 @@ namespace masstree {
         *memptr = NULL;
 
         // hack
-        PMEMoid bucket_oid = pmemobj_tx_alloc(size, TOID_TYPE_NUM(leafvalue));
-        *memptr = pmemobj_direct(bucket_oid);
+        PMEMoid ht_oid;
+        if (pmemobj_alloc(pop, &ht_oid, size, TOID_TYPE_NUM(leafvalue), 0, 0)) {
+            fprintf(stderr, "pmemobj_alloc failed for obj_memalign\n");
+            assert(0);
+        }
+        *memptr = pmemobj_direct(ht_oid);
 
         return 0;
 
