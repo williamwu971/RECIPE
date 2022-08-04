@@ -47,14 +47,14 @@ namespace masstree {
 
         // hack
         if (unlikely(pmemobj_tx_stage()!=TX_STAGE_WORK)){
-//            if (pmemobj_alloc(pop, &ht_oid, size, TOID_TYPE_NUM(leafvalue), 0, 0)) {
-//                fprintf(stderr, "pmemobj_alloc failed for obj_memalign\n");
-//                assert(0);
-//            }
-//            *memptr = pmemobj_direct(ht_oid);
-//
-//            return 0;
-            return posix_memalign(memptr,alignment,size);
+            if (pmemobj_alloc(pop, &ht_oid, size, TOID_TYPE_NUM(leafvalue), 0, 0)) {
+                fprintf(stderr, "pmemobj_alloc failed for obj_memalign\n");
+                assert(0);
+            }
+            *memptr = pmemobj_direct(ht_oid);
+
+            return 0;
+//            return posix_memalign(memptr,alignment,size);
         }else{
 
 //            printf("hit!\n");
@@ -169,7 +169,7 @@ namespace masstree {
 
     void *leafnode::operator new(size_t size) {
         void *ptr;
-        int ret = which_memalign(&ptr, CACHE_LINE_SIZE, size);
+        int ret = posix_memalign(&ptr, CACHE_LINE_SIZE, size);
         if (ret != 0) {
             printf("%s Allocation error by posix_memalign\n", __func__);
             exit(ret);
