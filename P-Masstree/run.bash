@@ -49,7 +49,7 @@ num_of_gc=(8)
 workload=20000000
 key_order="random"
 #key_order="seq"
-value_size=256 # the size of the value impact performance a lot
+value_size=1024 # the size of the value impact performance a lot
 
 file_prefixes=("perf")
 
