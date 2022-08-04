@@ -56,6 +56,12 @@ namespace masstree {
 
         }
 
+        return 1;
+
+    }
+
+    void obj_free(void *ptr){
+        return;
     }
 
 //static constexpr uint64_t CACHE_LINE_SIZE = 64;

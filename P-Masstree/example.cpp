@@ -302,7 +302,7 @@ void run(char **argv) {
                 which_memalign = log_memalign;
                 which_memfree = log_free;
                 require_log_init = 1;
-            } else if (strcasestr(argv[ac], "obj")){
+            } else if (strcasestr(argv[ac], "obj")) {
                 which_memalign = masstree::obj_memalign;
                 use_obj = 1;
             }
@@ -319,6 +319,7 @@ void run(char **argv) {
                 require_flush = 1;
             } else if (strcasestr(argv[ac], "obj")) {
                 use_obj = 1;
+                which_memfree = masstree::obj_free;
             }
         } else if (strcasestr(argv[ac], "key=")) {
             if (strcasestr(argv[ac], "rand")) {
@@ -473,7 +474,6 @@ void run(char **argv) {
 
 
                                     tree->put_and_return(keys[i], D_RW(objToid), 1, 0, t);
-
 
 
                                 }

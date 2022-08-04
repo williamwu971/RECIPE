@@ -27,6 +27,7 @@ namespace masstree {
 
     void obj_init(PMEMobjpool *new_pop);
     int obj_memalign(void **memptr, size_t alignment, size_t size);
+    void obj_free(void *ptr);
 
 #define LEAF_WIDTH          15
 #define LEAF_THRESHOLD      1
