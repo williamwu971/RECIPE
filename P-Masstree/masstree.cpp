@@ -61,6 +61,7 @@ namespace masstree {
     }
 
     void obj_free(void *ptr){
+        printf("free!\n");
         return;
     }
 
