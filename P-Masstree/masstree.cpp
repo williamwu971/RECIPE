@@ -48,7 +48,7 @@ namespace masstree {
         // hack
         if (unlikely(pmemobj_tx_stage()!=TX_STAGE_WORK)){
 
-            printf("hit 000\n");
+//            printf("hit 000\n");
 
             if (pmemobj_alloc(pop, &ht_oid, size, TOID_TYPE_NUM(leafvalue), 0, 0)) {
                 fprintf(stderr, "pmemobj_alloc failed for obj_memalign\n");
@@ -60,7 +60,7 @@ namespace masstree {
 //            return posix_memalign(memptr,alignment,size);
         }else{
 
-            printf("hit!\n");
+//            printf("hit!\n");
             ht_oid = pmemobj_tx_alloc(size,TOID_TYPE_NUM(leafvalue));
             *memptr = pmemobj_direct(ht_oid);
 
