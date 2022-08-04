@@ -380,7 +380,7 @@ void run(char **argv) {
             pop = pmemobj_open(OBJ_FN, POBJ_LAYOUT_NAME(masstree));
         } else {
             pop = pmemobj_create(OBJ_FN, POBJ_LAYOUT_NAME(masstree),
-                                 8 * 1024 * 1024 * 1024ULL, 0666);
+                                 64 * 1024 * 1024 * 1024ULL, 0666);
         }
 
         masstree::obj_init(pop);
