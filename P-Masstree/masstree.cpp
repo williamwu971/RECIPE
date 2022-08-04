@@ -46,7 +46,7 @@ namespace masstree {
         PMEMoid ht_oid;
 
         // hack
-        if (unlikely(pmemobj_tx_stage()!=TX_STAGE_WORK)){
+        if (pmemobj_tx_stage()!=TX_STAGE_WORK){
 
 //            printf("hit 000\n"); todo: confirm this branch is hit
 

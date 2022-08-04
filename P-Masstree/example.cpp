@@ -360,6 +360,7 @@ void run(char **argv) {
 
     struct masstree_obj {
         TOID(struct masstree_obj) objToid;
+        PMEMoid ht_oid;
         uint64_t data;
     };
 
@@ -460,6 +461,21 @@ void run(char **argv) {
 
                 if (use_obj) {
 
+
+                    PMEMoid ht_oid;
+                    if (pmemobj_alloc(pop, &ht_oid,
+                                      value_size, TOID_TYPE_NUM(struct masstree_obj),
+                                      0, 0)) {
+                        fprintf(stderr, "pmemobj_alloc failed for obj_memalign\n");
+                        assert(0);
+                    }
+                    struct masstree_obj *mo = (struct masstree_obj *) pmemobj_direct(ht_oid);
+                    mo->data = rands[i];
+                    mo->ht_oid = ht_oid;
+                    tree->put_and_return(keys[i], mo, 1, 0, t);
+                    continue;
+
+
                     TX_BEGIN(pop) {
 
                                     TOID(struct masstree_obj) objToid =
@@ -545,6 +561,25 @@ void run(char **argv) {
             for (uint64_t i = range.begin(); i != range.end(); i++) {
 
                 if (use_obj) {
+
+                    PMEMoid ht_oid;
+                    if (pmemobj_alloc(pop, &ht_oid,
+                                      value_size, TOID_TYPE_NUM(struct masstree_obj),
+                                      0, 0)) {
+                        fprintf(stderr, "pmemobj_alloc failed for obj_memalign\n");
+                        assert(0);
+                    }
+                    struct masstree_obj *mo = (struct masstree_obj *) pmemobj_direct(ht_oid);
+                    mo->data = keys[i];
+                    mo->ht_oid = ht_oid;
+                    struct masstree_obj *old_obj =
+                            (struct masstree_obj *)
+                                    tree->put_and_return(keys[i], mo, 1, 0, t);
+
+                    pmemobj_free(&old_obj->ht_oid);
+
+
+                    continue;
 
                     TX_BEGIN(pop) {
 
@@ -732,6 +767,13 @@ void run(char **argv) {
 
 
                 if (use_obj) {
+
+                    struct masstree_obj *old_obj = (struct masstree_obj *)
+                            tree->del_and_return(keys[i], 0, 0,
+                                                 tombstone_callback_func, t);
+                    pmemobj_free(&old_obj->ht_oid);
+                    continue;
+
 
                     TX_BEGIN(pop) {
 
