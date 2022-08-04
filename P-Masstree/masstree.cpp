@@ -41,6 +41,7 @@ namespace masstree {
 //    if (pmemobj_direct(my_root) == NULL)
 //        perror("root pointer is null\n");
 //    pool_uuid = my_root.pool_uuid_lo;
+        return 0;
     }
 
     static inline int obj_memalign(void **memptr, size_t alignment, size_t size){
