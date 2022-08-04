@@ -9,8 +9,8 @@ extern int (*which_memalign)(void **memptr, size_t alignment, size_t size);
 extern void (*which_memfree)(void *ptr);
 
 // todo: if this marco is defined, indexes will be stored in PMEM
-#define posix_memalign which_memalign
-#define free which_memfree
+//#define posix_memalign which_memalign
+//#define free which_memfree
 
 using namespace MASS;
 
@@ -159,7 +159,7 @@ namespace masstree {
 
     void *leafnode::operator new(size_t size) {
         void *ptr;
-        int ret = posix_memalign(&ptr, CACHE_LINE_SIZE, size);
+        int ret = which_memalign(&ptr, CACHE_LINE_SIZE, size);
         if (ret != 0) {
             printf("%s Allocation error by posix_memalign\n", __func__);
             exit(ret);
@@ -315,7 +315,7 @@ namespace masstree {
         size_t len =
                 (key_len % sizeof(uint64_t)) == 0 ? key_len : (((key_len) / sizeof(uint64_t)) + 1) * sizeof(uint64_t);
 
-        int ret = posix_memalign(&aligned_alloc, CACHE_LINE_SIZE, sizeof(leafvalue) + len + sizeof(uint64_t));
+        int ret = which_memalign(&aligned_alloc, CACHE_LINE_SIZE, sizeof(leafvalue) + len + sizeof(uint64_t));
         if (ret != 0) {
             printf("%s Allocation error by posix_memalign\n", __func__);
             exit(ret);
@@ -341,7 +341,7 @@ namespace masstree {
         size_t len =
                 (key_len % sizeof(uint64_t)) == 0 ? key_len : (((key_len) / sizeof(uint64_t)) + 1) * sizeof(uint64_t);
 
-        int ret = posix_memalign(&aligned_alloc, CACHE_LINE_SIZE, sizeof(leafvalue) + len);
+        int ret = which_memalign(&aligned_alloc, CACHE_LINE_SIZE, sizeof(leafvalue) + len);
         if (ret != 0) {
             printf("%s Allocation error by posix_memalign\n", __func__);
             exit(ret);
