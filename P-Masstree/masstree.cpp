@@ -3,62 +3,64 @@
 
 #include <libpmemobj.h>
 
-POBJ_LAYOUT_BEGIN(masstree);
-POBJ_LAYOUT_TOID(masstree, masstree::leafvalue);
-POBJ_LAYOUT_END(masstree);
+
+using namespace MASS;
+
+namespace masstree {
+
+    POBJ_LAYOUT_BEGIN(masstree);
+    POBJ_LAYOUT_TOID(masstree,leafvalue);
+    POBJ_LAYOUT_END(masstree);
 
 // Global pool uuid
 //uint64_t pool_uuid;
 
 // Global pool pointer
-PMEMobjpool *pop;
+    PMEMobjpool *pop;
 
-int obj_init(){
-    // Enable prefault
-    int arg_open = 1, arg_create = 1;
-    if ((pmemobj_ctl_set(pop, "prefault.at_open", &arg_open)) != 0)
-        perror("failed to configure prefaults at open\n");
-    if ((pmemobj_ctl_set(pop, "prefault.at_create", &arg_create)) != 0)
-        perror("failed to configure prefaults at create\n");
+    int obj_init(){
+        // Enable prefault
+        int arg_open = 1, arg_create = 1;
+        if ((pmemobj_ctl_set(pop, "prefault.at_open", &arg_open)) != 0)
+            perror("failed to configure prefaults at open\n");
+        if ((pmemobj_ctl_set(pop, "prefault.at_create", &arg_create)) != 0)
+            perror("failed to configure prefaults at create\n");
 
-    // Open the PMEMpool if it exists, otherwise create it
-    size_t pool_size = 32*1024*1024*1024UL;
-    if (access("/pmem0/masstree_pool", F_OK) != -1)
-        pop = pmemobj_open("/pmem0/masstree_pool", POBJ_LAYOUT_NAME(clht));
-    else
-        pop = pmemobj_create("/pmem0/masstree_pool", POBJ_LAYOUT_NAME(clht), pool_size, 0666);
+        // Open the PMEMpool if it exists, otherwise create it
+        size_t pool_size = 32*1024*1024*1024UL;
+        if (access("/pmem0/masstree_pool", F_OK) != -1)
+            pop = pmemobj_open("/pmem0/masstree_pool", POBJ_LAYOUT_NAME(clht));
+        else
+            pop = pmemobj_create("/pmem0/masstree_pool", POBJ_LAYOUT_NAME(clht), pool_size, 0666);
 
-    if (pop == NULL)
-        perror("failed to open the pool\n");
+        if (pop == NULL)
+            perror("failed to open the pool\n");
 
-    // Create the root pointer
+        // Create the root pointer
 //    PMEMoid my_root = pmemobj_root(pop, sizeof(clht_t));
 //    if (pmemobj_direct(my_root) == NULL)
 //        perror("root pointer is null\n");
 //    pool_uuid = my_root.pool_uuid_lo;
-}
-
-static inline int obj_memalign(void **memptr, size_t alignment, size_t size){
-
-    size=(size/alignment+1)*alignment;
-
-    *memptr=NULL;
-
-    // hack
-    PMEMoid bucket_oid;
-    if (pmemobj_alloc(pop, &bucket_oid,size, TOID_TYPE_NUM(masstree::leafvalue), 0, 0)) {
-        fprintf(stderr, "pmemobj_alloc failed for obj_memalign\n");
-        assert(0);
     }
 
-    *memptr=pmemobj_direct(bucket_oid);
+    static inline int obj_memalign(void **memptr, size_t alignment, size_t size){
 
-}
+        size=(size/alignment+1)*alignment;
 
+        *memptr=NULL;
 
-using namespace MASS;
+        // hack
+        PMEMoid bucket_oid;
+        if (pmemobj_alloc(pop, &bucket_oid,size, TOID_TYPE_NUM(leafvalue), 0, 0)) {
+            fprintf(stderr, "pmemobj_alloc failed for obj_memalign\n");
+            assert(0);
+        }
 
-namespace masstree {
+        *memptr=pmemobj_direct(bucket_oid);
+
+    }
+
+#define posix_memalign obj_memalign
 
 static constexpr uint64_t CACHE_LINE_SIZE = 64;
 
@@ -134,6 +136,9 @@ int keycmp(const uint64_t a[], const uint64_t b[], size_t key_len) {
 }
 
 masstree::masstree() {
+
+    obj_init();
+
     leafnode *init_root = new leafnode(0);
     clflush((char *)init_root, sizeof(leafnode), false, true);
     root_.store(init_root, std::memory_order_release);
