@@ -48,7 +48,7 @@ namespace masstree {
         // hack
         if (unlikely(pmemobj_tx_stage()!=TX_STAGE_WORK)){
 
-//            printf("hit 000\n");
+//            printf("hit 000\n"); todo: confirm this branch is hit
 
             if (pmemobj_alloc(pop, &ht_oid, size, TOID_TYPE_NUM(leafvalue), 0, 0)) {
                 fprintf(stderr, "pmemobj_alloc failed for obj_memalign\n");
