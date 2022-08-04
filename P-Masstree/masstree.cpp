@@ -3,8 +3,12 @@
 
 #include <libpmemobj.h>
 
+POBJ_LAYOUT_BEGIN(masstree);
+POBJ_LAYOUT_TOID(masstree, masstree::leafvalue);
+POBJ_LAYOUT_END(masstree);
+
 // Global pool uuid
-uint64_t pool_uuid;
+//uint64_t pool_uuid;
 
 // Global pool pointer
 PMEMobjpool *pop;
@@ -28,10 +32,10 @@ int obj_init(){
         perror("failed to open the pool\n");
 
     // Create the root pointer
-    PMEMoid my_root = pmemobj_root(pop, sizeof(clht_t));
-    if (pmemobj_direct(my_root) == NULL)
-        perror("root pointer is null\n");
-    pool_uuid = my_root.pool_uuid_lo;
+//    PMEMoid my_root = pmemobj_root(pop, sizeof(clht_t));
+//    if (pmemobj_direct(my_root) == NULL)
+//        perror("root pointer is null\n");
+//    pool_uuid = my_root.pool_uuid_lo;
 }
 
 static inline int obj_memalign(void **memptr, size_t alignment, size_t size){
