@@ -320,7 +320,6 @@ void run(char **argv) {
                 require_flush = 1;
             } else if (strcasestr(argv[ac], "obj")) {
                 use_obj = 1;
-                which_memfree = masstree::obj_free;
             }
         } else if (strcasestr(argv[ac], "key=")) {
             if (strcasestr(argv[ac], "rand")) {
