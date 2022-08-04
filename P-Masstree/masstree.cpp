@@ -16,6 +16,34 @@ using namespace MASS;
 
 namespace masstree {
 
+    POBJ_LAYOUT_BEGIN(masstree);
+    POBJ_LAYOUT_TOID(masstree, leafvalue);
+    POBJ_LAYOUT_END(masstree);
+
+// Global pool uuid
+//uint64_t pool_uuid;
+
+// Global pool pointer
+    PMEMobjpool *pop;
+
+    void obj_init(PMEMobjpool *new_pop) {
+        pop = new_pop;
+    }
+
+    static inline int obj_memalign(void **memptr, size_t alignment, size_t size) {
+
+        size = (size / alignment + 1) * alignment;
+
+        *memptr = NULL;
+
+        // hack
+        PMEMoid bucket_oid = pmemobj_tx_alloc(size, TOID_TYPE_NUM(leafvalue));
+        *memptr = pmemobj_direct(bucket_oid);
+
+        return 0;
+
+    }
+
 //static constexpr uint64_t CACHE_LINE_SIZE = 64;
 
     static inline void fence() {

@@ -24,6 +24,8 @@ struct masstree_put_to_pack {
 
 namespace masstree {
 
+    int obj_init();
+
 #define LEAF_WIDTH          15
 #define LEAF_THRESHOLD      1
 

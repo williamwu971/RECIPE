@@ -302,6 +302,8 @@ void run(char **argv) {
                 which_memalign = log_memalign;
                 which_memfree = log_free;
                 require_log_init = 1;
+            } else {
+
             }
         } else if (strcasestr(argv[ac], "value=")) {
             if (strcasestr(argv[ac], "pmem")) {
