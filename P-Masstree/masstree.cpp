@@ -137,6 +137,7 @@ int keycmp(const uint64_t a[], const uint64_t b[], size_t key_len) {
 
 masstree::masstree() {
 
+    printf("entering masstree\n");
     obj_init();
 
     leafnode *init_root = new leafnode(0);
