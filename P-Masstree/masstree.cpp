@@ -169,7 +169,7 @@ namespace masstree {
     }
 
     void leafnode::operator delete(void *addr) {
-        free(addr);
+        which_memfree(addr);
     }
 
     bool leafnode::isLocked(uint64_t version) const {
@@ -1242,17 +1242,17 @@ namespace masstree {
                        memcmp(lv->fkey, (LV_PTR(l->value(kx_.p)))->fkey,
                               aligned_len(lv->key_len)) == 0) {
                 if (!(l->leaf_delete(this, root, depth, lv, kx_, threadEpocheInfo))) {
-                    free(lv);
+                    which_memfree(lv);
                     del(key, threadEpocheInfo);
                 }
             } else {
                 l->writeUnlock(false);
-                free(lv);
+                which_memfree(lv);
                 return;
             }
         } else {
             l->writeUnlock(false);
-            free(lv);
+            which_memfree(lv);
             return;
         }
     }
@@ -2441,7 +2441,7 @@ namespace masstree {
                         p = reinterpret_cast<leafnode *> (snapshot_v);
                         leafvalue *smallest = p->smallest_leaf(lv->key_len, lv->value);
                         p->get_range(smallest, num, count, buf, p, depth + 1);
-                        free(smallest);
+                        which_memfree(smallest);
                     } else if (l->key(perm[i]) == lv->fkey[depth]) {
                         p = reinterpret_cast<leafnode *> (snapshot_v);
                         p->get_range(lv, num, count, buf, p, depth + 1);
@@ -2549,7 +2549,7 @@ namespace masstree {
                         p = reinterpret_cast<leafnode *> (snapshot_v);
                         leafvalue *smallest = p->smallest_leaf(lv->key_len, lv->value);
                         p->get_range(smallest, num, count, buf, p, depth + 1);
-                        free(smallest);
+                        which_memfree(smallest);
                     } else if (l->key(perm[i]) == lv->fkey[depth]) {
                         p = reinterpret_cast<leafnode *> (snapshot_v);
                         p->get_range(lv, num, count, buf, p, depth + 1);
@@ -2578,7 +2578,7 @@ namespace masstree {
             }
         }
 
-        free(lv);
+        which_memfree(lv);
         return count;
     }
 
