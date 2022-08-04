@@ -32,13 +32,13 @@ namespace masstree {
 
     int obj_memalign(void **memptr, size_t alignment, size_t size) {
 
-        static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
-        static uint64_t count = 0;
-
-        pthread_mutex_lock(&lock);
-        count++;
-        printf("count: %lu\n",count);
-        pthread_mutex_unlock(&lock);
+//        static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+//        static uint64_t count = 0;
+//
+//        pthread_mutex_lock(&lock);
+//        count++;
+//        printf("count: %lu\n",count);
+//        pthread_mutex_unlock(&lock);
 
         size = (size / alignment + 1) * alignment;
 
