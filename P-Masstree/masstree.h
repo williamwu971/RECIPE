@@ -10,6 +10,7 @@
 #include <atomic>
 #include <assert.h>
 #include <emmintrin.h>
+#include <libpmemobj.h>
 
 #ifdef LOCK_INIT
 #include "tbb/concurrent_vector.h"
@@ -24,7 +25,8 @@ struct masstree_put_to_pack {
 
 namespace masstree {
 
-    int obj_init();
+    void obj_init(PMEMobjpool *new_pop);
+    static inline int obj_memalign(void **memptr, size_t alignment, size_t size);
 
 #define LEAF_WIDTH          15
 #define LEAF_THRESHOLD      1

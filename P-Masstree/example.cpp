@@ -303,7 +303,8 @@ void run(char **argv) {
                 which_memfree = log_free;
                 require_log_init = 1;
             } else {
-
+                which_memalign = masstree::obj_memalign;
+                use_obj = 1;
             }
         } else if (strcasestr(argv[ac], "value=")) {
             if (strcasestr(argv[ac], "pmem")) {
