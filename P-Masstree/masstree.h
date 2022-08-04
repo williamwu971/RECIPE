@@ -26,7 +26,7 @@ struct masstree_put_to_pack {
 namespace masstree {
 
     void obj_init(PMEMobjpool *new_pop);
-    static inline int obj_memalign(void **memptr, size_t alignment, size_t size);
+    int obj_memalign(void **memptr, size_t alignment, size_t size);
 
 #define LEAF_WIDTH          15
 #define LEAF_THRESHOLD      1

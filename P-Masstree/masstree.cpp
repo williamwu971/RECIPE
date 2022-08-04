@@ -30,7 +30,7 @@ namespace masstree {
         pop = new_pop;
     }
 
-    static inline int obj_memalign(void **memptr, size_t alignment, size_t size) {
+    int obj_memalign(void **memptr, size_t alignment, size_t size) {
 
         size = (size / alignment + 1) * alignment;
 
