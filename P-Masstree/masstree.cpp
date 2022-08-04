@@ -38,7 +38,7 @@ namespace masstree {
         PMEMoid ht_oid;
 
         // hack
-        if (pmemobj_tx_stage()!=TX_STAGE_WORK){
+        if (unlikely(pmemobj_tx_stage()!=TX_STAGE_WORK)){
             if (pmemobj_alloc(pop, &ht_oid, size, TOID_TYPE_NUM(leafvalue), 0, 0)) {
                 fprintf(stderr, "pmemobj_alloc failed for obj_memalign\n");
                 assert(0);
