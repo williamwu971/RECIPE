@@ -304,6 +304,7 @@ void run(char **argv) {
                 require_log_init = 1;
             } else if (strcasestr(argv[ac], "obj")) {
                 which_memalign = masstree::obj_memalign;
+                which_memfree=masstree::obj_free;
                 use_obj = 1;
             }
         } else if (strcasestr(argv[ac], "value=")) {
