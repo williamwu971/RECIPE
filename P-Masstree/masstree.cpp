@@ -1,6 +1,57 @@
 #include "masstree.h"
 #include "Epoche.cpp"
 
+#include <libpmemobj.h>
+
+// Global pool uuid
+uint64_t pool_uuid;
+
+// Global pool pointer
+PMEMobjpool *pop;
+
+int obj_init(){
+    // Enable prefault
+    int arg_open = 1, arg_create = 1;
+    if ((pmemobj_ctl_set(pop, "prefault.at_open", &arg_open)) != 0)
+        perror("failed to configure prefaults at open\n");
+    if ((pmemobj_ctl_set(pop, "prefault.at_create", &arg_create)) != 0)
+        perror("failed to configure prefaults at create\n");
+
+    // Open the PMEMpool if it exists, otherwise create it
+    size_t pool_size = 32*1024*1024*1024UL;
+    if (access("/pmem0/masstree_pool", F_OK) != -1)
+        pop = pmemobj_open("/pmem0/masstree_pool", POBJ_LAYOUT_NAME(clht));
+    else
+        pop = pmemobj_create("/pmem0/masstree_pool", POBJ_LAYOUT_NAME(clht), pool_size, 0666);
+
+    if (pop == NULL)
+        perror("failed to open the pool\n");
+
+    // Create the root pointer
+    PMEMoid my_root = pmemobj_root(pop, sizeof(clht_t));
+    if (pmemobj_direct(my_root) == NULL)
+        perror("root pointer is null\n");
+    pool_uuid = my_root.pool_uuid_lo;
+}
+
+static inline int obj_memalign(void **memptr, size_t alignment, size_t size){
+
+    size=(size/alignment+1)*alignment;
+
+    *memptr=NULL;
+
+    // hack
+    PMEMoid bucket_oid;
+    if (pmemobj_alloc(pop, &bucket_oid,size, TOID_TYPE_NUM(masstree::leafvalue), 0, 0)) {
+        fprintf(stderr, "pmemobj_alloc failed for obj_memalign\n");
+        assert(0);
+    }
+
+    *memptr=pmemobj_direct(bucket_oid);
+
+}
+
+
 using namespace MASS;
 
 namespace masstree {
@@ -962,11 +1013,11 @@ leaf_retry:
         p = oldp;
         goto leaf_retry;
     }
-    
+
     p->writeLockOrRestart(needRestart);
     if (needRestart)
         goto leaf_retry;
-    
+
     oldp = p->advance_to_key(lv->fkey[depth - 1]);
     if (oldp != p) {
         p->writeUnlock(false);
@@ -1275,7 +1326,7 @@ void *leafnode::leaf_delete(masstree *t, void *root, uint32_t depth, leafvalue *
     return ret;
 }
 
-void *leafnode::inter_insert(masstree *t, void *root, uint32_t depth, leafvalue *lv, 
+void *leafnode::inter_insert(masstree *t, void *root, uint32_t depth, leafvalue *lv,
         uint64_t key, void *value, key_indexed_position &kx_, leafnode *child, bool child_isOverWrite)
 {
     bool isOverWrite = false;
@@ -1588,7 +1639,7 @@ leaf_retry:
         return;
     }
 
-    if (!p->inter_insert(this, root, depth, lv, key, right, kx_, 
+    if (!p->inter_insert(this, root, depth, lv, key, right, kx_,
                 reinterpret_cast<leafnode *> (child), isOverWrite)) {
         split(left, root, depth, lv, key, right, level, child, isOverWrite);
     }
