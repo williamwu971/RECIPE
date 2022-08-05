@@ -93,13 +93,13 @@ namespace masstree {
         if (front)
             mfence();
         for (; ptr < data + len; ptr += CACHE_LINE_SIZE) {
-#ifdef CLFLUSH
-            asm volatile("clflush %0" : "+m" (*(volatile char *)ptr));
-#elif CLFLUSH_OPT
-            asm volatile(".byte 0x66; clflush %0" : "+m" (*(volatile char *)(ptr)));
-#elif CLWB
-            asm volatile(".byte 0x66; xsaveopt %0" : "+m" (*(volatile char *) (ptr)));
-#endif
+//#ifdef CLFLUSH
+//            asm volatile("clflush %0" : "+m" (*(volatile char *)ptr));
+//#elif CLFLUSH_OPT
+//            asm volatile(".byte 0x66; clflush %0" : "+m" (*(volatile char *)(ptr)));
+//#elif CLWB
+//            asm volatile(".byte 0x66; xsaveopt %0" : "+m" (*(volatile char *) (ptr)));
+//#endif
         }
         if (back)
             mfence();
