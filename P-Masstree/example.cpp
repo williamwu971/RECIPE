@@ -345,6 +345,14 @@ void run(char **argv) {
     }
     printf("\n");
 
+#ifdef CLFLUSH
+    puts(" === USING CLFLUSH === ");
+#elif CLFLUSH_OPT
+    puts(" === USING CLFLUSH_OPT === ");
+#elif CLWB
+    puts(" === USING CLWB === ");
+#endif
+
     if (require_RP_init) {
         printf("init RP... ");
         int preset = 0;
