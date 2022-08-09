@@ -361,10 +361,12 @@ void log_recover(masstree::masstree *tree, int num_threads) {
 }
 
 
-void log_init(uint64_t num_logs, int pre_fault_threads) {
+void log_init(uint64_t pool_size, int pre_fault_threads) {
 
 
     log_structs_size_check();
+
+    uint64_t num_logs = pool_size / LOG_SIZE;
     uint64_t file_size = num_logs * CACHE_LINE_SIZE;
     int preset = 0;
 

@@ -116,7 +116,7 @@ struct log_cell {
 
 void log_recover(masstree::masstree *tree, int num_threads);
 
-void log_init(uint64_t num_logs, int pre_fault_threads);
+void log_init(uint64_t pool_size, int pre_fault_threads);
 
 void *log_malloc(size_t size);
 
