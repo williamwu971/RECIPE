@@ -903,7 +903,7 @@ int log_start_perf(const char *perf_fn) {
                           "uncore_imc_%d/event=0xe3,umask=0x0/,"
                           "uncore_imc_%d/event=0xe6,umask=0x0/,"
                           "uncore_imc_%d/event=0xe7,umask=0x0/",
-                          i, i, i, i
+                          sticks[i], sticks[i], sticks[i], sticks[i]
         );
 
         if (i == num_of_sticks - 1) {
