@@ -586,7 +586,7 @@ void run(char **argv) {
                             (struct masstree_obj *)
                                     tree->put_and_return(keys[i], mo, 1, 0, t);
 
-                    pmemobj_free(&old_obj->ht_oid);
+//                    pmemobj_free(&old_obj->ht_oid);
 
 
                     continue;
