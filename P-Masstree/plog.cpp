@@ -196,13 +196,14 @@ static inline void *log_prefault_custom_func(void *s, int c, size_t n) {
 uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
                  void **result, int *pre_set, int alignment, int pre_fault_threads) {
 
+    (void)pre_fault_threads;
     void *map = NULL;
     size_t mapped_len = 0;
     int is_pmem = 1;
-    void *(*memset_func)(void *s, int c, size_t n);
+//    void *(*memset_func)(void *s, int c, size_t n);
 
     if (use_pmem) {
-        memset_func = pmem_memset_persist;
+//        memset_func = pmem_memset_persist;
 
         if (file_size == 0) {
             map = pmem_map_file(fn, 0, 0, 0, &mapped_len, &is_pmem);
@@ -215,7 +216,7 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
         is_pmem = is_pmem && pmem_is_pmem(map, mapped_len);
 
     } else {
-        memset_func = memset;
+//        memset_func = memset;
 
         mapped_len = file_size;
 
@@ -240,11 +241,11 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
             die("cannot memset size:%zu", mapped_len);
         }
 
-        uint64_t step_size;
-        if (mapped_len % PAGE_SIZE == 0) step_size = PAGE_SIZE;
-        else step_size = CACHE_LINE_SIZE;
-
-        if (mapped_len > 2 * 1024 * 1024ULL)step_size = (2 * 1024 * 1024ULL); // to remove
+//        uint64_t step_size;
+//        if (mapped_len % PAGE_SIZE == 0) step_size = PAGE_SIZE;
+//        else step_size = CACHE_LINE_SIZE;
+//
+//        if (mapped_len > 2 * 1024 * 1024ULL)step_size = (2 * 1024 * 1024ULL); // to remove
 
         std::atomic<uint64_t> sum;
         sum.store(0);
