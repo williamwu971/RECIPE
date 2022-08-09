@@ -1010,12 +1010,21 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed, FILE *f) {
     }
 
     const char *pmem_sticks[] = {
+//            "uncore_imc_1/",
+//            "uncore_imc_4/",
+//            "uncore_imc_7/",
+//            "uncore_imc_10/"
+
+            "uncore_imc_0/",
             "uncore_imc_1/",
+            "uncore_imc_2/",
+            "uncore_imc_3/",
             "uncore_imc_4/",
+            "uncore_imc_5/",
+            "uncore_imc_6/",
             "uncore_imc_7/",
-            "uncore_imc_10/"
     };
-    int length = 4;
+    int length = 8;
 
     char buf[1024];
     double elapsed_perf = 0;
