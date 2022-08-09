@@ -1034,7 +1034,7 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed, FILE *f) {
     uint64_t read_b_cycle;
     uint64_t write_b_cycle;
     int repeat = 0;
-    int match=0;
+
 
     for (; repeat < 3 && elapsed_perf < 0.01; repeat++) {
 
@@ -1044,7 +1044,6 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed, FILE *f) {
         write = 0;
         read_b_cycle = 0;
         write_b_cycle = 0;
-        match=0;
 
 
         FILE *file = fopen(perf_fn, "r");
@@ -1096,7 +1095,6 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed, FILE *f) {
         fclose(file);
     }
 
-    printf("match for %s is %d\n",perf_fn,match);
 
 //    uint64_t elapsed_cycles = perf_stop_rtd - perf_start_rtd;
     elapsed = elapsed_perf;
