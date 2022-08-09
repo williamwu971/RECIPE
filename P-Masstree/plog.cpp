@@ -196,7 +196,7 @@ static inline void *log_prefault_custom_func(void *s, int c, size_t n) {
 uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
                  void **result, int *pre_set, int alignment, int pre_fault_threads) {
 
-    (void)pre_fault_threads;
+    (void) pre_fault_threads;
     void *map = NULL;
     size_t mapped_len = 0;
     int is_pmem = 1;
@@ -885,33 +885,62 @@ void log_debug_print(int to_file, int show) {
 int log_start_perf(const char *perf_fn) {
 
     char command[1024];
-    sprintf(command,
-            "sudo /home/blepers/linux-huge/tools/perf/perf stat -e "
 
-            "uncore_imc_1/event=0xe2,umask=0x0/,"
-            "uncore_imc_1/event=0xe3,umask=0x0/,"
-            "uncore_imc_1/event=0xe6,umask=0x0/,"
-            "uncore_imc_1/event=0xe7,umask=0x0/,"
+    int sticks[] = {0, 1, 2, 3, 4, 5, 6, 7};
+    int num_of_sticks = 8;
 
-            "uncore_imc_4/event=0xe2,umask=0x0/,"
-            "uncore_imc_4/event=0xe3,umask=0x0/,"
-            "uncore_imc_4/event=0xe6,umask=0x0/,"
-            "uncore_imc_4/event=0xe7,umask=0x0/,"
-
-            "uncore_imc_7/event=0xe2,umask=0x0/,"
-            "uncore_imc_7/event=0xe3,umask=0x0/,"
-            "uncore_imc_7/event=0xe6,umask=0x0/,"
-            "uncore_imc_7/event=0xe7,umask=0x0/,"
-
-            "uncore_imc_10/event=0xe2,umask=0x0/,"
-            "uncore_imc_10/event=0xe3,umask=0x0/,"
-            "uncore_imc_10/event=0xe6,umask=0x0/,"
-            "uncore_imc_10/event=0xe7,umask=0x0/ "
+    char *chaser = command;
 
 
-            "> %s 2>&1 &",
-            perf_fn
-    );
+    for (int i = 0; i < num_of_sticks; i++) {
+
+        if (i == 0) {
+            chaser += sprintf(chaser, "sudo /home/blepers/linux-huge/tools/perf/perf stat -e ");
+        }
+
+        chaser += sprintf(chaser,
+                          "uncore_imc_%d/event=0xe2,umask=0x0/,"
+                          "uncore_imc_%d/event=0xe3,umask=0x0/,"
+                          "uncore_imc_%d/event=0xe6,umask=0x0/,"
+                          "uncore_imc_%d/event=0xe7,umask=0x0/",
+                          i, i, i, i
+        );
+
+        if (i == num_of_sticks - 1) {
+            chaser += sprintf(chaser, " > %s 2>&1 &", perf_fn);
+        } else {
+            chaser += sprintf(chaser, ",");
+        }
+
+    }
+
+//    sprintf(command,
+//            "sudo /home/blepers/linux-huge/tools/perf/perf stat -e "
+//
+//            "uncore_imc_1/event=0xe2,umask=0x0/,"
+//            "uncore_imc_1/event=0xe3,umask=0x0/,"
+//            "uncore_imc_1/event=0xe6,umask=0x0/,"
+//            "uncore_imc_1/event=0xe7,umask=0x0/,"
+//
+//            "uncore_imc_4/event=0xe2,umask=0x0/,"
+//            "uncore_imc_4/event=0xe3,umask=0x0/,"
+//            "uncore_imc_4/event=0xe6,umask=0x0/,"
+//            "uncore_imc_4/event=0xe7,umask=0x0/,"
+//
+//            "uncore_imc_7/event=0xe2,umask=0x0/,"
+//            "uncore_imc_7/event=0xe3,umask=0x0/,"
+//            "uncore_imc_7/event=0xe6,umask=0x0/,"
+//            "uncore_imc_7/event=0xe7,umask=0x0/,"
+//
+//            "uncore_imc_10/event=0xe2,umask=0x0/,"
+//            "uncore_imc_10/event=0xe3,umask=0x0/,"
+//            "uncore_imc_10/event=0xe6,umask=0x0/,"
+//            "uncore_imc_10/event=0xe7,umask=0x0/ "
+//
+//
+//            "> %s 2>&1 &",
+//            perf_fn
+//    );
 
 //    sprintf(command,
 //            "/home/blepers/linux/tools/perf/perf record --call-graph dwarf -p %d -o %s -g >> perf.out 2>&1 &",
