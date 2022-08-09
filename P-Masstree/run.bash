@@ -20,6 +20,7 @@ for var in "$@"; do
     fi
 
     # build P-Masstree
+    cd $PREFIX/RECIPE/P-Masstree/ || exit
     git pull || exit
     rm -rf build && mkdir build
     cd build || exit
