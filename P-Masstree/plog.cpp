@@ -976,13 +976,9 @@ int log_start_perf(const char *perf_fn) {
 //            "/home/blepers/linux/tools/perf/perf record -p %d -o %s -g >> perf.out 2>&1 &",
 //            getpid(), perf_fn);
 
+    printf("perf: %s\n", command);
 
     int res = system(command);
-    if (res) {
-        printf("perf: %s\n", command);
-    }
-
-
     rdtscll(perf_start_rtd);
 
     return res;
