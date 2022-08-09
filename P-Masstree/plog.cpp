@@ -885,7 +885,7 @@ int log_start_perf(const char *perf_fn) {
 
     char command[1024];
     sprintf(command,
-            "sudo /home/blepers/linux/tools/perf/perf stat -e"
+            "sudo /mnt/sdb/xiaoxiang/linux/tools/perf/perf stat -e"
 
             "uncore_imc_1/event=0xe2,umask=0x0/,"
             "uncore_imc_1/event=0xe3,umask=0x0/,"
