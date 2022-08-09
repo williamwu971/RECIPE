@@ -353,7 +353,7 @@ void run(char **argv) {
     puts(" === USING CLWB === ");
 #endif
 
-#define PMEM_POOL_SIZE (32*1024*1024*1024ULL)
+#define PMEM_POOL_SIZE (48*1024*1024*1024ULL)
 
     if (require_RP_init) {
         printf("init RP... ");
