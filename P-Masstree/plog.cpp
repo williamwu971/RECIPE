@@ -886,7 +886,7 @@ void log_debug_print(int to_file, int show) {
 
 int log_start_perf(const char *perf_fn) {
 
-    char command[2048];
+    char command[2048] = "sudo /home/blepers/linux-huge/tools/perf/perf ";
 
     int sticks[] = {0, 1, 2, 3, 4, 5, 6, 7};
     int num_of_sticks = 8;
@@ -897,7 +897,7 @@ int log_start_perf(const char *perf_fn) {
     for (int i = 0; i < num_of_sticks; i++) {
 
         if (i == 0) {
-            chaser += sprintf(chaser, "sudo /home/blepers/linux-huge/tools/perf/perf stat -e ");
+            chaser += sprintf(chaser, "stat -e ");
         }
 
         chaser += sprintf(chaser,
@@ -945,7 +945,7 @@ int log_start_perf(const char *perf_fn) {
 //    );
 
     sprintf(command,
-            "/home/blepers/linux/tools/perf/perf record --call-graph dwarf -p %d -o %s -g >> perf.out 2>&1 &",
+            "record --call-graph dwarf -p %d -o %s -g >> perf.out 2>&1 &",
             getpid(), perf_fn);
     perf_stat = 0;
 
