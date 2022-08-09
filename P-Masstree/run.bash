@@ -81,6 +81,7 @@ for i in "${index_location[@]}"; do
         # backup perf files
         for pfn in *.perf; do
           [ -f "$pfn" ] || break
+          echo "backing up $pfn"
           cp "$pfn" "$pfn".old
         done
 
