@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-PREFIX="/mnt/sdb/xiaoxiang"
-
 for var in "$@"; do
   if [ "$var" = "build" ]; then
 
@@ -10,7 +8,7 @@ for var in "$@"; do
     #    apt-get install -y libtbb-dev libjemalloc-dev libpmem-dev
 
     # build ralloc
-    cd $PREFIX/ralloc/test/ || exit
+    cd /home/xiaoxiang/ralloc/test/ || exit
     git pull
     make clean
     make -j libralloc.a
@@ -20,7 +18,7 @@ for var in "$@"; do
     fi
 
     # build P-Masstree
-    cd $PREFIX/RECIPE/P-Masstree/ || exit
+    cd /mnt/sdb/xiaoxiang/RECIPE/P-Masstree/ || exit
     git pull || exit
     rm -rf build && mkdir build
     cd build || exit
