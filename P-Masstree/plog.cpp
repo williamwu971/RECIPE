@@ -886,7 +886,7 @@ void log_debug_print(int to_file, int show) {
 
 int log_start_perf(const char *perf_fn) {
 
-    char command[2048] = "sudo /home/blepers/linux-huge/tools/perf/perf ";
+    char command[2048];
 
     int sticks[] = {0, 1, 2, 3, 4, 5, 6, 7};
     int num_of_sticks = 8;
@@ -976,9 +976,12 @@ int log_start_perf(const char *perf_fn) {
 //            "/home/blepers/linux/tools/perf/perf record -p %d -o %s -g >> perf.out 2>&1 &",
 //            getpid(), perf_fn);
 
-    printf("perf: %s\n", command);
+    char real_command[2048];
+    sprintf(real_command, "sudo /home/blepers/linux-huge/tools/perf/perf %s", command);
 
-    int res = system(command);
+//    printf("perf: %s\n", command);
+
+    int res = system(real_command);
     rdtscll(perf_start_rtd);
 
     return res;
