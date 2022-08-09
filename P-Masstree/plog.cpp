@@ -976,7 +976,7 @@ int log_start_perf(const char *perf_fn) {
 //            "/home/blepers/linux/tools/perf/perf record -p %d -o %s -g >> perf.out 2>&1 &",
 //            getpid(), perf_fn);
 
-    char real_command[2048];
+    char real_command[4096];
     sprintf(real_command, "sudo /home/blepers/linux-huge/tools/perf/perf %s", command);
 
 //    printf("perf: %s\n", command);
