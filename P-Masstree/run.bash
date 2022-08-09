@@ -8,14 +8,14 @@ for var in "$@"; do
     #    apt-get install -y libtbb-dev libjemalloc-dev libpmem-dev
 
     # build ralloc
-    #    cd $PREFIX/ralloc/test/ || exit
-    #    git pull
-    #    make clean
-    #    make libralloc.a
-    #    if [ ! -f libralloc.a ]; then
-    #      echo "Failed to build ralloc!"
-    #      exit
-    #    fi
+    cd $PREFIX/ralloc/test/ || exit
+    git pull
+    make clean
+    make -j libralloc.a
+    if [ ! -f libralloc.a ]; then
+      echo "Failed to build ralloc!"
+      exit
+    fi
 
     # build P-Masstree
     git pull || exit
