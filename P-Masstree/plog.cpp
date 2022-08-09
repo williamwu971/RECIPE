@@ -884,7 +884,7 @@ void log_debug_print(int to_file, int show) {
 
 int log_start_perf(const char *perf_fn) {
 
-    char command[1024];
+    char command[2048];
 
     int sticks[] = {0, 1, 2, 3, 4, 5, 6, 7};
     int num_of_sticks = 8;
