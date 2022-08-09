@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+PREFIX="/mnt/sdb/xiaoxiang"
+
 for var in "$@"; do
   if [ "$var" = "build" ]; then
 
