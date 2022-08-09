@@ -353,10 +353,12 @@ void run(char **argv) {
     puts(" === USING CLWB === ");
 #endif
 
+#define PMEM_POOL_SIZE (64*1024*1024*1024ULL)
+
     if (require_RP_init) {
         printf("init RP... ");
         int preset = 0;
-        RP_init("masstree", 16 * 1024 * 1024 * 1024ULL, &preset);
+        RP_init("masstree", PMEM_POOL_SIZE, &preset);
     }
 
 
@@ -389,7 +391,7 @@ void run(char **argv) {
             pop = pmemobj_open(OBJ_FN, POBJ_LAYOUT_NAME(masstree));
         } else {
             pop = pmemobj_create(OBJ_FN, POBJ_LAYOUT_NAME(masstree),
-                                 16 * 1024 * 1024 * 1024ULL, 0666);
+                                 PMEM_POOL_SIZE, 0666);
         }
 
         masstree::obj_init(pop);
@@ -435,7 +437,7 @@ void run(char **argv) {
             log_recover(tree, 20);
             goto lookup;
         } else {
-            log_init(4096, num_thread);
+            log_init(PMEM_POOL_SIZE, num_thread);
         }
 
         if (which_malloc == log_malloc) {
