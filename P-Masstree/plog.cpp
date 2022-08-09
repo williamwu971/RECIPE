@@ -1056,6 +1056,8 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed, FILE *f) {
 
                 if (strstr(buf, pmem_sticks[i])) {
 
+                    puts(pmem_sticks[i]);
+
                     uint64_t number;
 
                     char num_str[1024];
