@@ -219,7 +219,7 @@ int main(int argc, char **argv) {
             keys[i] = t;
         }
     }
-
+    return 1;
 
 #ifdef CLFLUSH
     puts("\tdetected CLFLUSH");
