@@ -37,17 +37,17 @@ cd build || exit
 
 index_location=("dram" "pmem" "obj")
 value_location=("pmem" "log" "obj")
-index_location=("obj")
+#index_location=("obj")
 #value_location=("log")
 #value_location=("pmem")
-value_location=("obj")
+#value_location=("obj")
 #num_threads=(1 3 5 7 9 11 13 15)
 num_threads=(17)
 use_perf="yes"
 record_latency="no"
 num_of_gc=(8)
 
-workload=1200000
+workload=12000000
 key_order="random"
 #key_order="seq"
 value_size=1024 # the size of the value impact performance a lot
