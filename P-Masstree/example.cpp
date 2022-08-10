@@ -637,52 +637,54 @@ int main(int argc, char **argv) {
     }
 
     {
+        /**
+         * section DELETE
+         */
 
         const char *perf_fn = "delete.perf";
         if (use_perf)log_start_perf(perf_fn);
-
-        void *(*tombstone_callback_func)(uint64_t key) = NULL;
-        if (use_log) {
-            tombstone_callback_func = log_get_tombstone;
-        }
 
         // Delete
         auto starttime = std::chrono::system_clock::now();
         tbb::parallel_for(tbb::blocked_range<uint64_t>(0, n), [&](const tbb::blocked_range<uint64_t> &range) {
             auto t = tree->getThreadInfo();
+            u_int64_t a, b;
+
             for (uint64_t i = range.begin(); i != range.end(); i++) {
 
+                rdtscll(a);
 
                 if (use_obj) {
 
                     struct masstree_obj *old_obj = (struct masstree_obj *)
                             tree->del_and_return(keys[i], 0, 0,
-                                                 tombstone_callback_func, t);
+                                                 NULL, t);
                     pmemobj_free(&old_obj->ht_oid);
-                    continue;
 
 
-                    TX_BEGIN(pop) {
-
-                                    struct masstree_obj *obj = (struct masstree_obj *)
-                                            tree->del_and_return(keys[i], 0, 0,
-                                                                 tombstone_callback_func, t);
-
-                                    TX_FREE(obj->objToid);
-
-                                }
-                                    TX_ONABORT {
-                                    throw;
-                                }
-                    TX_END
-
-                    continue;
+//                    TX_BEGIN(pop) {
+//
+//                                    struct masstree_obj *obj = (struct masstree_obj *)
+//                                            tree->del_and_return(keys[i], 0, 0,
+//                                                                 tombstone_callback_func, t);
+//
+//                                    TX_FREE(obj->objToid);
+//
+//                                }
+//                                    TX_ONABORT {
+//                                    throw;
+//                                }
+//                    TX_END
+                } else if (use_log) {
+                    log_free(tree->del_and_return(keys[i], 0, 0,
+                                                  log_get_tombstone, t));
+                } else if (use_ralloc) {
+                    RP_free(tree->del_and_return(keys[i], 0, 0,
+                                                 NULL, t));
+                } else {
+                    free(tree->del_and_return(keys[i], 0, 0,
+                                              NULL, t));
                 }
-
-                void *old = tree->del_and_return(keys[i], 0, 0,
-                                                 tombstone_callback_func, t);
-
-                which_free(old);
 
                 // todo: write -1 here
             }
@@ -700,9 +702,11 @@ int main(int argc, char **argv) {
             printf("Throughput: delete,%ld,%.2f ops/us %.2f sec\n",
                    n, (n * 1.0) / duration.count(), duration.count() / 1000000.0);
 
+        if (record_latency) dump_latencies("delete.latencies", latencies, n);
+
         fprintf(throughput_file, "%.2f,", (n * 1.0) / duration.count());
+        if (use_log) log_debug_print(0, show_log_usage);
     }
-    if (which_malloc == log_malloc) log_debug_print(0, show_log_usage);
 
 
     // logging throughput to files
