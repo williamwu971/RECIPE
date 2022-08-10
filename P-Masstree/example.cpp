@@ -184,16 +184,6 @@ int main(int argc, char **argv) {
         }
     }
 
-
-    // todo: add latency tracker and perf
-
-    tbb::task_scheduler_init init(num_thread);
-    srand(time(NULL));
-    masstree::masstree *tree = new masstree::masstree();
-
-    FILE *throughput_file = fopen("perf.csv", "a");
-    u_int64_t *latencies = (u_int64_t *) malloc(sizeof(u_int64_t) * n);
-
     puts("\tbegin generating keys");
     uint64_t *keys = new uint64_t[n];
     uint64_t *rands = new uint64_t[n];
@@ -219,7 +209,6 @@ int main(int argc, char **argv) {
             keys[i] = t;
         }
     }
-    return 1;
 
 #ifdef CLFLUSH
     puts("\tdetected CLFLUSH");
@@ -263,6 +252,13 @@ int main(int argc, char **argv) {
 
         masstree::obj_init(pop);
     }
+
+    tbb::task_scheduler_init init(num_thread);
+    srand(time(NULL));
+    masstree::masstree *tree = new masstree::masstree();
+
+    FILE *throughput_file = fopen("perf.csv", "a");
+    u_int64_t *latencies = (u_int64_t *) malloc(sizeof(u_int64_t) * n);
 
     if (require_log_init) {
 
