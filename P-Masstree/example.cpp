@@ -85,7 +85,8 @@ int main(int argc, char **argv) {
                argv[0]);
         return 1;
     }
-
+    for (int ac = 0; ac < argc; ac++) printf("%s ", argv[ac]);
+    puts("");
 
     for (int ac = 0; ac < argc; ac++) {
 
