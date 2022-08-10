@@ -451,41 +451,37 @@ int main(int argc, char **argv) {
                             (struct masstree_obj *)
                                     tree->put_and_return(keys[i], mo, 1, 0, t);
 
-//                    pmemobj_free(&old_obj->ht_oid);
+                    pmemobj_free(&old_obj->ht_oid);
 
-
-                    continue;
-
-                    TX_BEGIN(pop) {
-
-                                    TOID(struct masstree_obj) objToid =
-                                            TX_ALLOC(struct masstree_obj, value_size);
-
-                                            D_RW(objToid)->objToid = objToid;
-                                            D_RW(objToid)->data = keys[i];
-
+//                    TX_BEGIN(pop) {
+//
+//                                    TOID(struct masstree_obj) objToid =
+//                                            TX_ALLOC(struct masstree_obj, value_size);
+//
+//                                            D_RW(objToid)->objToid = objToid;
+//                                            D_RW(objToid)->data = keys[i];
+//
 //                                    memset(((uint64_t *) (&D_RW(objToid)->data)) + 1, 7,
 //                                           value_size - sizeof(struct masstree_obj)
 //                                    );
-
+//
 //                                    printf("key: %lu pointer: %p\n", keys[i],
 //                                           tree->get(keys[i], t));
-
-                                    struct masstree_obj *obj = (struct masstree_obj *)
-                                            tree->put_and_return(keys[i], D_RW(objToid), 0, 0, t);
-
-
+//
+//                                    struct masstree_obj *obj = (struct masstree_obj *)
+//                                            tree->put_and_return(keys[i], D_RW(objToid), 0, 0, t);
+//
+//
 //                                    printf("key: %lu pointer: %p\n", keys[i], obj);
+//
+//                                    TX_FREE(obj->objToid);
+//
+//                                }
+//                                    TX_ONABORT {
+//                                    throw;
+//                                }
+//                    TX_END
 
-                                    TX_FREE(obj->objToid);
-
-                                }
-                                    TX_ONABORT {
-                                    throw;
-                                }
-                    TX_END
-
-                    continue;
                 } else if (use_log) {
                     char *raw = (char *) log_malloc(value_size);
 
