@@ -87,21 +87,21 @@ int main(int argc, char **argv) {
                 which_memalign = RP_memalign;
                 which_memfree = RP_free;
                 require_RP_init = 1;
-                printf(" === index using Ralloc === \n");
+                puts("\t\t\tindex=pmem");
 
             } else if (strcasestr(argv[ac], "log")) {
                 which_memalign = log_memalign;
                 which_memfree = log_free;
                 require_log_init = 1;
-                printf(" === index using Log === \n");
+                puts("\t\t\tindex=log");
 
             } else if (strcasestr(argv[ac], "obj")) {
                 which_memalign = masstree::obj_memalign;
                 which_memfree = masstree::obj_free;
-                printf(" === index using Obj === \n");
+                puts("\t\t\tindex=obj");
 
             } else {
-                printf(" === index using Dram === \n");
+                puts("\t\t\tindex=dram");
 
             }
         } else if (strcasestr(argv[ac], "value=")) {
@@ -110,31 +110,60 @@ int main(int argc, char **argv) {
                 which_free = RP_free;
                 require_RP_init = 1;
                 require_flush = 1;
+                puts("\t\t\tvalue=pmem");
+
             } else if (strcasestr(argv[ac], "log")) {
                 which_malloc = log_malloc;
                 which_free = log_free;
                 require_log_init = 1;
                 require_flush = 1;
+                puts("\t\t\tvalue=log");
+
             } else if (strcasestr(argv[ac], "obj")) {
                 use_obj = 1;
+                puts("\t\t\tvalue=obj");
+
+
+            } else {
+                puts("\t\t\tvalue=dram");
+
             }
         } else if (strcasestr(argv[ac], "key=")) {
             if (strcasestr(argv[ac], "rand")) {
                 shuffle_keys = 1;
+                puts("\t\t\tkey=rand");
+
+            } else {
+                puts("\t\t\tkey=seq");
+
             }
         } else if (strcasestr(argv[ac], "perf=")) {
             if (strcasestr(argv[ac], "y")) {
                 use_perf = 1;
+                puts("\t\t\tperf=y");
+
+            } else {
+                puts("\t\t\tperf=n");
+
             }
         } else if (strcasestr(argv[ac], "gc=")) {
-            num_of_gc = atoi(strcasestr(argv[ac], "=") + 1);
+            if (require_log_init)num_of_gc = atoi(strcasestr(argv[ac], "=") + 1);
+            printf("\t\t\tgc=%d\n", num_of_gc);
+
         } else if (strcasestr(argv[ac], "latency=")) {
             if (strcasestr(argv[ac], "yes")) {
                 record_latency = 1;
+                puts("\t\t\tlatency=yes");
+
+            } else {
+                puts("\t\t\tlatency=no");
+
             }
         } else if (strcasestr(argv[ac], "value_size=")) {
             int desired_size = atoi(strcasestr(argv[ac], "=") + 1);
             if (desired_size > value_size) value_size = desired_size;
+            printf("\t\t\tvalue_size=%d\n", value_size);
+
         }
     }
     printf("\n");
