@@ -166,13 +166,13 @@ int main(int argc, char **argv) {
 
         }
     }
-    printf("\n");
-
-
-    std::cout << "Simple Example of P-Masstree-New" << std::endl;
 
 
     tbb::task_scheduler_init init(num_thread);
+
+    puts("\tbegin generating keys");
+
+    srand(time(NULL));
 
     uint64_t *keys = new uint64_t[n];
     uint64_t *rands = new uint64_t[n];
@@ -187,16 +187,27 @@ int main(int argc, char **argv) {
         keys[i] = i + 1;
     }
 
+    // (TP dropped) shuffle the array
+    if (shuffle_keys) {
+
+        for (uint64_t i = 0; i < n - 1; i++) {
+            uint64_t j = i + rand() / (RAND_MAX / (n - i) + 1);
+            uint64_t t = keys[j];
+            keys[j] = keys[i];
+            keys[i] = t;
+        }
+    }
+
 
     FILE *throughput_file = fopen("perf.csv", "a");
 
 
 #ifdef CLFLUSH
-    puts(" === USING CLFLUSH === ");
+    puts("\tdetected CLFLUSH");
 #elif CLFLUSH_OPT
-    puts(" === USING CLFLUSH_OPT === ");
+    puts("\tdetected CLFLUSH_OPT");
 #elif CLWB
-    puts(" === USING CLWB === ");
+    puts("\tdetected CLWB");
 #endif
 
 #define PMEM_POOL_SIZE (48*1024*1024*1024ULL)
@@ -250,19 +261,7 @@ int main(int argc, char **argv) {
 
     // todo: add latency tracker and perf
 
-    // (TP dropped) shuffle the array todo: random keys (make it faster)
-    if (shuffle_keys) {
-        printf("shuffle keys... ");
-        fflush(stdout);
 
-        srand(time(NULL));
-        for (uint64_t i = 0; i < n - 1; i++) {
-            uint64_t j = i + rand() / (RAND_MAX / (n - i) + 1);
-            uint64_t t = keys[j];
-            keys[j] = keys[i];
-            keys[i] = t;
-        }
-    }
 
     double insert_throughput;
     double update_throughput;
@@ -295,7 +294,7 @@ int main(int argc, char **argv) {
         }
     }
 
-
+    std::cout << "Simple Example of P-Masstree-New" << std::endl;
     printf("\n");
     printf("operation,n,ops/s\n");
 
