@@ -223,7 +223,7 @@ int main(int argc, char **argv) {
 #ifdef MASSTREE_FLUSH
     puts("\tMASSTREE_FLUSH");
 #else
-    puts("\ttesting eADR")
+    puts("\ttesting eADR");
 #endif
 
 #define PMEM_POOL_SIZE (8*1024*1024*1024ULL)
