@@ -686,6 +686,9 @@ int main(int argc, char **argv) {
                                               NULL, t));
                 }
 
+                rdtscll(b);
+                latencies[i] = b - a;
+
                 // todo: write -1 here
             }
         });
