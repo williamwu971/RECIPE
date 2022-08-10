@@ -58,6 +58,7 @@ int main(int argc, char **argv) {
     which_free = free;
     int require_RP_init = 0;
     int require_log_init = 0;
+    int require_obj_init = 0;
     int require_flush = 0;
     int shuffle_keys = 0;
     int use_perf = 0;
@@ -98,6 +99,7 @@ int main(int argc, char **argv) {
             } else if (strcasestr(argv[ac], "obj")) {
                 which_memalign = masstree::obj_memalign;
                 which_memfree = masstree::obj_free;
+                require_obj_init = 1;
                 puts("\t\t\tindex=obj");
 
             } else {
@@ -121,6 +123,7 @@ int main(int argc, char **argv) {
 
             } else if (strcasestr(argv[ac], "obj")) {
                 use_obj = 1;
+                require_obj_init = 1;
                 puts("\t\t\tvalue=obj");
 
 
@@ -168,12 +171,20 @@ int main(int argc, char **argv) {
     }
 
 
+    // todo: add latency tracker and perf
+
     tbb::task_scheduler_init init(num_thread);
+    srand(time(NULL));
+    masstree::masstree *tree = new masstree::masstree();
+
+    double insert_throughput;
+    double update_throughput;
+    double lookup_throughput;
+    u_int64_t *latencies = (u_int64_t *) malloc(sizeof(u_int64_t) * n);
+    FILE *throughput_file = fopen("perf.csv", "a");
+
 
     puts("\tbegin generating keys");
-
-    srand(time(NULL));
-
     uint64_t *keys = new uint64_t[n];
     uint64_t *rands = new uint64_t[n];
 
@@ -199,9 +210,6 @@ int main(int argc, char **argv) {
     }
 
 
-    FILE *throughput_file = fopen("perf.csv", "a");
-
-
 #ifdef CLFLUSH
     puts("\tdetected CLFLUSH");
 #elif CLFLUSH_OPT
@@ -213,13 +221,10 @@ int main(int argc, char **argv) {
 #define PMEM_POOL_SIZE (48*1024*1024*1024ULL)
 
     if (require_RP_init) {
-        printf("init RP... ");
+        puts("\tbegin preparing Ralloc");
         int preset = 0;
         RP_init("masstree", PMEM_POOL_SIZE, &preset);
     }
-
-
-    // todo: obj
 
     POBJ_LAYOUT_BEGIN(masstree);
     POBJ_LAYOUT_TOID(masstree, struct masstree_obj);
@@ -231,10 +236,11 @@ int main(int argc, char **argv) {
         uint64_t data;
     };
 
-#define OBJ_FN "/pmem0/masstree_obj"
     PMEMobjpool *pop = NULL;
 
-    if (use_obj) {
+    if (require_obj_init) {
+
+        puts("\tbegin preparing Obj");
 
         // Enable prefault
         int arg_open = 1, arg_create = 1;
@@ -244,35 +250,19 @@ int main(int argc, char **argv) {
             perror("failed to configure prefaults at create\n");
 
 
-        if (access(OBJ_FN, F_OK) != -1) {
-            pop = pmemobj_open(OBJ_FN, POBJ_LAYOUT_NAME(masstree));
+        if (access("/pmem0/masstree_obj", F_OK) != -1) {
+            pop = pmemobj_open("/pmem0/masstree_obj", POBJ_LAYOUT_NAME(masstree));
         } else {
-            pop = pmemobj_create(OBJ_FN, POBJ_LAYOUT_NAME(masstree),
+            pop = pmemobj_create("/pmem0/masstree_obj", POBJ_LAYOUT_NAME(masstree),
                                  PMEM_POOL_SIZE, 0666);
         }
 
         masstree::obj_init(pop);
-
     }
 
-
-    if (use_perf)printf("WARNING: PERF is enabled!\n");
-    if (num_of_gc)printf("WARNING: GC is enabled %d\n", num_of_gc);
-
-    // todo: add latency tracker and perf
-
-
-
-    double insert_throughput;
-    double update_throughput;
-    double lookup_throughput;
-    u_int64_t *latencies = (u_int64_t *) malloc(sizeof(u_int64_t) * n);
-
-    masstree::masstree *tree = new masstree::masstree();
-
     if (require_log_init) {
-        printf("init log... ");
-        fflush(stdout);
+
+        puts("\tbegin preparing Log");
 
         if (
                 access(INODE_FN, F_OK) == 0 &&
@@ -285,14 +275,14 @@ int main(int argc, char **argv) {
             log_init(PMEM_POOL_SIZE, num_thread);
         }
 
-        if (which_malloc == log_malloc) {
-            printf("spawn GC... ");
-            fflush(stdout);
+        if (num_of_gc > 0) {
+            puts("\tbegin creating Gc");
             for (int gcc = 0; gcc < num_of_gc; gcc++) {
                 log_start_gc(tree);
             }
         }
     }
+
 
     std::cout << "Simple Example of P-Masstree-New" << std::endl;
     printf("\n");
