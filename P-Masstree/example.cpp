@@ -5,14 +5,40 @@
 #include "tbb/tbb.h"
 #include "plog.cpp"
 
+// todo: make templates/cpp (modular) <- important
+int (*which_memalign)(void **memptr, size_t alignment, size_t size) = posix_memalign;
 
-int (*which_memalign)(void **memptr, size_t alignment, size_t size);
+void (*which_memfree)(void *ptr) =free;
 
-void (*which_memfree)(void *ptr);
+int require_RP_init = 0;
+int require_log_init = 0;
+int require_obj_init = 0;
+//int require_flush = 0;
+int shuffle_keys = 0;
+int use_perf = 0;
+int num_of_gc = 0;
+int show_log_usage = 1;
+int record_latency = 0;
+int display_throughput = 1;
+int use_obj = 0;
+int use_ralloc = 0;
+int use_log = 0;
+int value_size = sizeof(struct log_cell) + sizeof(uint64_t);
+int memset_size = 0;
 
-void *(*which_malloc)(size_t size);
+uint64_t n;
+int num_thread;
+PMEMobjpool *pop = NULL;
 
-void (*which_free)(void *ptr);
+POBJ_LAYOUT_BEGIN(masstree);
+POBJ_LAYOUT_TOID(masstree, struct masstree_obj);
+POBJ_LAYOUT_END(masstree);
+
+struct masstree_obj {
+    TOID(struct masstree_obj) objToid;
+    PMEMoid ht_oid;
+    uint64_t data;
+};
 
 using namespace std;
 
@@ -43,6 +69,15 @@ static inline void clflush(char *data, int len, bool front, bool back) {
         asm volatile("sfence":: :"memory");
 }
 
+
+void dump_latencies(const char *fn, u_int64_t *numbers, uint64_t length) {
+    FILE *latency_file = fopen(fn, "w");
+    for (uint64_t idx = 0; idx < length; idx++) {
+        fprintf(latency_file, "%lu\n", numbers[idx]);
+    }
+    fclose(latency_file);
+}
+
 int main(int argc, char **argv) {
 
     if (argc != 10 && argc != 3) {
@@ -50,27 +85,6 @@ int main(int argc, char **argv) {
                argv[0]);
         return 1;
     }
-
-    // todo: make templates/cpp (modular) <- important
-    which_memalign = posix_memalign;
-    which_memfree = free;
-    which_malloc = malloc;
-    which_free = free;
-    int require_RP_init = 0;
-    int require_log_init = 0;
-    int require_obj_init = 0;
-    int require_flush = 0;
-    int shuffle_keys = 0;
-    int use_perf = 0;
-    int num_of_gc = 0;
-    int show_log_usage = 1;
-    int record_latency = 0;
-    int display_throughput = 1;
-    int use_obj = 0;
-    int value_size = sizeof(struct log_cell) + sizeof(uint64_t);
-
-    uint64_t n;
-    int num_thread;
 
 
     for (int ac = 0; ac < argc; ac++) {
@@ -108,22 +122,21 @@ int main(int argc, char **argv) {
             }
         } else if (strcasestr(argv[ac], "value=")) {
             if (strcasestr(argv[ac], "pmem")) {
-                which_malloc = RP_malloc;
-                which_free = RP_free;
                 require_RP_init = 1;
-                require_flush = 1;
+                use_ralloc = 1;
+                memset_size = value_size - sizeof(uint64_t);
                 puts("\t\t\tvalue=pmem");
 
             } else if (strcasestr(argv[ac], "log")) {
-                which_malloc = log_malloc;
-                which_free = log_free;
                 require_log_init = 1;
-                require_flush = 1;
+                use_log = 1;
+                memset_size = value_size - sizeof(uint64_t) - sizeof(struct log_cell);
                 puts("\t\t\tvalue=log");
 
             } else if (strcasestr(argv[ac], "obj")) {
                 use_obj = 1;
                 require_obj_init = 1;
+                memset_size = value_size - sizeof(struct masstree_obj);
                 puts("\t\t\tvalue=obj");
 
 
@@ -177,16 +190,13 @@ int main(int argc, char **argv) {
     srand(time(NULL));
     masstree::masstree *tree = new masstree::masstree();
 
-    double insert_throughput;
-    double update_throughput;
-    double lookup_throughput;
-    u_int64_t *latencies = (u_int64_t *) malloc(sizeof(u_int64_t) * n);
     FILE *throughput_file = fopen("perf.csv", "a");
-
+    u_int64_t *latencies = (u_int64_t *) malloc(sizeof(u_int64_t) * n);
 
     puts("\tbegin generating keys");
     uint64_t *keys = new uint64_t[n];
     uint64_t *rands = new uint64_t[n];
+
 
     // Generate keys
     for (uint64_t i = 0; i < n; i++) {
@@ -218,6 +228,10 @@ int main(int argc, char **argv) {
     puts("\tdetected CLWB");
 #endif
 
+#ifdef MASSTREE_FLUSH
+    puts("\tMASSTREE_FLUSH");
+#endif
+
 #define PMEM_POOL_SIZE (48*1024*1024*1024ULL)
 
     if (require_RP_init) {
@@ -226,17 +240,6 @@ int main(int argc, char **argv) {
         RP_init("masstree", PMEM_POOL_SIZE, &preset);
     }
 
-    POBJ_LAYOUT_BEGIN(masstree);
-    POBJ_LAYOUT_TOID(masstree, struct masstree_obj);
-    POBJ_LAYOUT_END(masstree);
-
-    struct masstree_obj {
-        TOID(struct masstree_obj) objToid;
-        PMEMoid ht_oid;
-        uint64_t data;
-    };
-
-    PMEMobjpool *pop = NULL;
 
     if (require_obj_init) {
 
@@ -285,19 +288,27 @@ int main(int argc, char **argv) {
 
 
     std::cout << "Simple Example of P-Masstree-New" << std::endl;
-    printf("\n");
     printf("operation,n,ops/s\n");
 
+
     {
+
+        /**
+         * section INSERT
+         */
         const char *perf_fn = "insert.perf";
         if (use_perf)log_start_perf(perf_fn);
+
 
         // Build tree
         auto starttime = std::chrono::system_clock::now();
         tbb::parallel_for(tbb::blocked_range<uint64_t>(0, n), [&](const tbb::blocked_range<uint64_t> &range) {
             auto t = tree->getThreadInfo();
+            u_int64_t a, b;
+
             for (uint64_t i = range.begin(); i != range.end(); i++) {
 
+                rdtscll(a);
 
                 if (use_obj) {
 
@@ -312,6 +323,9 @@ int main(int argc, char **argv) {
                     struct masstree_obj *mo = (struct masstree_obj *) pmemobj_direct(ht_oid);
                     mo->data = rands[i];
                     mo->ht_oid = ht_oid;
+                    pmemobj_persist(pop, mo, sizeof(struct masstree_obj));
+                    pmemobj_memset_persist(pop, mo + 1, 7, memset_size);
+
                     tree->put_and_return(keys[i], mo, 1, 0, t);
                     continue;
 
@@ -339,38 +353,50 @@ int main(int argc, char **argv) {
                     TX_END
 
                     continue;
-                }
+                } else if (use_log) {
 
-//                tree->put(keys[i], &keys[i], t);
+                    char *raw = (char *) log_malloc(value_size);
 
-                // todo: size randomize (YCSB/Facebook workload)
-//                int raw_size = 1024;
-//                int raw_size = sizeof(struct log_cell) + sizeof(uint64_t);
-                int raw_size = value_size;
+                    struct log_cell *lc = (struct log_cell *) raw;
+                    lc->value_size = value_size - sizeof(struct log_cell);
+                    lc->is_delete = 0;
+                    lc->key = keys[i];
+                    rdtscll(lc->version);
 
-                char *raw = (char *) which_malloc(raw_size);
-
-                struct log_cell *lc = (struct log_cell *) raw;
-                lc->value_size = raw_size - sizeof(struct log_cell);
-                lc->is_delete = 0;
-                lc->key = keys[i];
-                rdtscll(lc->version);
-//                lc->reference = 0;
-
-                uint64_t *value = (uint64_t *) (raw + sizeof(struct log_cell));
-                *value = rands[i];
+                    uint64_t *value = (uint64_t *) (raw + sizeof(struct log_cell));
+                    *value = rands[i];
 //                memset(value + 1, 7, raw_size - sizeof(struct log_cell) - sizeof(uint64_t));
-
-                // flush value before inserting todo: should this exist for DRAM+DRAM?
-
-                if (require_flush) {
-//                    clflush(raw, raw_size, true, true);
 //                    pmem_persist(raw, raw_size);
+
+#ifdef MASSTREE_FLUSH
+
                     pmem_persist(raw, sizeof(struct log_cell) + sizeof(uint64_t));
-                    pmem_memset_persist(value + 1, 7, raw_size - sizeof(struct log_cell) - sizeof(uint64_t));
+                    pmem_memset_persist(value + 1, 7, memset_size);
+#endif
+
+
+                    tree->put_and_return(keys[i], raw, 1, 0, t);
+
+                } else if (use_ralloc) {
+
+                    uint64_t *value = (uint64_t *) RP_malloc(value_size);
+                    *value = rands[i];
+                    memset(value + 1, 7, memset_size);
+                    clflush((char *) value, value_size, true, true);
+                    tree->put_and_return(keys[i], value, 1, 0, t);
+
+                } else {
+
+                    uint64_t *value = (uint64_t *) malloc(value_size);
+                    *value = rands[i];
+                    memset(value + 1, 7, value_size - sizeof(uint64_t));
+                    tree->put_and_return(keys[i], value, 1, 0, t);
 
                 }
-                tree->put_and_return(keys[i], raw, 1, 0, t);
+
+
+                rdtscll(b);
+                latencies[i] = b - a;
             }
         });
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
@@ -383,13 +409,18 @@ int main(int argc, char **argv) {
         if (display_throughput)
             printf("Throughput: insert,%ld,%.2f ops/us %.2f sec\n",
                    n, (n * 1.0) / duration.count(), duration.count() / 1000000.0);
-        insert_throughput = (n * 1.0) / duration.count();
 
+        if (record_latency) dump_latencies("insert.latencies", latencies, n);
 
-        fprintf(throughput_file, "%.2f,", insert_throughput);
+        fprintf(throughput_file, "%.2f,", (n * 1.0) / duration.count());
+        if (use_log) log_debug_print(1, show_log_usage);
     }
-    if (which_malloc == log_malloc) log_debug_print(1, show_log_usage);
+
+
     {
+        /**
+         * section UPDATE
+         */
 
         const char *perf_fn = num_of_gc ? "update_gc.perf" : "update.perf";
         if (use_perf)log_start_perf(perf_fn);
@@ -398,7 +429,11 @@ int main(int argc, char **argv) {
         auto starttime = std::chrono::system_clock::now();
         tbb::parallel_for(tbb::blocked_range<uint64_t>(0, n), [&](const tbb::blocked_range<uint64_t> &range) {
             auto t = tree->getThreadInfo();
+            u_int64_t a, b;
+
             for (uint64_t i = range.begin(); i != range.end(); i++) {
+
+                rdtscll(a);
 
                 if (use_obj) {
 
@@ -451,58 +486,48 @@ int main(int argc, char **argv) {
                     TX_END
 
                     continue;
-                }
+                } else if (use_log) {
+                    char *raw = (char *) log_malloc(value_size);
 
-                u_int64_t a = 0;
-                u_int64_t b = 0;
+                    struct log_cell *lc = (struct log_cell *) raw;
+                    lc->value_size = value_size - sizeof(struct log_cell);
+                    lc->is_delete = 0;
+                    lc->key = keys[i];
+                    rdtscll(lc->version);
 
-//                if (record_latency) rdtscll(a);
+                    uint64_t *value = (uint64_t *) (raw + sizeof(struct log_cell));
+                    *value = keys[i];
 
-//                char* raw =(char*) tree->get(keys[i], t);
-//                char* raw = (char*)tree->del_and_return(keys[i],0,0,t);
-//                uint64_t *ret = reinterpret_cast<uint64_t *> (raw+sizeof(struct log_cell));
-//                uint64_t *ret = reinterpret_cast<uint64_t *> (tree->get(keys[i], t));
 
-//                int raw_size = 1024;
-//                int raw_size = sizeof(struct log_cell) + sizeof(uint64_t);
-                int raw_size = value_size;
-                char *raw = (char *) which_malloc(raw_size);
-
-                struct log_cell *lc = (struct log_cell *) raw;
-                lc->value_size = raw_size - sizeof(struct log_cell);
-                lc->is_delete = 0;
-                lc->key = keys[i];
-                rdtscll(lc->version);
-//                lc->reference = 0;
-
-                uint64_t *value = (uint64_t *) (raw + sizeof(struct log_cell));
-                *value = keys[i];
-//                memset(value + 1, 7, raw_size - sizeof(struct log_cell) - sizeof(uint64_t));
-
-//                if (record_latency) rdtscll(b);
-//                if (record_latency) rdtscll(a);
-
-                // flush value before inserting todo: should this exist for DRAM+DRAM?
-
-                if (require_flush) {
-//                    clflush(raw, raw_size, true, true);
 //                    pmem_persist(raw, raw_size);
                     pmem_persist(raw, sizeof(struct log_cell) + sizeof(uint64_t));
-                    pmem_memset_persist(value + 1, 7, raw_size - sizeof(struct log_cell) - sizeof(uint64_t));
+                    pmem_memset_persist(value + 1, 7, memset_size);
+
+
+                    log_free(tree->put_and_return(keys[i], raw, 0, 0, t));
+
+                } else if (use_ralloc) {
+
+                    uint64_t *value = (uint64_t *) RP_malloc(value_size);
+                    *value = keys[i];
+                    memset(value + 1, 7, memset_size);
+                    clflush((char *) value, value_size, true, true);
+                    RP_free(tree->put_and_return(keys[i], value, 0, 0, t));
+
+                } else {
+
+                    uint64_t *value = (uint64_t *) malloc(value_size);
+                    *value = keys[i];
+                    memset(value + 1, 7, memset_size);
+                    free(tree->put_and_return(keys[i], value, 0, 0, t));
 
                 }
-//                if (record_latency) rdtscll(b);
-                if (record_latency) rdtscll_fence(a);
 
-                void *old = (char *) tree->put_and_return(keys[i], raw, 0, 0, t);
 
-                if (record_latency) rdtscll_fence(b);
-
-                which_free(old);
-
-                if (record_latency)latencies[i] = b - a;
-
+                rdtscll(b)
+                latencies[i] = b - a;
             }
+
         });
 
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
@@ -516,13 +541,15 @@ int main(int argc, char **argv) {
         if (display_throughput)
             printf("Throughput: update,%ld,%.2f ops/us %.2f sec\n",
                    n, (n * 1.0) / duration.count(), duration.count() / 1000000.0);
-        update_throughput = (n * 1.0) / duration.count();
 
-        fprintf(throughput_file, "%.2f,", update_throughput);
+        if (record_latency) dump_latencies("update.latencies", latencies, n);
+
+        fprintf(throughput_file, "%.2f,", (n * 1.0) / duration.count());
+        if (use_log) log_debug_print(0, show_log_usage);
     }
 
     lookup:
-    if (which_malloc == log_malloc) log_debug_print(0, show_log_usage);
+
 
     {
         const char *perf_fn = "lookup.perf";
@@ -582,12 +609,11 @@ int main(int argc, char **argv) {
         if (display_throughput)
             printf("Throughput: lookup,%ld,%.2f ops/us %.2f sec\n",
                    n, (n * 1.0) / duration.count(), duration.count() / 1000000.0);
-        lookup_throughput = (n * 1.0) / duration.count();
 
-        fprintf(throughput_file, "%.2f,", lookup_throughput);
+        fprintf(throughput_file, "%.2f,", (n * 1.0) / duration.count());
     }
 
-    if (which_malloc == log_malloc) log_debug_print(0, show_log_usage);
+    if (use_log) log_debug_print(0, show_log_usage);
 
     {
 
@@ -595,7 +621,7 @@ int main(int argc, char **argv) {
         if (use_perf)log_start_perf(perf_fn);
 
         void *(*tombstone_callback_func)(uint64_t key) = NULL;
-        if (which_malloc == log_malloc) {
+        if (use_log) {
             tombstone_callback_func = log_get_tombstone;
         }
 
@@ -652,9 +678,8 @@ int main(int argc, char **argv) {
         if (display_throughput)
             printf("Throughput: delete,%ld,%.2f ops/us %.2f sec\n",
                    n, (n * 1.0) / duration.count(), duration.count() / 1000000.0);
-        update_throughput = (n * 1.0) / duration.count();
 
-        fprintf(throughput_file, "%.2f,", update_throughput);
+        fprintf(throughput_file, "%.2f,", (n * 1.0) / duration.count());
     }
     if (which_malloc == log_malloc) log_debug_print(0, show_log_usage);
 
@@ -663,17 +688,11 @@ int main(int argc, char **argv) {
     fclose(throughput_file);
 
 
-    if (record_latency) {
-        FILE *latency_file = fopen("latency.csv", "w");
-        for (uint64_t idx = 0; idx < n; idx++) {
-            fprintf(latency_file, "%lu\n", latencies[idx]);
-        }
-        fclose(latency_file);
+    if (use_log) {
+        log_join_all_gc();
+        log_debug_print(2, show_log_usage);
     }
 
-    if (num_of_gc > 0 && which_malloc == log_malloc)
-        log_join_all_gc();
-    if (which_malloc == log_malloc) log_debug_print(2, show_log_usage);
 
     delete[] keys;
 

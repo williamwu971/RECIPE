@@ -8,14 +8,14 @@ for var in "$@"; do
     #    apt-get install -y libtbb-dev libjemalloc-dev libpmem-dev
 
     # build ralloc
-#    cd /home/xiaoxiang/ralloc/test/ || exit
-#    git pull
-#    make clean
-#    make -j libralloc.a
-#    if [ ! -f libralloc.a ]; then
-#      echo "Failed to build ralloc!"
-#      exit
-#    fi
+    #    cd /home/xiaoxiang/ralloc/test/ || exit
+    #    git pull
+    #    make clean
+    #    make -j libralloc.a
+    #    if [ ! -f libralloc.a ]; then
+    #      echo "Failed to build ralloc!"
+    #      exit
+    #    fi
 
     # build P-Masstree
     cd /mnt/sdb/xiaoxiang/RECIPE/P-Masstree/ || exit
@@ -94,8 +94,8 @@ for i in "${index_location[@]}"; do
         echo 1 >/proc/sys/vm/drop_caches
         rm -rf /pmem0/masstree*
         #      /home/blepers/linux/tools/perf/perf record -g ./example "$workload" "$n" index="$i" value="$v" key="$key_order"
-        ./example "$workload" "$n" index="$i" value="$v" key="$key_order" perf="$use_perf" \
-          gc="$g" latency="$record_latency" value_size="$value_size"
+        ./example "$workload" "$n" value_size="$value_size" index="$i" value="$v" key="$key_order" perf="$use_perf" \
+          gc="$g" latency="$record_latency"
 
         if [ "$record_latency" = "yes" ]; then
           python3 ../graph.py --r latency.csv --ylim 1000000
