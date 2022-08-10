@@ -36,7 +36,7 @@ done
 cd build || exit
 
 index_location=("dram" "pmem" "obj")
-value_location=("pmem" "log")
+value_location=("dram" "pmem" "log" "obj")
 index_location=("dram")
 #value_location=("log")
 #value_location=("pmem")
