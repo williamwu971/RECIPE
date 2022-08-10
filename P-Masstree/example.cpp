@@ -216,10 +216,14 @@ int main(int argc, char **argv) {
     puts("\tdetected CLFLUSH_OPT");
 #elif CLWB
     puts("\tdetected CLWB");
+#else
+    puts("\tno available cache line write back found")
 #endif
 
 #ifdef MASSTREE_FLUSH
     puts("\tMASSTREE_FLUSH");
+#else
+    puts("\ttesting eADR")
 #endif
 
 #define PMEM_POOL_SIZE (8*1024*1024*1024ULL)
