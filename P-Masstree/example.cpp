@@ -232,7 +232,7 @@ int main(int argc, char **argv) {
     puts("\tMASSTREE_FLUSH");
 #endif
 
-#define PMEM_POOL_SIZE (48*1024*1024*1024ULL)
+#define PMEM_POOL_SIZE (8*1024*1024*1024ULL)
 
     if (require_RP_init) {
         puts("\tbegin preparing Ralloc");
