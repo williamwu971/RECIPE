@@ -44,55 +44,12 @@ static inline void clflush(char *data, int len, bool front, bool back) {
 }
 
 int main(int argc, char **argv) {
-    if (argc != 10) {
-        if (argc == 3) {
 
-            char **new_argv = (char **) malloc(sizeof(char *) * 10);
-            new_argv[0] = argv[0];
-            new_argv[1] = argv[1];
-            new_argv[2] = argv[2];
-
-            new_argv[3] = (char *) malloc(sizeof(char) * 64);
-            new_argv[4] = (char *) malloc(sizeof(char) * 64);
-            new_argv[5] = (char *) malloc(sizeof(char) * 64);
-            new_argv[6] = (char *) malloc(sizeof(char) * 64);
-            new_argv[7] = (char *) malloc(sizeof(char) * 64);
-            new_argv[8] = (char *) malloc(sizeof(char) * 64);
-            new_argv[9] = (char *) malloc(sizeof(char) * 64);
-
-            sprintf(new_argv[3], "index=dram");
-            sprintf(new_argv[4], "value=log");
-            sprintf(new_argv[5], "key=random");
-            sprintf(new_argv[6], "perf=yes");
-            sprintf(new_argv[7], "gc=0");
-            sprintf(new_argv[8], "latency=yes");
-            sprintf(new_argv[9], "value_size=%lu", sizeof(struct log_cell) + sizeof(uint64_t));
-
-            argv = new_argv;
-
-            goto start;
-        }
+    if (argc != 10 && argc != 3) {
         printf("usage: %s [n] [nthreads]\nn: number of keys (integer)\nnthreads: number of threads (integer)\n",
                argv[0]);
         return 1;
     }
-
-    start:
-
-    std::cout << "Simple Example of P-Masstree-New" << std::endl;
-
-    uint64_t n = std::atoll(argv[1]);
-    uint64_t *keys = new uint64_t[n];
-    uint64_t *rands = new uint64_t[n];
-
-    // Generate keys
-    for (uint64_t i = 0; i < n; i++) {
-        keys[i] = i + 1;
-    }
-
-    int num_thread = atoi(argv[2]);
-    tbb::task_scheduler_init init(num_thread);
-
 
     // todo: make templates/cpp (modular) <- important
     which_memalign = posix_memalign;
@@ -108,14 +65,15 @@ int main(int argc, char **argv) {
     int show_log_usage = 1;
     int record_latency = 0;
     int display_throughput = 1;
-
     int use_obj = 0;
-
     int value_size = sizeof(struct log_cell) + sizeof(uint64_t);
-    FILE *throughput_file = fopen("perf.csv", "a");
+
+    uint64_t n = std::atoll(argv[1]);
+    int num_thread = atoi(argv[2]);
+
 
     printf("argv: ");
-    for (int ac = 0; ac < 10; ac++) {
+    for (int ac = 0; ac < argc; ac++) {
         printf("%s ", argv[ac]);
         if (strcasestr(argv[ac], "index=")) {
             if (strcasestr(argv[ac], "pmem")) {
@@ -165,6 +123,29 @@ int main(int argc, char **argv) {
         }
     }
     printf("\n");
+
+
+    std::cout << "Simple Example of P-Masstree-New" << std::endl;
+
+
+    tbb::task_scheduler_init init(num_thread);
+
+    uint64_t *keys = new uint64_t[n];
+    uint64_t *rands = new uint64_t[n];
+
+    // Generate keys
+    for (uint64_t i = 0; i < n; i++) {
+        rands[i] = rand();
+    }
+
+    // Generate keys
+    for (uint64_t i = 0; i < n; i++) {
+        keys[i] = i + 1;
+    }
+
+
+    FILE *throughput_file = fopen("perf.csv", "a");
+
 
 #ifdef CLFLUSH
     puts(" === USING CLFLUSH === ");
@@ -270,11 +251,6 @@ int main(int argc, char **argv) {
         }
     }
 
-
-    // Generate keys
-    for (uint64_t i = 0; i < n; i++) {
-        rands[i] = rand();
-    }
 
     printf("\n");
     printf("operation,n,ops/s\n");
