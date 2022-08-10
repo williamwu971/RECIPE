@@ -88,7 +88,7 @@ for i in "${index_location[@]}"; do
         cd - || exit
 
         # the first three columns
-        printf '%s,%s,%s,%s' "$i" "$v" "$n" "$g" >>perf.csv
+        printf '%s,%s,%s,%s,' "$i" "$v" "$n" "$g" >>perf.csv
 
         # drop system cache and clear pmem device
         echo 1 >/proc/sys/vm/drop_caches
