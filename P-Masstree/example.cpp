@@ -92,33 +92,33 @@ int main(int argc, char **argv) {
 
         if (ac == 1) {
             n = std::atoll(argv[1]);
-            printf("\t\t\tn:%lu\n", n);
+            printf("n:%lu ", n);
 
         } else if (ac == 2) {
             num_thread = atoi(argv[2]);
-            printf("\t\t\tnum_thread:%d\n", num_thread);
+            printf("num_thread:%d ", num_thread);
 
         } else if (strcasestr(argv[ac], "index=")) {
             if (strcasestr(argv[ac], "pmem")) {
                 which_memalign = RP_memalign;
                 which_memfree = RP_free;
                 require_RP_init = 1;
-                puts("\t\t\tindex=pmem");
+                printf("index=pmem ");
 
             } else if (strcasestr(argv[ac], "log")) {
                 which_memalign = log_memalign;
                 which_memfree = log_free;
                 require_log_init = 1;
-                puts("\t\t\tindex=log");
+                printf("index=log ");
 
             } else if (strcasestr(argv[ac], "obj")) {
                 which_memalign = masstree::obj_memalign;
                 which_memfree = masstree::obj_free;
                 require_obj_init = 1;
-                puts("\t\t\tindex=obj");
+                printf("index=obj ");
 
             } else {
-                puts("\t\t\tindex=dram");
+                printf("index=dram ");
 
             }
         } else if (strcasestr(argv[ac], "value=")) {
@@ -126,63 +126,64 @@ int main(int argc, char **argv) {
                 require_RP_init = 1;
                 use_ralloc = 1;
                 memset_size = value_size - sizeof(uint64_t);
-                puts("\t\t\tvalue=pmem");
+                printf("value=pmem ");
 
             } else if (strcasestr(argv[ac], "log")) {
                 require_log_init = 1;
                 use_log = 1;
                 memset_size = value_size - sizeof(uint64_t) - sizeof(struct log_cell);
-                puts("\t\t\tvalue=log");
+                printf("value=log ");
 
             } else if (strcasestr(argv[ac], "obj")) {
                 use_obj = 1;
                 require_obj_init = 1;
                 memset_size = value_size - sizeof(struct masstree_obj);
-                puts("\t\t\tvalue=obj");
+                printf("value=obj ");
 
 
             } else {
-                puts("\t\t\tvalue=dram");
+                printf("value=dram ");
 
             }
         } else if (strcasestr(argv[ac], "key=")) {
             if (strcasestr(argv[ac], "rand")) {
                 shuffle_keys = 1;
-                puts("\t\t\tkey=rand");
+                printf("key=rand ");
 
             } else {
-                puts("\t\t\tkey=seq");
+                printf("key=seq ");
 
             }
         } else if (strcasestr(argv[ac], "perf=")) {
             if (strcasestr(argv[ac], "y")) {
                 use_perf = 1;
-                puts("\t\t\tperf=y");
+                printf("perf=y ");
 
             } else {
-                puts("\t\t\tperf=n");
+                printf("perf=n ");
 
             }
         } else if (strcasestr(argv[ac], "gc=")) {
             if (require_log_init)num_of_gc = atoi(strcasestr(argv[ac], "=") + 1);
-            printf("\t\t\tgc=%d\n", num_of_gc);
+            printf("gc=%d ", num_of_gc);
 
         } else if (strcasestr(argv[ac], "latency=")) {
             if (strcasestr(argv[ac], "yes")) {
                 record_latency = 1;
-                puts("\t\t\tlatency=yes");
+                printf("latency=yes ");
 
             } else {
-                puts("\t\t\tlatency=no");
+                printf("latency=no ");
 
             }
         } else if (strcasestr(argv[ac], "value_size=")) {
             int desired_size = atoi(strcasestr(argv[ac], "=") + 1);
             if (desired_size > value_size) value_size = desired_size;
-            printf("\t\t\tvalue_size=%d\n", value_size);
+            printf("value_size=%d ", value_size);
 
         }
     }
+    puts("");
 
     puts("\tbegin generating keys");
     uint64_t *keys = new uint64_t[n];
