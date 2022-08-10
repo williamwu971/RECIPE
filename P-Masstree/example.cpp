@@ -323,36 +323,36 @@ int main(int argc, char **argv) {
                     struct masstree_obj *mo = (struct masstree_obj *) pmemobj_direct(ht_oid);
                     mo->data = rands[i];
                     mo->ht_oid = ht_oid;
+#ifdef MASSTREE_FLUSH
                     pmemobj_persist(pop, mo, sizeof(struct masstree_obj));
                     pmemobj_memset_persist(pop, mo + 1, 7, memset_size);
+#endif
 
                     tree->put_and_return(keys[i], mo, 1, 0, t);
-                    continue;
 
 
-                    TX_BEGIN(pop) {
-
-                                    TOID(struct masstree_obj) objToid =
-                                            TX_ALLOC(struct masstree_obj, value_size);
-
-                                            D_RW(objToid)->objToid = objToid;
-                                            D_RW(objToid)->data = rands[i];
-
+//                    TX_BEGIN(pop) {
+//
+//                                    TOID(struct masstree_obj) objToid =
+//                                            TX_ALLOC(struct masstree_obj, value_size);
+//
+//                                            D_RW(objToid)->objToid = objToid;
+//                                            D_RW(objToid)->data = rands[i];
+//
 //                                    memset(((uint64_t *) (&D_RW(objToid)->data)) + 1, 7,
 //                                           value_size - sizeof(struct masstree_obj)
 //                                    );
+//
+//
+//                                    tree->put_and_return(keys[i], D_RW(objToid), 1, 0, t);
+//
+//
+//                                }
+//                                    TX_ONABORT {
+//                                    throw;
+//                                }
+//                    TX_END
 
-
-                                    tree->put_and_return(keys[i], D_RW(objToid), 1, 0, t);
-
-
-                                }
-                                    TX_ONABORT {
-                                    throw;
-                                }
-                    TX_END
-
-                    continue;
                 } else if (use_log) {
 
                     char *raw = (char *) log_malloc(value_size);
@@ -382,7 +382,9 @@ int main(int argc, char **argv) {
                     uint64_t *value = (uint64_t *) RP_malloc(value_size);
                     *value = rands[i];
                     memset(value + 1, 7, memset_size);
+#ifdef MASSTREE_FLUSH
                     clflush((char *) value, value_size, true, true);
+#endif
                     tree->put_and_return(keys[i], value, 1, 0, t);
 
                 } else {
@@ -447,6 +449,12 @@ int main(int argc, char **argv) {
                     struct masstree_obj *mo = (struct masstree_obj *) pmemobj_direct(ht_oid);
                     mo->data = keys[i];
                     mo->ht_oid = ht_oid;
+
+#ifdef MASSTREE_FLUSH
+                    pmemobj_persist(pop, mo, sizeof(struct masstree_obj));
+                    pmemobj_memset_persist(pop, mo + 1, 7, memset_size);
+#endif
+
                     struct masstree_obj *old_obj =
                             (struct masstree_obj *)
                                     tree->put_and_return(keys[i], mo, 1, 0, t);
@@ -496,8 +504,10 @@ int main(int argc, char **argv) {
 
 
 //                    pmem_persist(raw, raw_size);
+#ifdef MASSTREE_FLUSH
                     pmem_persist(raw, sizeof(struct log_cell) + sizeof(uint64_t));
                     pmem_memset_persist(value + 1, 7, memset_size);
+#endif
 
 
                     log_free(tree->put_and_return(keys[i], raw, 0, 0, t));
@@ -507,7 +517,9 @@ int main(int argc, char **argv) {
                     uint64_t *value = (uint64_t *) RP_malloc(value_size);
                     *value = keys[i];
                     memset(value + 1, 7, memset_size);
+#ifdef MASSTREE_FLUSH
                     clflush((char *) value, value_size, true, true);
+#endif
                     RP_free(tree->put_and_return(keys[i], value, 0, 0, t));
 
                 } else {
