@@ -68,26 +68,41 @@ int main(int argc, char **argv) {
     int use_obj = 0;
     int value_size = sizeof(struct log_cell) + sizeof(uint64_t);
 
-    uint64_t n = std::atoll(argv[1]);
-    int num_thread = atoi(argv[2]);
+    uint64_t n;
+    int num_thread;
 
 
-    printf("argv: ");
     for (int ac = 0; ac < argc; ac++) {
-        printf("%s ", argv[ac]);
-        if (strcasestr(argv[ac], "index=")) {
+
+        if (ac == 1) {
+            n = std::atoll(argv[1]);
+            printf("\t\t\tn:%lu\n", n);
+
+        } else if (ac == 2) {
+            num_thread = atoi(argv[2]);
+            printf("\t\t\tnum_thread:%d\n", num_thread);
+
+        } else if (strcasestr(argv[ac], "index=")) {
             if (strcasestr(argv[ac], "pmem")) {
                 which_memalign = RP_memalign;
                 which_memfree = RP_free;
                 require_RP_init = 1;
+                printf(" === index using Ralloc === \n");
+
             } else if (strcasestr(argv[ac], "log")) {
                 which_memalign = log_memalign;
                 which_memfree = log_free;
                 require_log_init = 1;
+                printf(" === index using Log === \n");
+
             } else if (strcasestr(argv[ac], "obj")) {
                 which_memalign = masstree::obj_memalign;
                 which_memfree = masstree::obj_free;
-//                use_obj = 1;
+                printf(" === index using Obj === \n");
+
+            } else {
+                printf(" === index using Dram === \n");
+
             }
         } else if (strcasestr(argv[ac], "value=")) {
             if (strcasestr(argv[ac], "pmem")) {
