@@ -557,9 +557,10 @@ int main(int argc, char **argv) {
     }
 
     lookup:
-
-
     {
+        /**
+         * section LOOKUP
+         */
         const char *perf_fn = "lookup.perf";
         if (use_perf)log_start_perf(perf_fn);
 
@@ -567,7 +568,11 @@ int main(int argc, char **argv) {
         auto starttime = std::chrono::system_clock::now();
         tbb::parallel_for(tbb::blocked_range<uint64_t>(0, n), [&](const tbb::blocked_range<uint64_t> &range) {
             auto t = tree->getThreadInfo();
+            u_int64_t a, b;
+
             for (uint64_t i = range.begin(); i != range.end(); i++) {
+
+                rdtscll(a);
 
                 if (use_obj) {
 
@@ -577,32 +582,39 @@ int main(int argc, char **argv) {
                                 << "wrong value read: " << obj->data
                                 << " expected:" << keys[i]
                                 << std::endl;
-//                    printf("version:%lu, key:%lu, value_size:%lu, is_delete:%lu\n",
-//                           lc->version, lc->key, lc->value_size, lc->is_delete);
                         throw;
                     }
 
                     continue;
+                } else if (use_log) {
+
+                    struct log_cell *lc = (struct log_cell *) tree->get(keys[i], t);
+                    uint64_t *ret = reinterpret_cast<uint64_t *> (lc + 1);
+                    if (*ret != keys[i]) {
+                        std::cout
+                                << "wrong value read: " << *ret
+                                << " expected:" << keys[i]
+                                << " version:" << lc->version
+                                << " key:" << lc->key
+                                << " value_size:" << lc->value_size
+                                << " is_delete:" << lc->is_delete
+                                << std::endl;
+                        throw;
+                    }
+                } else {
+                    uint64_t *ret = reinterpret_cast<uint64_t *> (tree->get(keys[i], t));
+                    if (*ret != keys[i]) {
+                        std::cout
+                                << "wrong value read: " << *ret
+                                << " expected:" << keys[i]
+                                << std::endl;
+                        throw;
+                    }
                 }
 
-                char *raw = (char *) tree->get(keys[i], t);
+                rdtscll(b);
+                latencies[i] = b - a;
 
-                struct log_cell *lc = (struct log_cell *) raw;
-
-                uint64_t *ret = reinterpret_cast<uint64_t *> (raw + sizeof(struct log_cell));
-                if (*ret != keys[i]) {
-                    std::cout
-                            << "wrong value read: " << *ret
-                            << " expected:" << keys[i]
-                            << " version:" << lc->version
-                            << " key:" << lc->key
-                            << " value_size:" << lc->value_size
-                            << " is_delete:" << lc->is_delete
-                            << std::endl;
-//                    printf("version:%lu, key:%lu, value_size:%lu, is_delete:%lu\n",
-//                           lc->version, lc->key, lc->value_size, lc->is_delete);
-                    throw;
-                }
             }
         });
 
@@ -618,10 +630,11 @@ int main(int argc, char **argv) {
             printf("Throughput: lookup,%ld,%.2f ops/us %.2f sec\n",
                    n, (n * 1.0) / duration.count(), duration.count() / 1000000.0);
 
-        fprintf(throughput_file, "%.2f,", (n * 1.0) / duration.count());
-    }
+        if (record_latency) dump_latencies("lookup.latencies", latencies, n);
 
-    if (use_log) log_debug_print(0, show_log_usage);
+        fprintf(throughput_file, "%.2f,", (n * 1.0) / duration.count());
+        if (use_log) log_debug_print(0, show_log_usage);
+    }
 
     {
 
