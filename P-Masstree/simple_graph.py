@@ -17,9 +17,7 @@ plt.figure(1, figsize=(19, 12))
 for fn in args.r:
     with open(fn, "r") as data_file:
         data_read = list(map(lambda x: float(x), data_file.read().splitlines()))
-        print("read from {} complete".format(fn))
         plt.plot(data_read, label=fn)
-        print("plot from {} complete".format(fn))
 
 temp_title = ' '.join(args.t)
 plt.title(temp_title, fontsize=40)
@@ -27,7 +25,6 @@ if args.ylim != 0:
     plt.ylim(0, args.ylim)
 if args.xlim != 0:
     plt.xlim(0, args.xlim)
-print("title and lim from complete")
 
 plt.xticks(fontsize=30)
 plt.yticks(fontsize=30)
