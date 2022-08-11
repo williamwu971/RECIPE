@@ -1,11 +1,5 @@
-import os
-
 import matplotlib.pyplot as plt
-# import os
-import subprocess
 import argparse
-import numpy as np
-from termcolor import colored
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--t", default=[], nargs='+', help="title")
@@ -24,9 +18,6 @@ for fn in args.r:
     with open(fn, "r") as data_file:
         data_read = list(map(lambda x: float(x), data_file.read().splitlines()))
         plt.plot(data_read, label=fn)
-
-xs = []
-script_index = 0
 
 temp_title = ' '.join(args.t if len(args.t) > 0 else args.f)
 plt.title(temp_title, fontsize=40)
