@@ -13,7 +13,6 @@ void (*which_memfree)(void *ptr) =free;
 int require_RP_init = 0;
 int require_log_init = 0;
 int require_obj_init = 0;
-//int require_flush = 0;
 int shuffle_keys = 0;
 int use_perf = 0;
 int num_of_gc = 0;

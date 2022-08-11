@@ -98,7 +98,7 @@ for i in "${index_location[@]}"; do
           gc="$g" latency="$record_latency"
 
         if [ "$record_latency" = "yes" ]; then
-          python3 ../graph.py --r latency.csv --ylim 1000000
+          python3 ../graph.py --r *.latencies --ylim 1000000
         fi
         #      mv out.png out_"$i"_"$v".png
         #      ./example 100 "$n" index="$i" value="$v"
