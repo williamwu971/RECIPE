@@ -99,7 +99,7 @@ for i in "${index_location[@]}"; do
 
         if [ "$record_latency" = "yes" ]; then
           for filename in *.latencies; do
-            python3 ../simple_graph.py --r $filename --fn graph-$i-$v-$n-$g-$filename --ylim 10000000
+            python3 ../simple_graph.py --r $filename --fn graph-$i-$v-$n-$g-$filename --ylim 10000000 || exit
           done
         fi
         #      mv out.png out_"$i"_"$v".png
