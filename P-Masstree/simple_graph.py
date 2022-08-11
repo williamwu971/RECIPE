@@ -19,7 +19,7 @@ for fn in args.r:
         data_read = list(map(lambda x: float(x), data_file.read().splitlines()))
         plt.plot(data_read, label=fn)
 
-temp_title = ' '.join(args.t if len(args.t) > 0 else args.f)
+temp_title = ' '.join(args.t)
 plt.title(temp_title, fontsize=40)
 if args.ylim != 0:
     plt.ylim(0, args.ylim)
