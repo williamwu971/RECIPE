@@ -38,7 +38,7 @@ cd build || exit
 index_location=("dram" "pmem" "obj")
 value_location=("pmem" "log" "obj")
 index_location=("dram")
-#value_location=("log")
+value_location=("log")
 #value_location=("pmem")
 #value_location=("obj")
 #num_threads=(1 3 5 7 9 11 13 15)
