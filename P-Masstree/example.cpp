@@ -98,11 +98,11 @@ int main(int argc, char **argv) {
             printf("num_thread:%d ", num_thread);
 
         } else if (strcasestr(argv[ac], "index=")) {
-            if (strcasestr(argv[ac], "pmem")) {
+            if (strcasestr(argv[ac], "ralloc")) {
                 which_memalign = RP_memalign;
                 which_memfree = RP_free;
                 require_RP_init = 1;
-                printf("index=pmem ");
+                printf("index=ralloc ");
 
             } else if (strcasestr(argv[ac], "log")) {
                 which_memalign = log_memalign;
