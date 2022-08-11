@@ -19,8 +19,9 @@ for fn in args.r:
         data_read = list(map(lambda x: float(x), data_file.read().splitlines()))
         plt.plot(data_read, label=fn)
 
-temp_title = ' '.join(args.t)
-plt.title(temp_title, fontsize=40)
+# temp_title = ' '.join(args.t)
+# plt.title(temp_title, fontsize=40)
+plt.title(args.fn, fontsize=40)
 if args.ylim != 0:
     plt.ylim(0, args.ylim)
 if args.xlim != 0:
@@ -31,4 +32,4 @@ plt.yticks(fontsize=30)
 
 plt.ylabel(' '.join(args.y), fontsize=40)
 plt.xlabel(' '.join(args.x), fontsize=40)
-plt.savefig(args.fn, bbox_inches='tight')
+plt.savefig(args.fn + ".png", bbox_inches='tight')
