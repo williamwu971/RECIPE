@@ -79,13 +79,13 @@ for i in "${index_location[@]}"; do
       for g in "${num_of_gc[@]}"; do
 
         # backup perf files
-        cd .. || exit
+#        cd .. || exit
         for pfn in *.perf; do
           [ -f "$pfn" ] || break
           echo "backing up $pfn"
           cp "$pfn" "$pfn".old
         done
-        cd - || exit
+#        cd - || exit
 
         # the first three columns
         printf '%s,%s,%s,%s,' "$i" "$v" "$n" "$g" >>perf.csv
@@ -114,7 +114,7 @@ for i in "${index_location[@]}"; do
 done
 
 # move perf files
-for pfn in *.perf; do
-  [ -f "$pfn" ] || break
-  mv "$pfn" ../
-done
+#for pfn in *.perf; do
+#  [ -f "$pfn" ] || break
+#  mv "$pfn" ../
+#done
