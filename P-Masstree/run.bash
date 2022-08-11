@@ -47,7 +47,7 @@ use_perf="yes"
 record_latency="yes"
 num_of_gc=(8)
 
-workload=12000000
+workload=100000000
 key_order="random"
 #key_order="seq"
 value_size=256 # the size of the value impact performance a lot
