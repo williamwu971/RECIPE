@@ -35,11 +35,11 @@ done
 
 cd build || exit
 
-index_location=("dram" "pmem" "obj")
-value_location=("pmem" "log" "obj")
+index_location=("dram" "ralloc" "obj")
+value_location=("ralloc" "log" "obj")
 index_location=("dram")
 #value_location=("log")
-value_location=("log" "pmem")
+value_location=("log" "ralloc")
 #value_location=("obj")
 #num_threads=(1 3 5 7 9 11 13 15)
 num_threads=(17)
