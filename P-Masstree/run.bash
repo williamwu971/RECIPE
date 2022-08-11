@@ -98,7 +98,7 @@ for i in "${index_location[@]}"; do
           gc="$g" latency="$record_latency"
 
         if [ "$record_latency" = "yes" ]; then
-          for filename in ./*.latencies; do
+          for filename in *.latencies; do
             python3 ../simple_graph.py --r $filename --fn graph-$i-$v-$n-$g-$filename.png
           done
         fi
