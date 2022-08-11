@@ -585,8 +585,6 @@ int main(int argc, char **argv) {
                                 << std::endl;
                         throw;
                     }
-
-                    continue;
                 } else if (use_log) {
 
                     struct log_cell *lc = (struct log_cell *) tree->get(keys[i], t);
