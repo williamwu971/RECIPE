@@ -121,11 +121,11 @@ int main(int argc, char **argv) {
 
             }
         } else if (strcasestr(argv[ac], "value=")) {
-            if (strcasestr(argv[ac], "pmem")) {
+            if (strcasestr(argv[ac], "ralloc")) {
                 require_RP_init = 1;
                 use_ralloc = 1;
                 memset_size = value_size - sizeof(uint64_t);
-                printf("value=pmem ");
+                printf("value=ralloc ");
 
             } else if (strcasestr(argv[ac], "log")) {
                 require_log_init = 1;
