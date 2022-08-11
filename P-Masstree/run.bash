@@ -79,13 +79,13 @@ for i in "${index_location[@]}"; do
       for g in "${num_of_gc[@]}"; do
 
         # backup perf files
-#        cd .. || exit
+        #        cd .. || exit
         for pfn in *.perf; do
           [ -f "$pfn" ] || break
           echo "backing up $pfn"
           cp "$pfn" "$pfn".old
         done
-#        cd - || exit
+        #        cd - || exit
 
         # the first three columns
         printf '%s,%s,%s,%s,' "$i" "$v" "$n" "$g" >>perf.csv
@@ -98,7 +98,9 @@ for i in "${index_location[@]}"; do
           gc="$g" latency="$record_latency"
 
         if [ "$record_latency" = "yes" ]; then
-          python3 ../graph.py --r *.latencies --ylim 1000000
+          for filename in ./*.latencies; do
+            python3 ../simple_graph.py --r $filename --ylim 2000000 --fn $filename.png
+          done
         fi
         #      mv out.png out_"$i"_"$v".png
         #      ./example 100 "$n" index="$i" value="$v"
