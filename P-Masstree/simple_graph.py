@@ -17,6 +17,12 @@ plt.figure(1, figsize=(19, 12))
 for fn in args.r:
     with open(fn, "r") as data_file:
         data_read = list(map(lambda x: float(x), data_file.read().splitlines()))
+
+        if args.ylim != 0:
+            max_value = max(data_read)
+            if max_value > args.ylim * 0.9:
+                raise Exception("adjust ylim to {}".format(max_value / 0.9))
+
         plt.plot(data_read, label=fn)
 
 # temp_title = ' '.join(args.t)
