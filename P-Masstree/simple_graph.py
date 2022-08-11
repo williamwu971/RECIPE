@@ -25,10 +25,6 @@ for fn in args.r:
         data_read = list(map(lambda x: float(x), data_file.read().splitlines()))
         plt.plot(data_read, label=fn)
 
-increment_target = int(args.i[0])
-increment_size = int(args.i[1])
-increment_until = int(args.i[2])
-
 xs = []
 script_index = 0
 
