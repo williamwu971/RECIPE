@@ -23,6 +23,7 @@
 #include <libpmem.h>
 
 #define PAGE_SIZE (4LU*1024LU)
+#define CACHE_LINE_SIZE (64LU)
 
 /*
  * Cute timer macros
