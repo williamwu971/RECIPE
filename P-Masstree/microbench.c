@@ -55,8 +55,8 @@ int main(int argc, char **argv) {
     {
         uint64_t start = lehmer64() % (sb.st_size - (nb_accesses + 1) * granularity);
         for (size_t i = 0; i < nb_accesses; i++) {
-//            uint64_t loc = lehmer64() % (sb.st_size - granularity);
-            uint64_t loc = start + i * granularity;
+            uint64_t loc = lehmer64() % (sb.st_size - granularity);
+//            uint64_t loc = start + i * granularity;
             pmem_memcpy_persist(&map[loc], page_data, granularity);
         }
     }stop_timer("Doing %ld memcpy of %ld bytes (%f MB/s)", nb_accesses, granularity,
