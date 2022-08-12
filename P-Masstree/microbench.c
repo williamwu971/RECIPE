@@ -27,8 +27,8 @@ static inline void clflush(char *data, int len, int front, int back) {
 #elif CLFLUSH_OPT
         asm volatile(".byte 0x66; clflush %0" : "+m" (*(volatile char *)(ptr)));
 #elif CLWB
-//        asm volatile(".byte 0x66; xsaveopt %0" : "+m" (*(volatile char *) (ptr)));
-    asm volatile ("clwb (%0)" :: "r"(addr))
+        //        asm volatile(".byte 0x66; xsaveopt %0" : "+m" (*(volatile char *) (ptr)));
+            asm volatile ("clwb (%0)" :: "r"(ptr))
 #endif
     }
     if (back)
