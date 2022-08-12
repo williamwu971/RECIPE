@@ -27,7 +27,8 @@ static inline void clflush(char *data, int len, int front, int back) {
 #elif CLFLUSH_OPT
         asm volatile(".byte 0x66; clflush %0" : "+m" (*(volatile char *)(ptr)));
 #elif CLWB
-        asm volatile(".byte 0x66; xsaveopt %0" : "+m" (*(volatile char *) (ptr)));
+//        asm volatile(".byte 0x66; xsaveopt %0" : "+m" (*(volatile char *) (ptr)));
+    _mm_clwb(ptr);
 #endif
     }
     if (back)
@@ -76,8 +77,8 @@ int main(int argc, char **argv) {
             uint64_t loc = lehmer64() % (sb.st_size - granularity);
 //            uint64_t loc = start + i * granularity;
 //            pmem_memcpy_persist(&map[loc], page_data, granularity);
-//            clflush(&map[loc], granularity, 1, 1);
-            msync(&map[loc], granularity, MS_SYNC);
+            clflush(&map[loc], granularity, 1, 1);
+//            msync(&map[loc], granularity, MS_SYNC);
         }
     }stop_timer("Doing %ld memcpy of %ld bytes (%f MB/s)", nb_accesses, granularity,
                 bandwith(nb_accesses * granularity, elapsed));
