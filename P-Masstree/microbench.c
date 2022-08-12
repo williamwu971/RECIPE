@@ -20,8 +20,8 @@ static double bandwith(long data_size, long time) {
 int main(int argc, char **argv) {
     init_seed();
 
-    long granularity = 64;      // granularity of accesses
-    long nb_accesses = 10000000;   // nb ops
+    long granularity = 256;      // granularity of accesses
+    long nb_accesses = 100000000;   // nb ops
     char *path = "/pmem0/masstree_sb";   // benched file
 
     /* Open file */
