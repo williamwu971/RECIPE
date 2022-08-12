@@ -47,6 +47,7 @@ int main(int argc, char **argv) {
     /*for(int i = 0; i < nb_accesses; i++) {
        memcpy(map[location], xxx, size);
     }*/
+    puts("begin");
 
     /* Benchmark N memcpy */
     declare_timer;
