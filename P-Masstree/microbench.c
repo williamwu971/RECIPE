@@ -76,6 +76,11 @@ int main(int argc, char **argv) {
         for (size_t i = 0; i < nb_accesses; i++) {
             uint64_t loc = lehmer64() % (sb.st_size - granularity);
 //            uint64_t loc = start + i * granularity;
+
+            /**
+             * todo: questionable flush here
+             */
+
 //            pmem_memcpy_persist(&map[loc], page_data, granularity);
             clflush(&map[loc], granularity, 1, 1);
 //            msync(&map[loc], granularity, MS_SYNC);
