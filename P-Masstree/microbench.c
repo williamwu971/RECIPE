@@ -38,7 +38,7 @@ int main(int argc, char **argv) {
     char *map = pmem_map_file(path, 0, 0, 0777, NULL, NULL);
     if (!pmem_is_pmem(map, sb.st_size))
         die("File is not in pmem?!");
-//    memset(map, 0, sb.st_size);
+    memset(map, 0, sb.st_size);
 
     /* Allocate data to copy to the file */
     char *page_data = aligned_alloc(PAGE_SIZE, granularity);
