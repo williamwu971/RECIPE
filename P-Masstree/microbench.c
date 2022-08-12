@@ -38,11 +38,11 @@ int main(int argc, char **argv) {
     char *map = pmem_map_file(path, 0, 0, 0777, NULL, NULL);
     if (!pmem_is_pmem(map, sb.st_size))
         die("File is not in pmem?!");
-    memset(map, 0, sb.st_size);
+//    memset(map, 0, sb.st_size);
 
     /* Allocate data to copy to the file */
     char *page_data = aligned_alloc(PAGE_SIZE, granularity);
-    memset(page_data, 52, granularity);
+    memset(page_data, lehmer64(), granularity);
 
     /*for(int i = 0; i < nb_accesses; i++) {
        memcpy(map[location], xxx, size);
@@ -53,8 +53,10 @@ int main(int argc, char **argv) {
     declare_timer;
     start_timer
     {
+        uint64_t start = lehmer64() % (sb.st_size - (nb_accesses + 1) * granularity);
         for (size_t i = 0; i < nb_accesses; i++) {
-            uint64_t loc = lehmer64() % (sb.st_size - granularity);
+//            uint64_t loc = lehmer64() % (sb.st_size - granularity);
+            uint64_t loc = start + i * granularity;
             pmem_memcpy_persist(&map[loc], page_data, granularity);
         }
     }stop_timer("Doing %ld memcpy of %ld bytes (%f MB/s)", nb_accesses, granularity,
