@@ -516,6 +516,10 @@ void *log_malloc(size_t size) {
     thread_log->curr += size;
 //    pmem_persist(thread_log,sizeof(struct log));
 
+    if ((thread_log->curr - size - big_map) % 256 != 0) {
+        puts("ERROR");
+    }
+
     return thread_log->curr - size;
 }
 
