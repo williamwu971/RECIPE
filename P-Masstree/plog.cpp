@@ -502,9 +502,9 @@ void *log_malloc(size_t size) {
 //    if (unlikely(size < sizeof(struct log_cell))) die("size too small %zu", size);
 
     // the "freed" space should be strictly increasing
-//    if (unlikely(thread_log == NULL || thread_log->available < size)) {
-//        if (log_acquire(1) == NULL)die("cannot acquire new log");
-//    }
+    if (unlikely(thread_log == NULL || thread_log->available < size)) {
+        if (log_acquire(1) == NULL)die("cannot acquire new log");
+    }
 
     // write and decrease size
     thread_log->available -= size;
