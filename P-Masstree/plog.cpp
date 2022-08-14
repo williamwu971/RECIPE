@@ -538,7 +538,8 @@ int log_memalign(void **memptr, size_t alignment, size_t size) {
 void *log_get_tombstone(uint64_t key) {
 
 
-    struct log_cell *lc = (struct log_cell *) log_malloc(sizeof(struct log_cell));
+//    struct log_cell *lc = (struct log_cell *) log_malloc(sizeof(struct log_cell));
+    struct log_cell *lc = (struct log_cell *) log_malloc(256);
 
     rdtscll(lc->version);
     lc->value_size = 0;
