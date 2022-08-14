@@ -516,9 +516,9 @@ void *log_malloc(size_t size) {
     thread_log->curr += size;
 //    pmem_persist(thread_log,sizeof(struct log));
 
-    if ((thread_log->curr - size - big_map) % 256 != 0) {
-        puts("ERROR");
-    }
+//    if ((thread_log->curr - size - big_map) % 256 != 0) {
+//        puts("ERROR");
+//    }
 
     return thread_log->curr - size;
 }
@@ -538,8 +538,9 @@ int log_memalign(void **memptr, size_t alignment, size_t size) {
 void *log_get_tombstone(uint64_t key) {
 
 
-//    struct log_cell *lc = (struct log_cell *) log_malloc(sizeof(struct log_cell));
-    struct log_cell *lc = (struct log_cell *) log_malloc(256);
+    // todo: this here is potentially not 256-byte aligned
+    struct log_cell *lc = (struct log_cell *) log_malloc(sizeof(struct log_cell));
+//    struct log_cell *lc = (struct log_cell *) log_malloc(256);
 
     rdtscll(lc->version);
     lc->value_size = 0;
