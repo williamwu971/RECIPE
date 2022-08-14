@@ -226,7 +226,7 @@ int main(int argc, char **argv) {
     puts("\ttesting eADR");
 #endif
 
-#define PMEM_POOL_SIZE (64*1024*1024*1024ULL)
+#define PMEM_POOL_SIZE (8*1024*1024*1024ULL)
 
     if (require_RP_init) {
         puts("\tbegin preparing Ralloc");
