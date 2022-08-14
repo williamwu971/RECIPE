@@ -499,12 +499,12 @@ void log_release(uint64_t idx) {
 void *log_malloc(size_t size) {
 
 //    uint64_t required_size = sizeof(struct log_cell) + size;
-    if (unlikely(size < sizeof(struct log_cell))) die("size too small %zu", size);
+//    if (unlikely(size < sizeof(struct log_cell))) die("size too small %zu", size);
 
     // the "freed" space should be strictly increasing
-    if (unlikely(thread_log == NULL || thread_log->available < size)) {
-        if (log_acquire(1) == NULL)die("cannot acquire new log");
-    }
+//    if (unlikely(thread_log == NULL || thread_log->available < size)) {
+//        if (log_acquire(1) == NULL)die("cannot acquire new log");
+//    }
 
     // write and decrease size
     thread_log->available -= size;
@@ -513,6 +513,7 @@ void *log_malloc(size_t size) {
 //    lc->value_size = size - sizeof(struct log_cell);
 //    rdtscll(lc->version);
 
+    char *to_return = thread_log->curr;
     thread_log->curr += size;
 //    pmem_persist(thread_log,sizeof(struct log));
 
@@ -520,7 +521,8 @@ void *log_malloc(size_t size) {
 //        puts("ERROR");
 //    }
 
-    return thread_log->curr - size;
+//    return thread_log->curr - size;
+    return to_return;
 }
 
 
