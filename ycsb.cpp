@@ -21,9 +21,11 @@ using namespace std;
 #include "ssmem.h"
 
 #ifdef HOT
+
 #include <hot/rowex/HOTRowex.hpp>
 #include <idx/contenthelpers/IdentityKeyExtractor.hpp>
 #include <idx/contenthelpers/OptionalValue.hpp>
+
 #endif
 
 using namespace wangziqi2013::bwtree;
@@ -51,7 +53,6 @@ enum {
 
 enum {
     RANDINT_KEY,
-    STRING_KEY,
 };
 
 enum {
@@ -60,20 +61,19 @@ enum {
 };
 
 namespace Dummy {
-    inline void mfence() {asm volatile("mfence":::"memory");}
+    inline void mfence() { asm volatile("mfence":: :"memory"); }
 
-    inline void clflush(char *data, int len, bool front, bool back)
-    {
+    inline void clflush(char *data, int len, bool front, bool back) {
         if (front)
             mfence();
-        volatile char *ptr = (char *)((unsigned long)data & ~(64 - 1));
-        for (; ptr < data+len; ptr += 64){
+        volatile char *ptr = (char *) ((unsigned long) data & ~(64 - 1));
+        for (; ptr < data + len; ptr += 64) {
 #ifdef CLFLUSH
             asm volatile("clflush %0" : "+m" (*(volatile char *)ptr));
 #elif CLFLUSH_OPT
             asm volatile(".byte 0x66; clflush %0" : "+m" (*(volatile char *)(ptr)));
 #elif CLWB
-            asm volatile(".byte 0x66; xsaveopt %0" : "+m" (*(volatile char *)(ptr)));
+            asm volatile(".byte 0x66; xsaveopt %0" : "+m" (*(volatile char *) (ptr)));
 #endif
         }
         if (back)
@@ -95,27 +95,27 @@ namespace Dummy {
  *
  */
 class KeyComparator {
- public:
-  inline bool operator()(const long int k1, const long int k2) const {
-    return k1 < k2;
-  }
+public:
+    inline bool operator()(const long int k1, const long int k2) const {
+        return k1 < k2;
+    }
 
-  inline bool operator()(const uint64_t k1, const uint64_t k2) const {
-      return k1 < k2;
-  }
+    inline bool operator()(const uint64_t k1, const uint64_t k2) const {
+        return k1 < k2;
+    }
 
-  inline bool operator()(const char *k1, const char *k2) const {
-      return memcmp(k1, k2, strlen(k1) > strlen(k2) ? strlen(k1) : strlen(k2)) < 0;
-  }
+    inline bool operator()(const char *k1, const char *k2) const {
+        return memcmp(k1, k2, strlen(k1) > strlen(k2) ? strlen(k1) : strlen(k2)) < 0;
+    }
 
-  KeyComparator(int dummy) {
-    (void)dummy;
+    KeyComparator(int dummy) {
+        (void) dummy;
 
-    return;
-  }
+        return;
+    }
 
-  KeyComparator() = delete;
-  //KeyComparator(const KeyComparator &p_key_cmp_obj) = delete;
+    KeyComparator() = delete;
+    //KeyComparator(const KeyComparator &p_key_cmp_obj) = delete;
 };
 
 /*
@@ -127,30 +127,30 @@ class KeyComparator {
  * the object everytime a container is initialized
  */
 class KeyEqualityChecker {
- public:
-  inline bool operator()(const long int k1, const long int k2) const {
-    return k1 == k2;
-  }
+public:
+    inline bool operator()(const long int k1, const long int k2) const {
+        return k1 == k2;
+    }
 
-  inline bool operator()(uint64_t k1, uint64_t k2) const {
-      return k1 == k2;
-  }
+    inline bool operator()(uint64_t k1, uint64_t k2) const {
+        return k1 == k2;
+    }
 
-  inline bool operator()(const char *k1, const char *k2) const {
-      if (strlen(k1) != strlen(k2))
-          return false;
-      else
-          return memcmp(k1, k2, strlen(k1)) == 0;
-  }
+    inline bool operator()(const char *k1, const char *k2) const {
+        if (strlen(k1) != strlen(k2))
+            return false;
+        else
+            return memcmp(k1, k2, strlen(k1)) == 0;
+    }
 
-  KeyEqualityChecker(int dummy) {
-    (void)dummy;
+    KeyEqualityChecker(int dummy) {
+        (void) dummy;
 
-    return;
-  }
+        return;
+    }
 
-  KeyEqualityChecker() = delete;
-  //KeyEqualityChecker(const KeyEqualityChecker &p_key_eq_obj) = delete;
+    KeyEqualityChecker() = delete;
+    //KeyEqualityChecker(const KeyEqualityChecker &p_key_eq_obj) = delete;
 };
 /////////////////////////////////////////////////////////////////////////////////
 
@@ -162,7 +162,7 @@ typedef struct IntKeyVal {
 
 template<typename ValueType = IntKeyVal *>
 class IntKeyExtractor {
-    public:
+public:
     typedef uint64_t KeyType;
 
     inline KeyType operator()(ValueType const &value) const {
@@ -172,11 +172,11 @@ class IntKeyExtractor {
 
 template<typename ValueType = Key *>
 class KeyExtractor {
-    public:
-    typedef char const * KeyType;
+public:
+    typedef char const *KeyType;
 
     inline KeyType operator()(ValueType const &value) const {
-        return (char const *)value->fkey;
+        return (char const *) value->fkey;
     }
 };
 /////////////////////////////////////////////////////////////////////////////////
@@ -220,175 +220,22 @@ static uint64_t LOAD_SIZE = 64000000;
 static uint64_t RUN_SIZE = 64000000;
 
 void loadKey(TID tid, Key &key) {
-    return ;
+    return;
 }
 
 int (*which_memalign)(void **memptr, size_t alignment, size_t size);
+
 void (*which_memfree)(void *ptr);
+
 void *(*which_malloc)(size_t size);
+
 void (*which_free)(void *ptr);
 
-void ycsb_load_run_string(int index_type, int wl, int kt, int ap, int num_thread,
-        std::vector<Key *> &init_keys,
-        std::vector<Key *> &keys,
-        std::vector<int> &ranges,
-        std::vector<int> &ops)
-{
-
-
-    std::string init_file;
-    std::string txn_file;
-
-    if (ap == UNIFORM) {
-        if (kt == STRING_KEY && wl == WORKLOAD_A) {
-            init_file = "./index-microbench/workloads/ycsbkey_load_workloada";
-            txn_file = "./index-microbench/workloads/ycsbkey_run_workloada";
-        } else if (kt == STRING_KEY && wl == WORKLOAD_B) {
-            init_file = "./index-microbench/workloads/ycsbkey_load_workloadb";
-            txn_file = "./index-microbench/workloads/ycsbkey_run_workloadb";
-        } else if (kt == STRING_KEY && wl == WORKLOAD_C) {
-            init_file = "./index-microbench/workloads/ycsbkey_load_workloadc";
-            txn_file = "./index-microbench/workloads/ycsbkey_run_workloadc";
-        } else if (kt == STRING_KEY && wl == WORKLOAD_D) {
-            init_file = "./index-microbench/workloads/ycsbkey_load_workloadd";
-            txn_file = "./index-microbench/workloads/ycsbkey_run_workloadd";
-        } else if (kt == STRING_KEY && wl == WORKLOAD_E) {
-            init_file = "./index-microbench/workloads/ycsbkey_load_workloade";
-            txn_file = "./index-microbench/workloads/ycsbkey_run_workloade";
-        }
-    } else {
-        if (kt == STRING_KEY && wl == WORKLOAD_A) {
-            init_file = "./index-microbench/workloads/ycsbkey_load_workloada";
-            txn_file = "./index-microbench/workloads/ycsbkey_run_workloada";
-        } else if (kt == STRING_KEY && wl == WORKLOAD_B) {
-            init_file = "./index-microbench/workloads/ycsbkey_load_workloadb";
-            txn_file = "./index-microbench/workloads/ycsbkey_run_workloadb";
-        } else if (kt == STRING_KEY && wl == WORKLOAD_C) {
-            init_file = "./index-microbench/workloads/ycsbkey_load_workloadc";
-            txn_file = "./index-microbench/workloads/ycsbkey_run_workloadc";
-        } else if (kt == STRING_KEY && wl == WORKLOAD_D) {
-            init_file = "./index-microbench/workloads/ycsbkey_load_workloadd";
-            txn_file = "./index-microbench/workloads/ycsbkey_run_workloadd";
-        } else if (kt == STRING_KEY && wl == WORKLOAD_E) {
-            init_file = "./index-microbench/workloads/ycsbkey_load_workloade";
-            txn_file = "./index-microbench/workloads/ycsbkey_run_workloade";
-        }
-    }
-
-    std::ifstream infile_load(init_file);
-
-    std::string op;
-    std::string key;
-    int range;
-
-    std::string insert("INSERT");
-    std::string update("UPDATE");
-    std::string read("READ");
-    std::string scan("SCAN");
-    std::string maxKey("z");
-
-    int count = 0;
-    uint64_t val;
-    while ((count < LOAD_SIZE) && infile_load.good()) {
-        infile_load >> op >> key;
-        if (op.compare(insert) != 0) {
-            std::cout << "READING LOAD FILE FAIL!\n";
-            return ;
-        }
-        val = std::stoul(key.substr(4, key.size()));
-        init_keys.push_back(init_keys[count]->make_leaf((char *)key.c_str(), key.size()+1, val));
-        count++;
-    }
-
-    fprintf(stderr, "Loaded %d keys\n", count);
-
-    std::ifstream infile_txn(txn_file);
-
-    count = 0;
-    while ((count < RUN_SIZE) && infile_txn.good()) {
-        infile_txn >> op >> key;
-        if (op.compare(insert) == 0) {
-            ops.push_back(OP_INSERT);
-            val = std::stoul(key.substr(4, key.size()));
-            keys.push_back(keys[count]->make_leaf((char *)key.c_str(), key.size()+1, val));
-            ranges.push_back(1);
-        } else if (op.compare(update) == 0) {
-            ops.push_back(OP_UPDATE);
-            val = std::stoul(key.substr(4, key.size()));
-            keys.push_back(keys[count]->make_leaf((char *)key.c_str(), key.size()+1, val));
-            ranges.push_back(1);
-        } else if (op.compare(read) == 0) {
-            ops.push_back(OP_READ);
-            val = std::stoul(key.substr(4, key.size()));
-            keys.push_back(keys[count]->make_leaf((char *)key.c_str(), key.size()+1, val));
-            ranges.push_back(1);
-        } else if (op.compare(scan) == 0) {
-            infile_txn >> range;
-            ops.push_back(OP_SCAN);
-            keys.push_back(keys[count]->make_leaf((char *)key.c_str(), key.size()+1, 0));
-            ranges.push_back(range);
-        } else {
-            std::cout << "UNRECOGNIZED CMD!\n";
-            return;
-        }
-        count++;
-    }
-
-    if (index_type == TYPE_MASSTREE) {
-        masstree::masstree *tree = new masstree::masstree();
-
-        {
-            // Load
-            auto starttime = std::chrono::system_clock::now();
-            tbb::parallel_for(tbb::blocked_range<uint64_t>(0, LOAD_SIZE), [&](const tbb::blocked_range<uint64_t> &scope) {
-                auto t = tree->getThreadInfo();
-                for (uint64_t i = scope.begin(); i != scope.end(); i++) {
-                    tree->put((char *)init_keys[i]->fkey, init_keys[i]->value, t);
-                }
-            });
-            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
-                    std::chrono::system_clock::now() - starttime);
-            printf("Throughput: load, %f ,ops/us\n", (LOAD_SIZE * 1.0) / duration.count());
-        }
-
-        {
-            // Run
-            auto starttime = std::chrono::system_clock::now();
-            tbb::parallel_for(tbb::blocked_range<uint64_t>(0, RUN_SIZE), [&](const tbb::blocked_range<uint64_t> &scope) {
-                auto t = tree->getThreadInfo();
-                for (uint64_t i = scope.begin(); i != scope.end(); i++) {
-                    if (ops[i] == OP_INSERT) {
-                        tree->put((char *)keys[i]->fkey, keys[i]->value, t);
-                    } else if (ops[i] == OP_READ) {
-                        uint64_t *ret = reinterpret_cast<uint64_t *> (tree->get((char *)keys[i]->fkey, t));
-                        if (ap == UNIFORM && (uint64_t) ret != keys[i]->value) {
-                            printf("[MASS] search key = %lu, search value = %lu\n", keys[i]->value, ret);
-                            exit(1);
-                        }
-                    } else if (ops[i] == OP_SCAN) {
-                        int resultsFound;
-                        uint64_t results[200];
-                        resultsFound = tree->scan((char *)keys[i]->fkey, ranges[i], results, t);
-                    } else if (ops[i] == OP_DELETE) {
-                        tree->del((char *)keys[i]->fkey, t);
-                    } else if (ops[i] == OP_UPDATE) {
-                        tree->put((char *)keys[i]->fkey, keys[i]->value, t);
-                    }
-                }
-            });
-            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
-                    std::chrono::system_clock::now() - starttime);
-            printf("Throughput: run, %f ,ops/us\n", (RUN_SIZE * 1.0) / duration.count());
-        }
-    }
-}
-
 void ycsb_load_run_randint(int index_type, int wl, int kt, int ap, int num_thread,
-        std::vector<uint64_t> &init_keys,
-        std::vector<uint64_t> &keys,
-        std::vector<int> &ranges,
-        std::vector<int> &ops)
-{
+                           std::vector<uint64_t> &init_keys,
+                           std::vector<uint64_t> &keys,
+                           std::vector<int> &ranges,
+                           std::vector<int> &ops) {
     std::string init_file;
     std::string txn_file;
 
@@ -444,7 +291,7 @@ void ycsb_load_run_randint(int index_type, int wl, int kt, int ap, int num_threa
         infile_load >> op >> key;
         if (op.compare(insert) != 0) {
             std::cout << "READING LOAD FILE FAIL!\n";
-            return ;
+            return;
         }
         init_keys.push_back(key);
         count++;
@@ -493,12 +340,13 @@ void ycsb_load_run_randint(int index_type, int wl, int kt, int ap, int num_threa
         {
             // Load
             auto starttime = std::chrono::system_clock::now();
-            tbb::parallel_for(tbb::blocked_range<uint64_t>(0, LOAD_SIZE), [&](const tbb::blocked_range<uint64_t> &scope) {
-                auto t = tree->getThreadInfo();
-                for (uint64_t i = scope.begin(); i != scope.end(); i++) {
-                    tree->put(init_keys[i], &init_keys[i], t);
-                }
-            });
+            tbb::parallel_for(tbb::blocked_range<uint64_t>(0, LOAD_SIZE),
+                              [&](const tbb::blocked_range<uint64_t> &scope) {
+                                  auto t = tree->getThreadInfo();
+                                  for (uint64_t i = scope.begin(); i != scope.end(); i++) {
+                                      tree->put(init_keys[i], &init_keys[i], t);
+                                  }
+                              });
             auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
                     std::chrono::system_clock::now() - starttime);
             printf("Throughput: load, %f ,ops/us\n", (LOAD_SIZE * 1.0) / duration.count());
@@ -507,27 +355,28 @@ void ycsb_load_run_randint(int index_type, int wl, int kt, int ap, int num_threa
         {
             // Run
             auto starttime = std::chrono::system_clock::now();
-            tbb::parallel_for(tbb::blocked_range<uint64_t>(0, RUN_SIZE), [&](const tbb::blocked_range<uint64_t> &scope) {
-                auto t = tree->getThreadInfo();
-                for (uint64_t i = scope.begin(); i != scope.end(); i++) {
-                    if (ops[i] == OP_INSERT) {
-                        tree->put(keys[i], &keys[i], t);
-                    } else if (ops[i] == OP_READ) {
-                        uint64_t *ret = reinterpret_cast<uint64_t *> (tree->get(keys[i], t));
-                        if (ap == UNIFORM && *ret != keys[i]) {
-                            printf("[MASS] search key = %lu, search value = %lu\n", keys[i], *ret);
-                            exit(1);
-                        }
-                    } else if (ops[i] == OP_SCAN) {
-                        uint64_t buf[200];
-                        int ret = tree->scan(keys[i], ranges[i], buf, t);
-                    } else if (ops[i] == OP_DELETE) {
-                        tree->del(keys[i], t);
-                    } else if (ops[i] == OP_UPDATE) {
-                        tree->put(keys[i], &keys[i], t);
-                    }
-                }
-            });
+            tbb::parallel_for(tbb::blocked_range<uint64_t>(0, RUN_SIZE),
+                              [&](const tbb::blocked_range<uint64_t> &scope) {
+                                  auto t = tree->getThreadInfo();
+                                  for (uint64_t i = scope.begin(); i != scope.end(); i++) {
+                                      if (ops[i] == OP_INSERT) {
+                                          tree->put(keys[i], &keys[i], t);
+                                      } else if (ops[i] == OP_READ) {
+                                          uint64_t *ret = reinterpret_cast<uint64_t *> (tree->get(keys[i], t));
+                                          if (ap == UNIFORM && *ret != keys[i]) {
+                                              printf("[MASS] search key = %lu, search value = %lu\n", keys[i], *ret);
+                                              exit(1);
+                                          }
+                                      } else if (ops[i] == OP_SCAN) {
+                                          uint64_t buf[200];
+                                          int ret = tree->scan(keys[i], ranges[i], buf, t);
+                                      } else if (ops[i] == OP_DELETE) {
+                                          tree->del(keys[i], t);
+                                      } else if (ops[i] == OP_UPDATE) {
+                                          tree->put(keys[i], &keys[i], t);
+                                      }
+                                  }
+                              });
             auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
                     std::chrono::system_clock::now() - starttime);
             printf("Throughput: run, %f ,ops/us\n", (RUN_SIZE * 1.0) / duration.count());
@@ -538,7 +387,8 @@ void ycsb_load_run_randint(int index_type, int wl, int kt, int ap, int num_threa
 
 int main(int argc, char **argv) {
     if (argc != 6) {
-        std::cout << "Usage: ./ycsb [index type] [ycsb workload type] [key distribution] [access pattern] [number of threads]\n";
+        std::cout
+                << "Usage: ./ycsb [index type] [ycsb workload type] [key distribution] [access pattern] [number of threads]\n";
         std::cout << "1. index type: masstree\n";
         std::cout << "2. ycsb workload type: a, b, c, e\n";
         std::cout << "3. key distribution: randint, string\n";
@@ -549,12 +399,12 @@ int main(int argc, char **argv) {
 
     printf("%s, workload%s, %s, %s, threads %s\n", argv[1], argv[2], argv[3], argv[4], argv[5]);
 
-    which_memalign=posix_memalign;
-    which_memfree=free;
-    which_malloc=malloc;
-    which_free=free;
+    which_memalign = posix_memalign;
+    which_memfree = free;
+    which_malloc = malloc;
+    which_free = free;
 
-    if (strcmp(argv[1], "masstree") != 0){
+    if (strcmp(argv[1], "masstree") != 0) {
         printf("only masstree is allowed!\n");
         return 1;
     }
@@ -586,8 +436,6 @@ int main(int argc, char **argv) {
     int kt;
     if (strcmp(argv[3], "randint") == 0) {
         kt = RANDINT_KEY;
-    } else if (strcmp(argv[3], "string") == 0) {
-        kt = STRING_KEY;
     } else {
         fprintf(stderr, "Unknown key type: %s\n", argv[3]);
         exit(1);
@@ -606,7 +454,7 @@ int main(int argc, char **argv) {
     int num_thread = atoi(argv[5]);
     tbb::task_scheduler_init init(num_thread);
 
-    if (kt != STRING_KEY) {
+    if (kt == RANDINT_KEY) {
         std::vector<uint64_t> init_keys;
         std::vector<uint64_t> keys;
         std::vector<int> ranges;
@@ -623,23 +471,6 @@ int main(int argc, char **argv) {
         memset(&ops[0], 0x00, RUN_SIZE * sizeof(int));
 
         ycsb_load_run_randint(index_type, wl, kt, ap, num_thread, init_keys, keys, ranges, ops);
-    } else {
-        std::vector<Key *> init_keys;
-        std::vector<Key *> keys;
-        std::vector<int> ranges;
-        std::vector<int> ops;
-
-        init_keys.reserve(LOAD_SIZE);
-        keys.reserve(RUN_SIZE);
-        ranges.reserve(RUN_SIZE);
-        ops.reserve(RUN_SIZE);
-
-        memset(&init_keys[0], 0x00, LOAD_SIZE * sizeof(Key *));
-        memset(&keys[0], 0x00, RUN_SIZE * sizeof(Key *));
-        memset(&ranges[0], 0x00, RUN_SIZE * sizeof(int));
-        memset(&ops[0], 0x00, RUN_SIZE * sizeof(int));
-
-        ycsb_load_run_string(index_type, wl, kt, ap, num_thread, init_keys, keys, ranges, ops);
     }
 
     return 0;
