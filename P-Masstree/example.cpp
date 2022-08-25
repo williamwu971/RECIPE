@@ -5,6 +5,8 @@
 //#include "tbb/tbb.h"
 #include "plog.cpp"
 
+#define PMEM_POOL_SIZE (64*1024*1024*1024ULL)
+
 // todo: make templates/cpp (modular) <- important
 int (*which_memalign)(void **memptr, size_t alignment, size_t size) = posix_memalign;
 
@@ -639,7 +641,6 @@ int main(int argc, char **argv) {
     puts("\ttesting eADR");
 #endif
 
-#define PMEM_POOL_SIZE (32*1024*1024*1024ULL)
 
     if (require_RP_init) {
         puts("\tbegin preparing Ralloc");
