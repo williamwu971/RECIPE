@@ -31,6 +31,7 @@ PMEMobjpool *pop = NULL;
 
 POBJ_LAYOUT_BEGIN(masstree);
 POBJ_LAYOUT_TOID(masstree, struct masstree_obj)
+
 POBJ_LAYOUT_END(masstree)
 
 struct masstree_obj {
@@ -197,6 +198,8 @@ void *section_insert(void *arg) {
         rdtscll(b)
         latencies[i] = b - a;
     }
+
+    return NULL;
 }
 
 void *section_update(void *arg) {
@@ -317,6 +320,8 @@ void *section_update(void *arg) {
         rdtscll(b)
         latencies[i] = b - a;
     }
+
+    return NULL;
 }
 
 void *section_lookup(void *arg) {
@@ -379,6 +384,8 @@ void *section_lookup(void *arg) {
         latencies[i] = b - a;
 
     }
+
+    return NULL;
 }
 
 void *section_delete(void *arg) {
@@ -437,6 +444,8 @@ void *section_delete(void *arg) {
 
         // todo: write -1 here
     }
+
+    return NULL;
 }
 
 void run(
