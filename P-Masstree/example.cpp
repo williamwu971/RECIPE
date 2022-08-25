@@ -685,7 +685,7 @@ int main(int argc, char **argv) {
 
     uint64_t n_per_thread = n / num_thread;
     int numberOfProcessors = sysconf(_SC_NPROCESSORS_ONLN);
-    printf("Number of processors: %d\n", numberOfProcessors);
+    printf("\tNumber of processors: %d\n", numberOfProcessors);
 
 
     for (int i = 0; i < num_thread; i++) {
