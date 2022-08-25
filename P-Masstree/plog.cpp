@@ -800,9 +800,21 @@ void *log_garbage_collection(void *arg) {
 
 void log_start_gc(masstree::masstree *t) {
 
+    static int use_me = sysconf(_SC_NPROCESSORS_ONLN) / 2 - 1;
+    pthread_attr_t attr;
+    cpu_set_t cpu;
+    CPU_ZERO(&cpu);
+    CPU_SET(use_me, &cpu); // reserving CPU 0
+
+    pthread_attr_init(&attr);
+    pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpu);
+
+
     gc_ids = (pthread_t *) realloc(gc_ids, sizeof(pthread_t) * (++num_gcs));
 
-    pthread_create(gc_ids + (num_gcs - 1), NULL, log_garbage_collection, t);
+    pthread_create(gc_ids + (num_gcs - 1), &attr, log_garbage_collection, t);
+
+    use_me--;
 //    pthread_detach(gc_ids[num_gcs - 1]);
 
 }
