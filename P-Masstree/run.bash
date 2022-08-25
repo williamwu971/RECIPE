@@ -42,12 +42,12 @@ index_location=("dram")
 value_location=("log" "ralloc")
 #value_location=("obj")
 #num_threads=(1 3 5 7 9 11 13 15)
-num_threads=(17)
+num_threads=(1)
 use_perf="yes"
 record_latency="yes"
 num_of_gc=(8)
 
-workload=100000000
+workload=5000000
 key_order="random"
 #key_order="seq"
 value_size=256 # the size of the value impact performance a lot
