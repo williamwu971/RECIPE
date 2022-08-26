@@ -135,8 +135,8 @@ int main(int argc, char **argv) {
 //            asm volatile ("sfence":: : "memory");
             sum += map[locs[i]];
         }
-    }stop_timer("Doing %ld memcpy of %ld bytes (%f MB/s)", nb_accesses, granularity,
-                bandwith(nb_accesses * granularity, elapsed));
+    }stop_timer("Doing %ld memcpy of %ld bytes (%f MB/s) sum %lu", nb_accesses, granularity,
+                bandwith(nb_accesses * granularity, elapsed), sum);
 
 //    system("killall -s INT -w perf");
 
