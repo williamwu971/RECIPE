@@ -97,22 +97,22 @@ int main(int argc, char **argv) {
 
     puts("begin");
 
-    char buf[1024];
-    sprintf(buf, "/home/blepers/linux-huge/tools/perf/perf record -p %d &", getpid());
-
-    sprintf(buf, "/home/blepers/linux-huge/tools/perf/perf stat -e "
-                 "uncore_imc_0/event=0x04,umask=0x0c/,"
-                 "uncore_imc_1/event=0x04,umask=0x0c/,"
-                 "uncore_imc_2/event=0x04,umask=0x0c/,"
-                 "uncore_imc_3/event=0x04,umask=0x0c/,"
-                 "uncore_imc_4/event=0x04,umask=0x0c/,"
-                 "uncore_imc_5/event=0x04,umask=0x0c/,"
-                 "uncore_imc_6/event=0x04,umask=0x0c/,"
-                 "uncore_imc_7/event=0x04,umask=0x0c/"
-                 " -p %d &", getpid());
-
-    system(buf);
-    sleep(1);
+//    char buf[1024];
+//    sprintf(buf, "/home/blepers/linux-huge/tools/perf/perf record -p %d &", getpid());
+//
+//    sprintf(buf, "/home/blepers/linux-huge/tools/perf/perf stat -e "
+//                 "uncore_imc_0/event=0xe2,umask=0x0/,"
+//                 "uncore_imc_0/event=0x04,umask=0x0c/,"
+//                 "uncore_imc_0/event=0x04,umask=0x0c/,"
+//                 "uncore_imc_0/event=0x04,umask=0x0c/,"
+//                 "uncore_imc_0/event=0x04,umask=0x0c/,"
+//                 "uncore_imc_0/event=0x04,umask=0x0c/,"
+//                 "uncore_imc_0/event=0x04,umask=0x0c/,"
+//                 "uncore_imc_0/event=0x04,umask=0x0c/"
+//                 " -p %d &", getpid());
+//
+//    system(buf);
+//    sleep(1);
 
     /* Benchmark N memcpy */
     declare_timer;
@@ -135,7 +135,7 @@ int main(int argc, char **argv) {
     }stop_timer("Doing %ld memcpy of %ld bytes (%f MB/s)", nb_accesses, granularity,
                 bandwith(nb_accesses * granularity, elapsed));
 
-    system("killall -s INT -w perf");
+//    system("killall -s INT -w perf");
 
 //    FILE *f = fopen("build/microbench.latencies", "w");
 //    for (size_t i = 0; i < nb_accesses; i++) {
