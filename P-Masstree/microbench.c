@@ -97,6 +97,10 @@ int main(int argc, char **argv) {
 
     puts("begin");
 
+    char buf[1024];
+    sprintf(buf, "/home/blepers/linux-huge/tools/perf/perf record -p %d &", getpid());
+    system(buf);
+
     /* Benchmark N memcpy */
     declare_timer;
     start_timer
@@ -117,6 +121,8 @@ int main(int argc, char **argv) {
         }
     }stop_timer("Doing %ld memcpy of %ld bytes (%f MB/s)", nb_accesses, granularity,
                 bandwith(nb_accesses * granularity, elapsed));
+
+    system("killall -w perf");
 
 //    FILE *f = fopen("build/microbench.latencies", "w");
 //    for (size_t i = 0; i < nb_accesses; i++) {
