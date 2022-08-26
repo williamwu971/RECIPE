@@ -258,7 +258,7 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
 
 //        omp_set_num_threads(pre_fault_threads);
 //#pragma omp parallel for schedule(static, 1)
-        for (uint64_t i = 0; i < mapped_len; i += 4096) {
+        for (uint64_t i = 0; i < mapped_len; i++) {
 
             ((char *) map)[i] = value;
         }
