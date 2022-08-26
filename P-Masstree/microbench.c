@@ -66,24 +66,39 @@ int main(int argc, char **argv) {
     /*for(int i = 0; i < nb_accesses; i++) {
        memcpy(map[location], xxx, size);
     }*/
+
+
+    uint64_t *locs = malloc(nb_accesses * sizeof(uint64_t));
+    uint64_t start = lehmer64() % (sb.st_size - (nb_accesses + 1) * granularity);
+    if (argc != 1) {
+        puts("seq");
+        for (size_t i = 0; i < nb_accesses; i++) {
+            locs[i] = lehmer64() % (sb.st_size - granularity);
+        }
+    } else {
+        puts("rand");
+        for (size_t i = 0; i < nb_accesses; i++) {
+            locs[i] = start + i * granularity;
+        }
+    }
+
+
     puts("begin");
 
     /* Benchmark N memcpy */
     declare_timer;
     start_timer
     {
-        uint64_t start = lehmer64() % (sb.st_size - (nb_accesses + 1) * granularity);
+
         for (size_t i = 0; i < nb_accesses; i++) {
-            uint64_t loc = lehmer64() % (sb.st_size - granularity);
+//            uint64_t loc = lehmer64() % (sb.st_size - granularity);
 //            uint64_t loc = start + i * granularity;
 
             /**
              * todo: questionable flush here
              */
 
-//            pmem_memcpy_persist(&map[loc], page_data, granularity);
-            clflush(&map[loc], granularity, 1, 1);
-//            msync(&map[loc], granularity, MS_SYNC);
+            pmem_memcpy_persist(&map[locs[i]], page_data, granularity);
         }
     }stop_timer("Doing %ld memcpy of %ld bytes (%f MB/s)", nb_accesses, granularity,
                 bandwith(nb_accesses * granularity, elapsed));
