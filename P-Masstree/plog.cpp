@@ -511,7 +511,7 @@ void *log_get_tombstone(uint64_t key) {
     lc->key = key;
     lc->is_delete = 1;
 
-#ifndef NO_PERSIST
+#ifdef MASSTREE_FLUSH
     pmem_persist(lc, sizeof(struct log_cell));
 #endif
 
@@ -670,7 +670,11 @@ void *log_garbage_collection(void *arg) {
                     if (!old_lc->is_delete) {
 
                         if (current_value_in_tree->version <= old_lc->version) {
+#ifdef MASSTREE_FLUSH
                             pmem_memcpy_persist(thread_log->curr, current_ptr, total_size);
+#else
+                            memcpy(thread_log->curr, current_ptr, total_size);
+#endif
 
                             l->assign_value(pack.p, thread_log->curr);
                             thread_log->available -= total_size;
@@ -715,7 +719,11 @@ void *log_garbage_collection(void *arg) {
                                                  old_lc->version, NULL, t);
 
                         } else {
+#ifdef MASSTREE_FLUSH
                             pmem_memcpy_persist(thread_log->curr, current_ptr, total_size);
+#else
+                            memcpy(thread_log->curr, current_ptr, total_size);
+#endif
 
                             l->assign_value(pack.p, thread_log->curr);
                             thread_log->available -= total_size;
