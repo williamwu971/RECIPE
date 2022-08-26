@@ -110,10 +110,10 @@ int main(int argc, char **argv) {
              * todo: questionable flush here
              */
 
-            pmem_memcpy_persist(&map[locs[i]], page_data, granularity);
-//            memcpy(&map[locs[i]], page_data, granularity);
-//            asm volatile ("clwb (%0)"::"r"(&map[locs[i]]));
-//            asm volatile ("sfence":: : "memory");
+//            pmem_memcpy_persist(&map[locs[i]], page_data, granularity);
+            memcpy(&map[locs[i]], page_data, granularity);
+            asm volatile ("clwb (%0)"::"r"(&map[locs[i]]));
+            asm volatile ("sfence":: : "memory");
         }
     }stop_timer("Doing %ld memcpy of %ld bytes (%f MB/s)", nb_accesses, granularity,
                 bandwith(nb_accesses * granularity, elapsed));
