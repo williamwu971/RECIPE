@@ -46,6 +46,7 @@ using namespace std;
 
 #include "masstree.h"
 #include "ralloc.hpp"
+#include "pfence_util.h"
 
 inline int RP_memalign(void **memptr, size_t alignment, size_t size) {
     *memptr = RP_malloc(size + (alignment - size % alignment));

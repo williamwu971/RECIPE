@@ -3,3 +3,4 @@ test
 *.csv
 ralloc.hpp
 libpmemobj*
+pfence_util.h
