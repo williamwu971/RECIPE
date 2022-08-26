@@ -69,7 +69,7 @@ int main(int argc, char **argv) {
 //    if (!pmem_is_pmem(map, sb.st_size))
 //        die("File is not in pmem?!");
     char *map = mmap(NULL, sb.st_size, PROT_READ | PROT_WRITE, MAP_SYNC | MAP_SHARED_VALIDATE, fd, 0);
-    memset(map, 0, sb.st_size);
+//    memset(map, 0, sb.st_size);
 
     /* Allocate data to copy to the file */
     char *page_data = aligned_alloc(PAGE_SIZE, granularity);
