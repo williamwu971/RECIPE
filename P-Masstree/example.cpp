@@ -126,6 +126,8 @@ void *section_insert(void *arg) {
 #ifdef MASSTREE_FLUSH
             pmemobj_persist(pop, mo, sizeof(struct masstree_obj));
             pmemobj_memset_persist(pop, mo + 1, 7, memset_size);
+#else
+            memset(mo + 1, 7, memset_size);
 #endif
 
             tree->put_and_return(keys[i], mo, 1, 0, t);
