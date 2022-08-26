@@ -169,9 +169,10 @@ void *section_insert(void *arg) {
 //                    pmem_persist(raw, raw_size);
 
 #ifdef MASSTREE_FLUSH
-
             pmem_persist(raw, sizeof(struct log_cell) + sizeof(uint64_t));
             pmem_memset_persist(value + 1, 7, memset_size);
+#else
+            memset(value + 1, 7, memset_size);
 #endif
 
 
