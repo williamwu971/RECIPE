@@ -65,8 +65,8 @@ static inline void clflush(char *data, int len, bool front, bool back) {
 #elif CLFLUSH_OPT
         asm volatile(".byte 0x66; clflush %0" : "+m" (*(volatile char *) (ptr)));
 #elif CLWB
-//        asm volatile(".byte 0x66; xsaveopt %0" : "+m" (*(volatile char *) (ptr)));
-        FLUSH(ptr);
+        //        asm volatile(".byte 0x66; xsaveopt %0" : "+m" (*(volatile char *) (ptr)));
+                FLUSH(ptr);
 #endif
     }
     if (back)
@@ -245,6 +245,8 @@ void *section_update(void *arg) {
 #ifdef MASSTREE_FLUSH
             pmemobj_persist(pop, mo, sizeof(struct masstree_obj));
             pmemobj_memset_persist(pop, mo + 1, 7, memset_size);
+#else
+            memset(mo + 1, 7, memset_size);
 #endif
 
             struct masstree_obj *old_obj =
@@ -299,6 +301,8 @@ void *section_update(void *arg) {
 #ifdef MASSTREE_FLUSH
             pmem_persist(raw, sizeof(struct log_cell) + sizeof(uint64_t));
             pmem_memset_persist(value + 1, 7, memset_size);
+#else
+            memset(value + 1, 7, memset_size);
 #endif
 
 
