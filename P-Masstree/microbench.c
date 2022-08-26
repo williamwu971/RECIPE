@@ -36,6 +36,18 @@ static inline void clflush(char *data, int len, int front, int back) {
 }
 
 int main(int argc, char **argv) {
+
+
+    cpu_set_t cpuset;
+    pthread_t thread = pthread_self();
+
+    /* Set affinity mask to include CPUs 0 to 7 */
+
+    CPU_ZERO(&cpuset);
+    CPU_SET(1, &cpuset);
+
+    pthread_setaffinity_np(thread, sizeof(cpu_set_t), &cpuset);
+
     init_seed();
 
     long granularity = 256;      // granularity of accesses
