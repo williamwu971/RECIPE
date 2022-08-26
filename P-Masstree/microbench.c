@@ -73,7 +73,7 @@ int main(int argc, char **argv) {
 
     /* Allocate data to copy to the file */
     char *page_data = aligned_alloc(PAGE_SIZE, granularity);
-    memset(page_data, lehmer64(), granularity);
+//    memset(page_data, lehmer64(), granularity);
 
     /*for(int i = 0; i < nb_accesses; i++) {
        memcpy(map[location], xxx, size);
@@ -114,6 +114,8 @@ int main(int argc, char **argv) {
 //    system(buf);
 //    sleep(1);
 
+    uint64_t sum = 0;
+
     /* Benchmark N memcpy */
     declare_timer;
     start_timer
@@ -128,9 +130,10 @@ int main(int argc, char **argv) {
              */
 
 //            pmem_memcpy_persist(&map[locs[i]], page_data, granularity);
-            memcpy(&map[locs[i]], page_data, granularity);
-            asm volatile ("clwb (%0)"::"r"(&map[locs[i]]));
-            asm volatile ("sfence":: : "memory");
+//            memcpy(&map[locs[i]], page_data, granularity);
+//            asm volatile ("clwb (%0)"::"r"(&map[locs[i]]));
+//            asm volatile ("sfence":: : "memory");
+            sum += map[locs[i]];
         }
     }stop_timer("Doing %ld memcpy of %ld bytes (%f MB/s)", nb_accesses, granularity,
                 bandwith(nb_accesses * granularity, elapsed));
