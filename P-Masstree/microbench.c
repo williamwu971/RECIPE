@@ -83,12 +83,12 @@ int main(int argc, char **argv) {
     uint64_t *locs = malloc(nb_accesses * sizeof(uint64_t));
     uint64_t start = lehmer64() % (sb.st_size - (nb_accesses + 1) * granularity);
     if (argc != 1) {
-        puts("seq");
+        puts("rand");
         for (size_t i = 0; i < nb_accesses; i++) {
             locs[i] = lehmer64() % (sb.st_size - granularity);
         }
     } else {
-        puts("rand");
+        puts("seq");
         for (size_t i = 0; i < nb_accesses; i++) {
             locs[i] = start + i * granularity;
         }
