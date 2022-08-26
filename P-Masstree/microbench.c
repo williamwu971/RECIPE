@@ -90,7 +90,7 @@ int main(int argc, char **argv) {
     } else {
         puts("seq");
         for (size_t i = 0; i < nb_accesses; i++) {
-            locs[i] = start + i * granularity;
+            locs[i] = (start + i * granularity) % (sb.st_size - granularity);
         }
     }
 
