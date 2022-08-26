@@ -7,16 +7,6 @@ for var in "$@"; do
     #    apt-get install -y build-essential cmake libboost-all-dev libpapi-dev default-jdk
     #    apt-get install -y libtbb-dev libjemalloc-dev libpmem-dev
 
-    # build ralloc
-    #    cd /home/xiaoxiang/ralloc/test/ || exit
-    #    git pull
-    #    make clean
-    #    make -j libralloc.a
-    #    if [ ! -f libralloc.a ]; then
-    #      echo "Failed to build ralloc!"
-    #      exit
-    #    fi
-
     # build P-Masstree
     cd /mnt/sdb/xiaoxiang/RECIPE/P-Masstree/ || exit
     git pull || exit
@@ -30,6 +20,18 @@ for var in "$@"; do
 
     echo "" && echo "############" && echo "OK" && echo "############" && echo ""
     exit
+  fi
+
+  if [ "$var" = "ralloc" ]; then
+    # build ralloc
+    cd /home/xiaoxiang/ralloc/test/ || exit
+    git pull
+    make clean
+    make -j libralloc.a
+    if [ ! -f libralloc.a ]; then
+      echo "Failed to build ralloc!"
+      exit
+    fi
   fi
 done
 
