@@ -120,7 +120,7 @@ int main(int argc, char **argv) {
 
     FILE *f = fopen("build/microbench.latencies", "w");
     for (size_t i = 0; i < nb_accesses; i++) {
-        fprintf(f, "%llu\n", locs[i]);
+        fprintf(f, "%lu\n", locs[i]);
     }
     fclose(f);
 
