@@ -223,98 +223,6 @@ void loadKey(TID tid, Key &key) {
     return;
 }
 
-int (*which_memalign)(void **memptr, size_t alignment, size_t size);
-
-void (*which_memfree)(void *ptr);
-
-void *(*which_malloc)(size_t size);
-
-void (*which_free)(void *ptr);
-
-
-void custom_insert(masstree::masstree *tree, ThreadInfo t,
-                   int use_obj, int use_ralloc, int use_log,
-                   uint64_t *keys) {
-    if (use_obj) {
-
-
-        PMEMoid ht_oid;
-        if (pmemobj_alloc(pop, &ht_oid,
-                          value_size, TOID_TYPE_NUM(struct masstree_obj),
-                          0, 0)) {
-            fprintf(stderr, "pmemobj_alloc failed for obj_memalign\n");
-            assert(0);
-        }
-        struct masstree_obj *mo = (struct masstree_obj *) pmemobj_direct(ht_oid);
-        mo->data = rands[i];
-        mo->ht_oid = ht_oid;
-#ifdef MASSTREE_FLUSH
-        pmemobj_persist(pop, mo, sizeof(struct masstree_obj));
-                    pmemobj_memset_persist(pop, mo + 1, 7, memset_size);
-#endif
-
-        tree->put_and_return(keys[i], mo, 1, 0, t);
-
-    } else if (use_log) {
-
-        char *raw = (char *) log_malloc(value_size);
-
-        struct log_cell *lc = (struct log_cell *) raw;
-        lc->value_size = value_size - sizeof(struct log_cell);
-        lc->is_delete = 0;
-        lc->key = keys[i];
-        rdtscll(lc->version);
-
-        uint64_t *value = (uint64_t *) (raw + sizeof(struct log_cell));
-        *value = rands[i];
-//                memset(value + 1, 7, raw_size - sizeof(struct log_cell) - sizeof(uint64_t));
-//                    pmem_persist(raw, raw_size);
-
-#ifdef MASSTREE_FLUSH
-
-        pmem_persist(raw, sizeof(struct log_cell) + sizeof(uint64_t));
-                    pmem_memset_persist(value + 1, 7, memset_size);
-#endif
-
-
-        tree->put_and_return(keys[i], raw, 1, 0, t);
-
-    } else if (use_ralloc) {
-
-        uint64_t *value = (uint64_t *) RP_malloc(value_size);
-        *value = rands[i];
-        memset(value + 1, 7, memset_size);
-#ifdef MASSTREE_FLUSH
-        clflush((char *) value, value_size, true, true);
-#endif
-        tree->put_and_return(keys[i], value, 1, 0, t);
-
-    } else {
-
-        uint64_t *value = (uint64_t *) malloc(value_size);
-        *value = rands[i];
-        memset(value + 1, 7, value_size - sizeof(uint64_t));
-        tree->put_and_return(keys[i], value, 1, 0, t);
-
-    }
-}
-
-void custom_read() {
-
-}
-
-void custom_scan() {
-
-}
-
-void custom_delete() {
-
-}
-
-void custom_update() {
-
-}
-
 void ycsb_load_run_randint(int index_type, int wl, int kt, int ap, int num_thread,
                            std::vector<uint64_t> &init_keys,
                            std::vector<uint64_t> &keys,
@@ -483,10 +391,6 @@ int main(int argc, char **argv) {
 
     printf("%s, workload%s, %s, %s, threads %s\n", argv[1], argv[2], argv[3], argv[4], argv[5]);
 
-    which_memalign = posix_memalign;
-    which_memfree = free;
-    which_malloc = malloc;
-    which_free = free;
 
     if (strcmp(argv[1], "masstree") != 0) {
         printf("only masstree is allowed!\n");
@@ -536,7 +440,7 @@ int main(int argc, char **argv) {
     }
 
     int num_thread = atoi(argv[5]);
-    tbb::task_scheduler_init init(num_thread);
+//    tbb::task_scheduler_init init(num_thread);
 
     if (kt == RANDINT_KEY) {
         std::vector<uint64_t> init_keys;

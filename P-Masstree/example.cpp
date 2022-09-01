@@ -2,6 +2,7 @@
 #include <chrono>
 #include <random>
 #include <libpmemobj.h>
+#include <fstream>
 //#include "tbb/tbb.h"
 #include "plog.cpp"
 
@@ -91,6 +92,465 @@ struct section_arg {
     u_int64_t *latencies;
 };
 
+
+static uint64_t YCSB_SIZE = 64000000;
+//static uint64_t YCSB_SIZE = 64000000;
+
+std::vector<uint64_t> ycsb_init_keys;
+std::vector<uint64_t> ycsb_keys;
+std::vector<int> ycsb_ranges;
+std::vector<int> ycsb_ops;
+
+char *wl = NULL;
+
+enum {
+    OP_INSERT,
+    OP_UPDATE,
+    OP_READ,
+    OP_SCAN,
+    OP_DELETE,
+};
+
+void yscb_load() {
+
+
+    std::string init_file;
+    std::string txn_file;
+
+
+    if (strcmp(wl, "a") == 0) {
+        init_file = "./index-microbench/workloads/loada_unif_int.dat";
+        txn_file = "./index-microbench/workloads/txnsa_unif_int.dat";
+    } else if (strcmp(wl, "b") == 0) {
+        init_file = "./index-microbench/workloads/loadb_unif_int.dat";
+        txn_file = "./index-microbench/workloads/txnsb_unif_int.dat";
+    } else if (strcmp(wl, "c") == 0) {
+        init_file = "./index-microbench/workloads/loadc_unif_int.dat";
+        txn_file = "./index-microbench/workloads/txnsc_unif_int.dat";
+    } else if (strcmp(wl, "d") == 0) {
+        init_file = "./index-microbench/workloads/loadd_unif_int.dat";
+        txn_file = "./index-microbench/workloads/txnsd_unif_int.dat";
+    } else if (strcmp(wl, "e") == 0) {
+        init_file = "./index-microbench/workloads/loade_unif_int.dat";
+        txn_file = "./index-microbench/workloads/txnse_unif_int.dat";
+    }
+
+
+    std::ifstream infile_load(init_file);
+
+    std::string op;
+    uint64_t key;
+    int range;
+
+    std::string insert("INSERT");
+    std::string update("UPDATE");
+    std::string read("READ");
+    std::string scan("SCAN");
+
+    ycsb_init_keys.reserve(YCSB_SIZE);
+    ycsb_keys.reserve(YCSB_SIZE);
+    ycsb_ranges.reserve(YCSB_SIZE);
+    ycsb_ops.reserve(YCSB_SIZE);
+
+    memset(&ycsb_init_keys[0], 0x00, YCSB_SIZE * sizeof(uint64_t));
+    memset(&ycsb_keys[0], 0x00, YCSB_SIZE * sizeof(uint64_t));
+    memset(&ycsb_ranges[0], 0x00, YCSB_SIZE * sizeof(int));
+    memset(&ycsb_ops[0], 0x00, YCSB_SIZE * sizeof(int));
+
+    int count = 0;
+    while ((count < YCSB_SIZE) && infile_load.good()) {
+        infile_load >> op >> key;
+        if (op.compare(insert) != 0) {
+            std::cout << "READING LOAD FILE FAIL!\n";
+            return;
+        }
+        ycsb_init_keys.push_back(key);
+        count++;
+    }
+
+    fprintf(stderr, "Loaded %d keys\n", count);
+
+    std::ifstream infile_txn(txn_file);
+
+    count = 0;
+    while ((count < YCSB_SIZE) && infile_txn.good()) {
+        infile_txn >> op >> key;
+        if (op.compare(insert) == 0) {
+            ycsb_ops.push_back(OP_INSERT);
+            ycsb_keys.push_back(key);
+            ycsb_ranges.push_back(1);
+        } else if (op.compare(update) == 0) {
+            ycsb_ops.push_back(OP_UPDATE);
+            ycsb_keys.push_back(key);
+            ycsb_ranges.push_back(1);
+        } else if (op.compare(read) == 0) {
+            ycsb_ops.push_back(OP_READ);
+            ycsb_keys.push_back(key);
+            ycsb_ranges.push_back(1);
+        } else if (op.compare(scan) == 0) {
+            infile_txn >> range;
+            ycsb_ops.push_back(OP_SCAN);
+            ycsb_keys.push_back(key);
+            ycsb_ranges.push_back(range);
+        } else {
+            std::cout << "UNRECOGNIZED CMD!\n";
+            return;
+        }
+        count++;
+    }
+
+    std::atomic<int> range_complete, range_incomplete;
+    range_complete.store(0);
+    range_incomplete.store(0);
+}
+
+static inline void masstree_branched_insert(
+        masstree::masstree *tree,
+        MASS::ThreadInfo t,
+        uint64_t p_key,
+        uint64_t p_value
+) {
+    if (use_obj) {
+
+
+        PMEMoid ht_oid;
+        if (pmemobj_alloc(pop, &ht_oid,
+                          value_size, TOID_TYPE_NUM(struct masstree_obj),
+                          0, 0)) {
+            fprintf(stderr, "pmemobj_alloc failed for obj_memalign\n");
+            assert(0);
+        }
+        struct masstree_obj *mo = (struct masstree_obj *) pmemobj_direct(ht_oid);
+        mo->data = p_value;
+        mo->ht_oid = ht_oid;
+#ifdef MASSTREE_FLUSH
+        pmemobj_persist(pop, mo, sizeof(struct masstree_obj));
+            pmemobj_memset_persist(pop, mo + 1, 7, memset_size);
+#else
+        memset(mo + 1, 7, memset_size);
+#endif
+
+        tree->put_and_return(p_key, mo, 1, 0, t);
+
+
+//                    TX_BEGIN(pop) {
+//
+//                                    TOID(struct masstree_obj) objToid =
+//                                            TX_ALLOC(struct masstree_obj, value_size);
+//
+//                                            D_RW(objToid)->objToid = objToid;
+//                                            D_RW(objToid)->data = p_value;
+//
+//                                    memset(((uint64_t *) (&D_RW(objToid)->data)) + 1, 7,
+//                                           value_size - sizeof(struct masstree_obj)
+//                                    );
+//
+//
+//                                    tree->put_and_return(p_key, D_RW(objToid), 1, 0, t);
+//
+//
+//                                }
+//                                    TX_ONABORT {
+//                                    throw;
+//                                }
+//                    TX_END
+
+    } else if (use_log) {
+
+        char *raw = (char *) log_malloc(value_size);
+
+        struct log_cell *lc = (struct log_cell *) raw;
+        lc->value_size = value_size - sizeof(struct log_cell);
+        lc->is_delete = 0;
+        lc->key = p_key;
+        rdtscll(lc->version)
+
+        uint64_t *value = (uint64_t *) (raw + sizeof(struct log_cell));
+        *value = p_value;
+//                memset(value + 1, 7, raw_size - sizeof(struct log_cell) - sizeof(uint64_t));
+//                    pmem_persist(raw, raw_size);
+
+#ifdef MASSTREE_FLUSH
+        pmem_persist(raw, sizeof(struct log_cell) + sizeof(uint64_t));
+            pmem_memset_persist(value + 1, 7, memset_size);
+#else
+        memset(value + 1, 7, memset_size);
+#endif
+
+
+        tree->put_and_return(p_key, raw, 1, 0, t);
+
+    } else if (use_ralloc) {
+
+        uint64_t *value = (uint64_t *) RP_malloc(value_size);
+        *value = p_value;
+        memset(value + 1, 7, memset_size);
+#ifdef MASSTREE_FLUSH
+        clflush((char *) value, value_size, true, true);
+#endif
+        tree->put_and_return(p_key, value, 1, 0, t);
+
+    } else {
+
+        uint64_t *value = (uint64_t *) malloc(value_size);
+        *value = p_value;
+        memset(value + 1, 7, value_size - sizeof(uint64_t));
+        tree->put_and_return(p_key, value, 1, 0, t);
+
+    }
+}
+
+static inline void masstree_branched_update(
+        masstree::masstree *tree,
+        MASS::ThreadInfo t,
+        uint64_t u_key,
+        uint64_t u_value
+
+) {
+    if (use_obj) {
+
+        PMEMoid ht_oid;
+        if (pmemobj_alloc(pop, &ht_oid,
+                          value_size, TOID_TYPE_NUM(struct masstree_obj),
+                          0, 0)) {
+            fprintf(stderr, "pmemobj_alloc failed for obj_memalign\n");
+            assert(0);
+        }
+        struct masstree_obj *mo = (struct masstree_obj *) pmemobj_direct(ht_oid);
+        mo->data = u_value;
+        mo->ht_oid = ht_oid;
+
+#ifdef MASSTREE_FLUSH
+        pmemobj_persist(pop, mo, sizeof(struct masstree_obj));
+pmemobj_memset_persist(pop, mo + 1, 7, memset_size);
+#else
+        memset(mo + 1, 7, memset_size);
+#endif
+
+        struct masstree_obj *old_obj =
+                (struct masstree_obj *)
+                        tree->put_and_return(u_key, mo, 1, 0, t);
+
+        pmemobj_free(&old_obj->ht_oid);
+
+//                    TX_BEGIN(pop) {
+//
+//                                    TOID(struct masstree_obj) objToid =
+//                                            TX_ALLOC(struct masstree_obj, value_size);
+//
+//                                            D_RW(objToid)->objToid = objToid;
+//                                            D_RW(objToid)->data = keys[i];
+//
+//                                    memset(((uint64_t *) (&D_RW(objToid)->data)) + 1, 7,
+//                                           value_size - sizeof(struct masstree_obj)
+//                                    );
+//
+//                                    printf("key: %lu pointer: %p\n", keys[i],
+//                                           tree->get(keys[i], t));
+//
+//                                    struct masstree_obj *obj = (struct masstree_obj *)
+//                                            tree->put_and_return(u_key, D_RW(objToid), 0, 0, t);
+//
+//
+//                                    printf("key: %lu pointer: %p\n", keys[i], obj);
+//
+//                                    TX_FREE(obj->objToid);
+//
+//                                }
+//                                    TX_ONABORT {
+//                                    throw;
+//                                }
+//                    TX_END
+
+    } else if (use_log) {
+        char *raw = (char *) log_malloc(value_size);
+
+        struct log_cell *lc = (struct log_cell *) raw;
+        lc->value_size = value_size - sizeof(struct log_cell);
+        lc->is_delete = 0;
+        lc->key = u_key;
+        rdtscll(lc->version)
+
+        uint64_t *value = (uint64_t *) (raw + sizeof(struct log_cell));
+        *value = u_value;
+
+
+//                    pmem_persist(raw, raw_size);
+#ifdef MASSTREE_FLUSH
+        pmem_persist(raw, sizeof(struct log_cell) + sizeof(uint64_t));
+pmem_memset_persist(value + 1, 7, memset_size);
+#else
+        memset(value + 1, 7, memset_size);
+#endif
+
+
+        log_free(tree->put_and_return(u_key, raw, 0, 0, t));
+
+    } else if (use_ralloc) {
+
+        uint64_t *value = (uint64_t *) RP_malloc(value_size);
+        *value = u_value;
+        memset(value + 1, 7, memset_size);
+#ifdef MASSTREE_FLUSH
+        clflush((char *) value, value_size, true, true);
+#endif
+        RP_free(tree->put_and_return(u_key, value, 0, 0, t));
+
+    } else {
+
+        uint64_t *value = (uint64_t *) malloc(value_size);
+        *value = u_value;
+        memset(value + 1, 7, memset_size);
+        free(tree->put_and_return(u_key, value, 0, 0, t));
+
+    }
+}
+
+static inline void masstree_branched_lookup(
+        masstree::masstree *tree,
+        MASS::ThreadInfo t,
+        uint64_t g_key,
+        uint64_t g_value
+) {
+    if (use_obj) {
+
+        struct masstree_obj *obj = (struct masstree_obj *) tree->get(g_key, t);
+        if (obj->data != g_value) {
+            std::cout
+                    << "wrong value read: " << obj->data
+                    << " expected:" << g_value
+                    << std::endl;
+            throw;
+        }
+    } else if (use_log) {
+
+        struct log_cell *lc = (struct log_cell *) tree->get(g_key, t);
+        uint64_t *ret = reinterpret_cast<uint64_t *> (lc + 1);
+        if (*ret != g_value) {
+            std::cout
+                    << "wrong value read: " << *ret
+                    << " expected:" << g_value
+                    << " version:" << lc->version
+                    << " key:" << lc->key
+                    << " value_size:" << lc->value_size
+                    << " is_delete:" << lc->is_delete
+                    << std::endl;
+            throw;
+        }
+    } else {
+        uint64_t *ret = reinterpret_cast<uint64_t *> (tree->get(g_key, t));
+        if (*ret != g_value) {
+            std::cout
+                    << "wrong value read: " << *ret
+                    << " expected:" << g_value
+                    << std::endl;
+            throw;
+        }
+    }
+}
+
+static inline void masstree_branched_delete(
+        masstree::masstree *tree,
+        MASS::ThreadInfo t,
+        uint64_t d_key
+) {
+    if (use_obj) {
+
+        struct masstree_obj *old_obj = (struct masstree_obj *)
+                tree->del_and_return(d_key, 0, 0,
+                                     NULL, t);
+        pmemobj_free(&old_obj->ht_oid);
+
+
+//                    TX_BEGIN(pop) {
+//
+//                                    struct masstree_obj *obj = (struct masstree_obj *)
+//                                            tree->del_and_return(d_key, 0, 0,
+//                                                                 tombstone_callback_func, t);
+//
+//                                    TX_FREE(obj->objToid);
+//
+//                                }
+//                                    TX_ONABORT {
+//                                    throw;
+//                                }
+//                    TX_END
+    } else if (use_log) {
+        log_free(tree->del_and_return(d_key, 0, 0,
+                                      log_get_tombstone, t));
+    } else if (use_ralloc) {
+        RP_free(tree->del_and_return(d_key, 0, 0,
+                                     NULL, t));
+    } else {
+        free(tree->del_and_return(d_key, 0, 0,
+                                  NULL, t));
+    }
+}
+
+void *section_ycsb_load(void *arg) {
+
+    struct section_arg *sa = (struct section_arg *) arg;
+
+    masstree::masstree *tree = sa->tree;
+    uint64_t start = sa->start;
+    uint64_t end = sa->end;
+    u_int64_t *latencies = sa->latencies;
+
+    auto t = tree->getThreadInfo();
+
+    u_int64_t a, b;
+
+    for (uint64_t i = start; i != end; i++) {
+        rdtscll(a)
+
+//        tree->put(ycsb_init_keys[i], &ycsb_init_keys[i], t);
+        masstree_branched_insert(tree, t, ycsb_init_keys[i], ycsb_init_keys[i]);
+
+        rdtscll(b)
+        latencies[i] = b - a;
+    }
+
+    return NULL;
+}
+
+void *section_ycsb_run(void *arg) {
+
+
+    struct section_arg *sa = (struct section_arg *) arg;
+
+    masstree::masstree *tree = sa->tree;
+    uint64_t start = sa->start;
+    uint64_t end = sa->end;
+    u_int64_t *latencies = sa->latencies;
+
+    auto t = tree->getThreadInfo();
+
+    u_int64_t a, b;
+
+
+    for (uint64_t i = start; i != end; i++) {
+
+        rdtscll(a)
+
+        if (ycsb_ops[i] == OP_INSERT || ycsb_ops[i] == OP_UPDATE) {
+            masstree_branched_update(tree, t, ycsb_keys[i], ycsb_keys[i]);
+        } else if (ycsb_ops[i] == OP_READ) {
+            masstree_branched_lookup(tree, t, ycsb_keys[i], ycsb_keys[i]);
+        } else if (ycsb_ops[i] == OP_SCAN) {
+            uint64_t buf[200];
+            int ret = tree->scan(ycsb_keys[i], ycsb_ranges[i], buf, t);
+            (void) ret;
+        } else if (ycsb_ops[i] == OP_DELETE) {
+            masstree_branched_delete(tree, t, ycsb_keys[i]);
+        }
+
+        rdtscll(b)
+        latencies[i] = b - a;
+    }
+
+    return NULL;
+}
+
 void *section_insert(void *arg) {
 
     struct section_arg *sa = (struct section_arg *) arg;
@@ -112,95 +572,7 @@ void *section_insert(void *arg) {
 
         rdtscll(a)
 
-        if (use_obj) {
-
-
-            PMEMoid ht_oid;
-            if (pmemobj_alloc(pop, &ht_oid,
-                              value_size, TOID_TYPE_NUM(struct masstree_obj),
-                              0, 0)) {
-                fprintf(stderr, "pmemobj_alloc failed for obj_memalign\n");
-                assert(0);
-            }
-            struct masstree_obj *mo = (struct masstree_obj *) pmemobj_direct(ht_oid);
-            mo->data = rands[i];
-            mo->ht_oid = ht_oid;
-#ifdef MASSTREE_FLUSH
-            pmemobj_persist(pop, mo, sizeof(struct masstree_obj));
-            pmemobj_memset_persist(pop, mo + 1, 7, memset_size);
-#else
-            memset(mo + 1, 7, memset_size);
-#endif
-
-            tree->put_and_return(keys[i], mo, 1, 0, t);
-
-
-//                    TX_BEGIN(pop) {
-//
-//                                    TOID(struct masstree_obj) objToid =
-//                                            TX_ALLOC(struct masstree_obj, value_size);
-//
-//                                            D_RW(objToid)->objToid = objToid;
-//                                            D_RW(objToid)->data = rands[i];
-//
-//                                    memset(((uint64_t *) (&D_RW(objToid)->data)) + 1, 7,
-//                                           value_size - sizeof(struct masstree_obj)
-//                                    );
-//
-//
-//                                    tree->put_and_return(keys[i], D_RW(objToid), 1, 0, t);
-//
-//
-//                                }
-//                                    TX_ONABORT {
-//                                    throw;
-//                                }
-//                    TX_END
-
-        } else if (use_log) {
-
-            char *raw = (char *) log_malloc(value_size);
-
-            struct log_cell *lc = (struct log_cell *) raw;
-            lc->value_size = value_size - sizeof(struct log_cell);
-            lc->is_delete = 0;
-            lc->key = keys[i];
-            rdtscll(lc->version)
-
-            uint64_t *value = (uint64_t *) (raw + sizeof(struct log_cell));
-            *value = rands[i];
-//                memset(value + 1, 7, raw_size - sizeof(struct log_cell) - sizeof(uint64_t));
-//                    pmem_persist(raw, raw_size);
-
-#ifdef MASSTREE_FLUSH
-            pmem_persist(raw, sizeof(struct log_cell) + sizeof(uint64_t));
-            pmem_memset_persist(value + 1, 7, memset_size);
-#else
-            memset(value + 1, 7, memset_size);
-#endif
-
-
-            tree->put_and_return(keys[i], raw, 1, 0, t);
-
-        } else if (use_ralloc) {
-
-            uint64_t *value = (uint64_t *) RP_malloc(value_size);
-            *value = rands[i];
-            memset(value + 1, 7, memset_size);
-#ifdef MASSTREE_FLUSH
-            clflush((char *) value, value_size, true, true);
-#endif
-            tree->put_and_return(keys[i], value, 1, 0, t);
-
-        } else {
-
-            uint64_t *value = (uint64_t *) malloc(value_size);
-            *value = rands[i];
-            memset(value + 1, 7, value_size - sizeof(uint64_t));
-            tree->put_and_return(keys[i], value, 1, 0, t);
-
-        }
-
+        masstree_branched_insert(tree, t, keys[i], rands[i]);
 
         rdtscll(b)
         latencies[i] = b - a;
@@ -229,104 +601,7 @@ void *section_update(void *arg) {
 
         rdtscll(a)
 
-        if (use_obj) {
-
-            PMEMoid ht_oid;
-            if (pmemobj_alloc(pop, &ht_oid,
-                              value_size, TOID_TYPE_NUM(struct masstree_obj),
-                              0, 0)) {
-                fprintf(stderr, "pmemobj_alloc failed for obj_memalign\n");
-                assert(0);
-            }
-            struct masstree_obj *mo = (struct masstree_obj *) pmemobj_direct(ht_oid);
-            mo->data = keys[i];
-            mo->ht_oid = ht_oid;
-
-#ifdef MASSTREE_FLUSH
-            pmemobj_persist(pop, mo, sizeof(struct masstree_obj));
-            pmemobj_memset_persist(pop, mo + 1, 7, memset_size);
-#else
-            memset(mo + 1, 7, memset_size);
-#endif
-
-            struct masstree_obj *old_obj =
-                    (struct masstree_obj *)
-                            tree->put_and_return(keys[i], mo, 1, 0, t);
-
-            pmemobj_free(&old_obj->ht_oid);
-
-//                    TX_BEGIN(pop) {
-//
-//                                    TOID(struct masstree_obj) objToid =
-//                                            TX_ALLOC(struct masstree_obj, value_size);
-//
-//                                            D_RW(objToid)->objToid = objToid;
-//                                            D_RW(objToid)->data = keys[i];
-//
-//                                    memset(((uint64_t *) (&D_RW(objToid)->data)) + 1, 7,
-//                                           value_size - sizeof(struct masstree_obj)
-//                                    );
-//
-//                                    printf("key: %lu pointer: %p\n", keys[i],
-//                                           tree->get(keys[i], t));
-//
-//                                    struct masstree_obj *obj = (struct masstree_obj *)
-//                                            tree->put_and_return(keys[i], D_RW(objToid), 0, 0, t);
-//
-//
-//                                    printf("key: %lu pointer: %p\n", keys[i], obj);
-//
-//                                    TX_FREE(obj->objToid);
-//
-//                                }
-//                                    TX_ONABORT {
-//                                    throw;
-//                                }
-//                    TX_END
-
-        } else if (use_log) {
-            char *raw = (char *) log_malloc(value_size);
-
-            struct log_cell *lc = (struct log_cell *) raw;
-            lc->value_size = value_size - sizeof(struct log_cell);
-            lc->is_delete = 0;
-            lc->key = keys[i];
-            rdtscll(lc->version)
-
-            uint64_t *value = (uint64_t *) (raw + sizeof(struct log_cell));
-            *value = keys[i];
-
-
-//                    pmem_persist(raw, raw_size);
-#ifdef MASSTREE_FLUSH
-            pmem_persist(raw, sizeof(struct log_cell) + sizeof(uint64_t));
-            pmem_memset_persist(value + 1, 7, memset_size);
-#else
-            memset(value + 1, 7, memset_size);
-#endif
-
-
-            log_free(tree->put_and_return(keys[i], raw, 0, 0, t));
-
-        } else if (use_ralloc) {
-
-            uint64_t *value = (uint64_t *) RP_malloc(value_size);
-            *value = keys[i];
-            memset(value + 1, 7, memset_size);
-#ifdef MASSTREE_FLUSH
-            clflush((char *) value, value_size, true, true);
-#endif
-            RP_free(tree->put_and_return(keys[i], value, 0, 0, t));
-
-        } else {
-
-            uint64_t *value = (uint64_t *) malloc(value_size);
-            *value = keys[i];
-            memset(value + 1, 7, memset_size);
-            free(tree->put_and_return(keys[i], value, 0, 0, t));
-
-        }
-
+        masstree_branched_update(tree, t, keys[i], keys[i]);
 
         rdtscll(b)
         latencies[i] = b - a;
@@ -355,41 +630,7 @@ void *section_lookup(void *arg) {
 
         rdtscll(a)
 
-        if (use_obj) {
-
-            struct masstree_obj *obj = (struct masstree_obj *) tree->get(keys[i], t);
-            if (obj->data != keys[i]) {
-                std::cout
-                        << "wrong value read: " << obj->data
-                        << " expected:" << keys[i]
-                        << std::endl;
-                throw;
-            }
-        } else if (use_log) {
-
-            struct log_cell *lc = (struct log_cell *) tree->get(keys[i], t);
-            uint64_t *ret = reinterpret_cast<uint64_t *> (lc + 1);
-            if (*ret != keys[i]) {
-                std::cout
-                        << "wrong value read: " << *ret
-                        << " expected:" << keys[i]
-                        << " version:" << lc->version
-                        << " key:" << lc->key
-                        << " value_size:" << lc->value_size
-                        << " is_delete:" << lc->is_delete
-                        << std::endl;
-                throw;
-            }
-        } else {
-            uint64_t *ret = reinterpret_cast<uint64_t *> (tree->get(keys[i], t));
-            if (*ret != keys[i]) {
-                std::cout
-                        << "wrong value read: " << *ret
-                        << " expected:" << keys[i]
-                        << std::endl;
-                throw;
-            }
-        }
+        masstree_branched_lookup(tree, t, keys[i], keys[i]);
 
         rdtscll(b)
         latencies[i] = b - a;
@@ -418,37 +659,7 @@ void *section_delete(void *arg) {
 
         rdtscll(a)
 
-        if (use_obj) {
-
-            struct masstree_obj *old_obj = (struct masstree_obj *)
-                    tree->del_and_return(keys[i], 0, 0,
-                                         NULL, t);
-            pmemobj_free(&old_obj->ht_oid);
-
-
-//                    TX_BEGIN(pop) {
-//
-//                                    struct masstree_obj *obj = (struct masstree_obj *)
-//                                            tree->del_and_return(keys[i], 0, 0,
-//                                                                 tombstone_callback_func, t);
-//
-//                                    TX_FREE(obj->objToid);
-//
-//                                }
-//                                    TX_ONABORT {
-//                                    throw;
-//                                }
-//                    TX_END
-        } else if (use_log) {
-            log_free(tree->del_and_return(keys[i], 0, 0,
-                                          log_get_tombstone, t));
-        } else if (use_ralloc) {
-            RP_free(tree->del_and_return(keys[i], 0, 0,
-                                         NULL, t));
-        } else {
-            free(tree->del_and_return(keys[i], 0, 0,
-                                      NULL, t));
-        }
+        masstree_branched_delete(tree, t, keys[i]);
 
         rdtscll(b)
         latencies[i] = b - a;
@@ -498,7 +709,9 @@ void run(
     sprintf(perf_fn, "%s.latencies", section_name);
     if (record_latency) dump_latencies(perf_fn, latencies, n);
 
-    fprintf(throughput_file, "%.2f,", (n * 1.0) / duration.count());
+    if (throughput_file != NULL) {
+        fprintf(throughput_file, "%.2f,", (n * 1.0) / duration.count());
+    }
 }
 
 int main(int argc, char **argv) {
@@ -516,6 +729,7 @@ int main(int argc, char **argv) {
         if (ac == 1) {
             n = std::atoll(argv[1]);
             printf("n:%lu ", n);
+            YCSB_SIZE = n;
 
         } else if (ac == 2) {
             num_thread = atoi(argv[2]);
@@ -604,6 +818,14 @@ int main(int argc, char **argv) {
             if (desired_size > value_size) value_size = desired_size;
             printf("value_size=%d ", value_size);
 
+        } else if (strcasestr(argv[ac], "ycsb=")) {
+            wl = strcasestr(argv[ac], "=") + 1;
+            printf("ycsb=%s ", wl);
+
+            if (YCSB_SIZE > 64000000)YCSB_SIZE = 64000000;
+            if (n > 64000000)n = 64000000;
+
+            yscb_load();
         }
     }
     puts("");
@@ -708,7 +930,8 @@ int main(int argc, char **argv) {
         // todo: possible uneven workload
         section_args[i] = {
                 n_per_thread * i,
-                n_per_thread * (i + 1), tree,
+                n_per_thread * (i + 1),
+                tree,
                 keys,
                 rands,
                 latencies
@@ -741,6 +964,18 @@ int main(int argc, char **argv) {
 
     std::cout << "Simple Example of P-Masstree-New" << std::endl;
     printf("operation,n,ops/s\n");
+
+
+    {
+        /**
+         * section YCSB
+         */
+        if (wl != NULL) {
+            run("ycsb_load", NULL, attrs, section_args, latencies, section_ycsb_load);
+            run("ycsb_run", NULL, attrs, section_args, latencies, section_ycsb_run);
+            goto end;
+        }
+    }
 
     {
         /**
@@ -775,6 +1010,8 @@ int main(int argc, char **argv) {
         if (use_log) log_debug_print(0, show_log_usage);
     }
 
+
+    end:
 
     // logging throughput to files
     fclose(throughput_file);
