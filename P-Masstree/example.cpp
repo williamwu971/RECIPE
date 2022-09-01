@@ -915,6 +915,7 @@ int main(int argc, char **argv) {
     struct section_arg *section_args = (struct section_arg *) calloc(num_thread, sizeof(struct section_arg));
 
     uint64_t n_per_thread = n / num_thread;
+    uint64_t n_remainder = n % num_thread;
     int numberOfProcessors = sysconf(_SC_NPROCESSORS_ONLN);
     printf("\tNumber of processors: %d\n", numberOfProcessors);
 
@@ -928,14 +929,22 @@ int main(int argc, char **argv) {
         pthread_attr_setaffinity_np(attrs + i, sizeof(cpu_set_t), cpus + i);
 
         // todo: possible uneven workload
-        section_args[i] = {
-                n_per_thread * i,
-                n_per_thread * (i + 1),
-                tree,
-                keys,
-                rands,
-                latencies
-        };
+        if (i == 0) {
+            section_args[i].start = 0;
+        } else {
+            section_args[i].start = section_args[i - 1].end;
+        }
+
+        section_args[i].end = section_args[i].start + n_per_thread;
+        if (n_remainder > 0) {
+            n_remainder--;
+            section_args[i].end++;
+        }
+
+        section_args[i].tree = tree;
+        section_args[i].keys = keys;
+        section_args[i].rands = rands;
+        section_args[i].latencies = latencies;
     }
 
     if (require_log_init) {
