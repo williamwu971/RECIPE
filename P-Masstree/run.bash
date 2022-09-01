@@ -45,7 +45,7 @@ index_location=("dram")
 #value_location=("obj")
 #num_threads=(1 3 5 7 9 11 13 15)
 num_threads=(1)
-use_perf="no"
+use_perf="yes"
 record_latency="yes"
 num_of_gc=(8)
 
@@ -99,11 +99,11 @@ for i in "${index_location[@]}"; do
         ./example "$workload" "$n" value_size="$value_size" index="$i" value="$v" key="$key_order" perf="$use_perf" \
           gc="$g" latency="$record_latency" ycsb="a"
 
-#        if [ "$record_latency" = "yes" ]; then
-#          for filename in *.latencies; do
-#            python3 ../simple_graph.py --r $filename --fn graph-$i-$v-$n-$g-$filename --ylim 10000000 || exit
-#          done
-#        fi
+        if [ "$record_latency" = "yes" ]; then
+          for filename in *.latencies; do
+            python3 ../simple_graph.py --r $filename --fn graph-$i-$v-$n-$g-$filename --ylim 10000000 || exit
+          done
+        fi
         #      mv out.png out_"$i"_"$v".png
         #      ./example 100 "$n" index="$i" value="$v"
 
