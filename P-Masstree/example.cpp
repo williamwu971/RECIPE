@@ -111,7 +111,7 @@ enum {
     OP_DELETE,
 };
 
-void yscb_load() {
+void ycsb_load() {
 
 
     std::string init_file;
@@ -846,7 +846,7 @@ int main(int argc, char **argv) {
             YCSB_SIZE = 64000000;
             n = 64000000;
 
-            yscb_load();
+            ycsb_load();
         }
     }
     puts("");
