@@ -40,7 +40,7 @@ cd build || exit
 index_location=("dram" "ralloc" "obj")
 value_location=("ralloc" "log" "obj")
 index_location=("dram")
-#value_location=("log")
+#value_location=("ralloc")
 value_location=("log")
 #value_location=("obj")
 #num_threads=(1 3 5 7 9 11 13 15)
