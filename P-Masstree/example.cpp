@@ -157,7 +157,7 @@ void yscb_load() {
     memset(&ycsb_ranges[0], 0x00, YCSB_SIZE * sizeof(int));
     memset(&ycsb_ops[0], 0x00, YCSB_SIZE * sizeof(int));
 
-    int count = 0;
+    uint64_t count = 0;
     while ((count < YCSB_SIZE) && infile_load.good()) {
         infile_load >> op >> key;
         if (op.compare(insert) != 0) {
@@ -168,7 +168,7 @@ void yscb_load() {
         count++;
     }
 
-    fprintf(stderr, "Loaded %d keys\n", count);
+    fprintf(stderr, "Loaded %lu keys\n", count);
 
     std::ifstream infile_txn(txn_file);
 
