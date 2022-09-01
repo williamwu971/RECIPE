@@ -822,8 +822,8 @@ int main(int argc, char **argv) {
             wl = strcasestr(argv[ac], "=") + 1;
             printf("ycsb=%s ", wl);
 
-            if (YCSB_SIZE > 64000000)YCSB_SIZE = 64000000;
-            if (n > 64000000)n = 64000000;
+            YCSB_SIZE = 64000000;
+            n = 64000000;
 
             yscb_load();
         }
