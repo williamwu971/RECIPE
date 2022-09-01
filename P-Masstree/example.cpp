@@ -304,7 +304,8 @@ static inline void masstree_branched_update(
         masstree::masstree *tree,
         MASS::ThreadInfo t,
         uint64_t u_key,
-        uint64_t u_value
+        uint64_t u_value,
+        int no_allow_prev_null
 
 ) {
     if (use_obj) {
@@ -331,7 +332,10 @@ pmemobj_memset_persist(pop, mo + 1, 7, memset_size);
                 (struct masstree_obj *)
                         tree->put_and_return(u_key, mo, 1, 0, t);
 
-        pmemobj_free(&old_obj->ht_oid);
+        if (no_allow_prev_null || old_obj != NULL) {
+            pmemobj_free(&old_obj->ht_oid);
+        }
+
 
 //                    TX_BEGIN(pop) {
 //
@@ -384,7 +388,12 @@ pmem_memset_persist(value + 1, 7, memset_size);
 #endif
 
 
-        log_free(tree->put_and_return(u_key, raw, 0, 0, t));
+        void *returned = tree->put_and_return(u_key, raw, 0, 0, t);
+
+        if (no_allow_prev_null || returned != NULL) {
+            log_free(returned);
+        }
+
 
     } else if (use_ralloc) {
 
@@ -394,14 +403,26 @@ pmem_memset_persist(value + 1, 7, memset_size);
 #ifdef MASSTREE_FLUSH
         clflush((char *) value, value_size, true, true);
 #endif
-        RP_free(tree->put_and_return(u_key, value, 0, 0, t));
+
+        void *returned = tree->put_and_return(u_key, value, 0, 0, t);
+
+        if (no_allow_prev_null || returned != NULL) {
+            RP_free(returned);
+        }
+
 
     } else {
 
         uint64_t *value = (uint64_t *) malloc(value_size);
         *value = u_value;
         memset(value + 1, 7, memset_size);
-        free(tree->put_and_return(u_key, value, 0, 0, t));
+
+        void *returned = tree->put_and_return(u_key, value, 0, 0, t);
+
+        if (no_allow_prev_null || returned != NULL) {
+            free(returned);
+        }
+
 
     }
 }
@@ -533,7 +554,7 @@ void *section_ycsb_run(void *arg) {
         rdtscll(a)
 
         if (ycsb_ops[i] == OP_INSERT || ycsb_ops[i] == OP_UPDATE) {
-            masstree_branched_update(tree, t, ycsb_keys[i], ycsb_keys[i]);
+            masstree_branched_update(tree, t, ycsb_keys[i], ycsb_keys[i], 0);
         } else if (ycsb_ops[i] == OP_READ) {
             masstree_branched_lookup(tree, t, ycsb_keys[i], ycsb_keys[i]);
         } else if (ycsb_ops[i] == OP_SCAN) {
@@ -601,7 +622,7 @@ void *section_update(void *arg) {
 
         rdtscll(a)
 
-        masstree_branched_update(tree, t, keys[i], keys[i]);
+        masstree_branched_update(tree, t, keys[i], keys[i], 1);
 
         rdtscll(b)
         latencies[i] = b - a;
