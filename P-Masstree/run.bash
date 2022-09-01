@@ -45,7 +45,7 @@ value_location=("log")
 #value_location=("obj")
 #num_threads=(1 3 5 7 9 11 13 15)
 num_threads=(1)
-use_perf="yes"
+use_perf="no"
 record_latency="yes"
 num_of_gc=(8)
 
