@@ -119,20 +119,20 @@ void yscb_load() {
 
 
     if (strcmp(wl, "a") == 0) {
-        init_file = "./index-microbench/workloads/loada_unif_int.dat";
-        txn_file = "./index-microbench/workloads/txnsa_unif_int.dat";
+        init_file = "../../index-microbench/workloads/loada_unif_int.dat";
+        txn_file = "../../index-microbench/workloads/txnsa_unif_int.dat";
     } else if (strcmp(wl, "b") == 0) {
-        init_file = "./index-microbench/workloads/loadb_unif_int.dat";
-        txn_file = "./index-microbench/workloads/txnsb_unif_int.dat";
+        init_file = "../../index-microbench/workloads/loadb_unif_int.dat";
+        txn_file = "../../index-microbench/workloads/txnsb_unif_int.dat";
     } else if (strcmp(wl, "c") == 0) {
-        init_file = "./index-microbench/workloads/loadc_unif_int.dat";
-        txn_file = "./index-microbench/workloads/txnsc_unif_int.dat";
+        init_file = "../../index-microbench/workloads/loadc_unif_int.dat";
+        txn_file = "../../index-microbench/workloads/txnsc_unif_int.dat";
     } else if (strcmp(wl, "d") == 0) {
-        init_file = "./index-microbench/workloads/loadd_unif_int.dat";
-        txn_file = "./index-microbench/workloads/txnsd_unif_int.dat";
+        init_file = "../../index-microbench/workloads/loadd_unif_int.dat";
+        txn_file = "../../index-microbench/workloads/txnsd_unif_int.dat";
     } else if (strcmp(wl, "e") == 0) {
-        init_file = "./index-microbench/workloads/loade_unif_int.dat";
-        txn_file = "./index-microbench/workloads/txnse_unif_int.dat";
+        init_file = "../../index-microbench/workloads/loade_unif_int.dat";
+        txn_file = "../../index-microbench/workloads/txnse_unif_int.dat";
     }
 
 
