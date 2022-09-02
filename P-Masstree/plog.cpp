@@ -770,7 +770,7 @@ void *log_garbage_collection(void *arg) {
 
 void log_start_gc(masstree::masstree *t) {
 
-    static int use_me = sysconf(_SC_NPROCESSORS_ONLN) / 2 - 1;
+    static int use_me = sysconf(_SC_NPROCESSORS_ONLN) / 2 - 2;
     pthread_attr_t attr;
     cpu_set_t cpu;
     CPU_ZERO(&cpu);
