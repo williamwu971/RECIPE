@@ -95,6 +95,7 @@ for i in "${index_location[@]}"; do
         # drop system cache and clear pmem device
         echo 1 >/proc/sys/vm/drop_caches
         rm -rf /pmem0/masstree*
+        killall -w perf
         #      /home/blepers/linux/tools/perf/perf record -g ./example "$workload" "$n" index="$i" value="$v" key="$key_order"
         ./example "$workload" "$n" value_size="$value_size" index="$i" value="$v" key="$key_order" perf="$use_perf" \
           gc="$g" latency="$record_latency" ycsb="a"
