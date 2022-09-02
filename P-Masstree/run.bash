@@ -57,20 +57,28 @@ value_size=256 # the size of the value impact performance a lot
 file_prefixes=("perf")
 
 for fp in "${file_prefixes[@]}"; do
-  echo "$fp,workload=$workload,value_size=$value_size,key_order=$key_order" >$fp.csv
+  echo "$fp,workload=$workload,value_size=$value_size,key_order=$key_order" >"$fp".csv
 
   # the header of csv file
-  printf "index,value,threads,gc," >>$fp.csv
-  printf "insert_rb(gb/s),insert_wb(gb/s),insert_TP(ops/us)," >>$fp.csv
-  printf "update_rb(gb/s),update_wb(gb/s),update_TP(ops/us)," >>$fp.csv
-  printf "get_rb(gb/s),get_wb(gb/s),get_TP(ops/us)," >>$fp.csv
-  printf "delete_rb(gb/s),delete_wb(gb/s),delete_TP(ops/us)," >>$fp.csv
+  #  {
+  #    printf "index,value,threads,gc,"
+  #    printf "insert_rb(gb/s),insert_wb(gb/s),insert_TP(ops/us),"
+  #    printf "update_rb(gb/s),update_wb(gb/s),update_TP(ops/us),"
+  #    printf "get_rb(gb/s),get_wb(gb/s),get_TP(ops/us),"
+  #    printf "delete_rb(gb/s),delete_wb(gb/s),delete_TP(ops/us),"
+  #  } >>"$fp".csv
+
+  {
+    printf "index,value,threads,gc,"
+    printf "load_rb(gb/s),load_wb(gb/s),load_TP(ops/us),"
+    printf "run_rb(gb/s),run_wb(gb/s),run_TP(ops/us),"
+  } >>"$fp".csv
 
   #  for n in "${num_threads[@]}"; do
   #    printf 'T=%s,' "$n" >>$fp.csv
   #  done
 
-  echo "" >>$fp.csv
+  echo "" >>"$fp".csv
 done
 
 rm -f latency.csv out.png
@@ -102,7 +110,7 @@ for i in "${index_location[@]}"; do
 
         if [ "$record_latency" = "yes" ]; then
           for filename in *.latencies; do
-            python3 ../simple_graph.py --r $filename --fn graph-$i-$v-$n-$g-$filename --ylim 20000000 || exit
+            python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-"$filename" --ylim 20000000 || exit
           done
         fi
         #      mv out.png out_"$i"_"$v".png
@@ -111,7 +119,7 @@ for i in "${index_location[@]}"; do
         # this should result in two csv files insert.csv and lookup.csv
         # just append a new line to it
         for fp in "${file_prefixes[@]}"; do
-          echo "" >>$fp.csv
+          echo "" >>"$fp".csv
         done
       done
     done

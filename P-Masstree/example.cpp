@@ -1028,8 +1028,8 @@ int main(int argc, char **argv) {
          * section YCSB
          */
         if (wl != NULL) {
-            run("ycsb_load", NULL, attrs, section_args, latencies, section_ycsb_load);
-            run("ycsb_run", NULL, attrs, section_args, latencies, section_ycsb_run);
+            run("ycsb_load", throughput_file, attrs, section_args, latencies, section_ycsb_load);
+            run("ycsb_run", throughput_file, attrs, section_args, latencies, section_ycsb_run);
             goto end;
         }
     }
