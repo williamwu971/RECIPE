@@ -172,6 +172,12 @@ void ycsb_load() {
 
     std::ifstream infile_txn(txn_file);
 
+
+    uint64_t count_OP_INSERT = 0;
+    uint64_t count_OP_UPDATE = 0;
+    uint64_t count_OP_READ = 0;
+    uint64_t count_OP_SCAN = 0;
+
     count = 0;
     while ((count < YCSB_SIZE) && infile_txn.good()) {
         infile_txn >> op >> key;
@@ -179,25 +185,34 @@ void ycsb_load() {
             ycsb_ops.push_back(OP_INSERT);
             ycsb_keys.push_back(key);
             ycsb_ranges.push_back(1);
+            count_OP_INSERT++;
         } else if (op.compare(update) == 0) {
             ycsb_ops.push_back(OP_UPDATE);
             ycsb_keys.push_back(key);
             ycsb_ranges.push_back(1);
+            count_OP_UPDATE++;
         } else if (op.compare(read) == 0) {
             ycsb_ops.push_back(OP_READ);
             ycsb_keys.push_back(key);
             ycsb_ranges.push_back(1);
+            count_OP_READ++;
         } else if (op.compare(scan) == 0) {
             infile_txn >> range;
             ycsb_ops.push_back(OP_SCAN);
             ycsb_keys.push_back(key);
             ycsb_ranges.push_back(range);
+            count_OP_SCAN++;
         } else {
             std::cout << "UNRECOGNIZED CMD!\n";
             return;
         }
         count++;
     }
+
+    printf("INSERT: %lu %5.2f \n", count_OP_INSERT, (double) count_OP_INSERT / (double) count * 100.0f);
+    printf("UPDATE: %lu %5.2f \n", count_OP_UPDATE, (double) count_OP_UPDATE / (double) count * 100.0f);
+    printf("READ  : %lu %5.2f \n", count_OP_READ, (double) count_OP_READ / (double) count * 100.0f);
+    printf("SCAN  : %lu %5.2f \n", count_OP_SCAN, (double) count_OP_SCAN / (double) count * 100.0f);
 
     std::atomic<int> range_complete, range_incomplete;
     range_complete.store(0);
