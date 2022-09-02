@@ -567,6 +567,7 @@ void *section_ycsb_run(void *arg) {
     uint64_t start = sa->start;
     uint64_t end = sa->end;
     u_int64_t *latencies = sa->latencies;
+    int check_value = (YCSB_SIZE == 6464000000);
 
     auto t = tree->getThreadInfo();
 
@@ -580,7 +581,7 @@ void *section_ycsb_run(void *arg) {
         if (ycsb_ops[i] == OP_INSERT || ycsb_ops[i] == OP_UPDATE) {
             masstree_branched_update(tree, t, ycsb_keys[i], ycsb_keys[i], 0);
         } else if (ycsb_ops[i] == OP_READ) {
-            masstree_branched_lookup(tree, t, ycsb_keys[i], ycsb_keys[i]);
+            masstree_branched_lookup(tree, t, ycsb_keys[i], ycsb_keys[i], check_value);
         } else if (ycsb_ops[i] == OP_SCAN) {
             uint64_t buf[200];
             int ret = tree->scan(ycsb_keys[i], ycsb_ranges[i], buf, t);
@@ -675,7 +676,7 @@ void *section_lookup(void *arg) {
 
         rdtscll(a)
 
-        masstree_branched_lookup(tree, t, keys[i], keys[i]);
+        masstree_branched_lookup(tree, t, keys[i], keys[i], 1);
 
         rdtscll(b)
         latencies[i] = b - a;
