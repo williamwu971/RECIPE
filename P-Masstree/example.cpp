@@ -446,11 +446,20 @@ static inline void masstree_branched_lookup(
         masstree::masstree *tree,
         MASS::ThreadInfo t,
         uint64_t g_key,
-        uint64_t g_value
+        uint64_t g_value,
+        int check_value
 ) {
+
+    void *raw = tree->get(g_key, t);
+
+    if (!check_value) {
+        (void) raw;
+        return;
+    }
+
     if (use_obj) {
 
-        struct masstree_obj *obj = (struct masstree_obj *) tree->get(g_key, t);
+        struct masstree_obj *obj = (struct masstree_obj *) raw;
         if (obj->data != g_value) {
             std::cout
                     << "wrong value read: " << obj->data
@@ -460,7 +469,7 @@ static inline void masstree_branched_lookup(
         }
     } else if (use_log) {
 
-        struct log_cell *lc = (struct log_cell *) tree->get(g_key, t);
+        struct log_cell *lc = (struct log_cell *) raw;
         uint64_t *ret = reinterpret_cast<uint64_t *> (lc + 1);
         if (*ret != g_value) {
             std::cout
@@ -474,7 +483,7 @@ static inline void masstree_branched_lookup(
             throw;
         }
     } else {
-        uint64_t *ret = reinterpret_cast<uint64_t *> (tree->get(g_key, t));
+        uint64_t *ret = reinterpret_cast<uint64_t *> (raw);
         if (*ret != g_value) {
             std::cout
                     << "wrong value read: " << *ret
