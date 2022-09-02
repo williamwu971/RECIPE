@@ -974,6 +974,7 @@ int log_start_perf(const char *perf_fn) {
 //    printf("perf: %s\n", command);
 
     int res = system(real_command);
+    sleep(1);
     rdtscll(perf_start_rtd);
 
     return res;
@@ -1089,7 +1090,7 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed, FILE *f) {
 
 
 //    uint64_t elapsed_cycles = perf_stop_rtd - perf_start_rtd;
-    elapsed = elapsed_perf;
+    elapsed = elapsed_perf - 1; // todo: offset to adjust sleep(1)
 
 
 //    double read_b_percent = (double) read_b_cycle / (double) elapsed_cycles * 100.0f;
