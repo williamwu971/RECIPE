@@ -38,7 +38,7 @@ POBJ_LAYOUT_TOID(masstree, struct masstree_obj)
 POBJ_LAYOUT_END(masstree)
 
 struct masstree_obj {
-    TOID(struct masstree_obj) objToid;
+//    TOID(struct masstree_obj) objToid;
     PMEMoid ht_oid;
     uint64_t data;
 };
