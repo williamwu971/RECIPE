@@ -85,7 +85,7 @@ void dump_latencies(const char *fn, u_int64_t *numbers, uint64_t length) {
 
 struct section_arg {
     uint64_t start;
-    uint64_t end;
+//    uint64_t end;
     masstree::masstree *tree;
     uint64_t *keys;
     uint64_t *rands;
@@ -240,7 +240,7 @@ static inline void masstree_branched_insert(
         mo->ht_oid = ht_oid;
 #ifdef MASSTREE_FLUSH
         pmemobj_persist(pop, mo, sizeof(struct masstree_obj));
-            pmemobj_memset_persist(pop, mo + 1, 7, memset_size);
+        pmemobj_memset_persist(pop, mo + 1, 7, memset_size);
 #else
         memset(mo + 1, 7, memset_size);
 #endif
@@ -287,7 +287,7 @@ static inline void masstree_branched_insert(
 
 #ifdef MASSTREE_FLUSH
         pmem_persist(raw, sizeof(struct log_cell) + sizeof(uint64_t));
-            pmem_memset_persist(value + 1, 7, memset_size);
+        pmem_memset_persist(value + 1, 7, memset_size);
 #else
         memset(value + 1, 7, memset_size);
 #endif
@@ -338,7 +338,7 @@ static inline void masstree_branched_update(
 
 #ifdef MASSTREE_FLUSH
         pmemobj_persist(pop, mo, sizeof(struct masstree_obj));
-pmemobj_memset_persist(pop, mo + 1, 7, memset_size);
+        pmemobj_memset_persist(pop, mo + 1, 7, memset_size);
 #else
         memset(mo + 1, 7, memset_size);
 #endif
@@ -397,7 +397,7 @@ pmemobj_memset_persist(pop, mo + 1, 7, memset_size);
 //                    pmem_persist(raw, raw_size);
 #ifdef MASSTREE_FLUSH
         pmem_persist(raw, sizeof(struct log_cell) + sizeof(uint64_t));
-pmem_memset_persist(value + 1, 7, memset_size);
+        pmem_memset_persist(value + 1, 7, memset_size);
 #else
         memset(value + 1, 7, memset_size);
 #endif
@@ -538,14 +538,14 @@ void *section_ycsb_load(void *arg) {
 
     masstree::masstree *tree = sa->tree;
     uint64_t start = sa->start;
-    uint64_t end = sa->end;
+//    uint64_t end = sa->end;
     u_int64_t *latencies = sa->latencies;
 
     auto t = tree->getThreadInfo();
 
     u_int64_t a, b;
 
-    for (uint64_t i = start; i != end; i++) {
+    for (uint64_t i = start; i < n; i += num_thread) {
         rdtscll(a)
 
 //        tree->put(ycsb_init_keys[i], &ycsb_init_keys[i], t);
@@ -565,7 +565,7 @@ void *section_ycsb_run(void *arg) {
 
     masstree::masstree *tree = sa->tree;
     uint64_t start = sa->start;
-    uint64_t end = sa->end;
+//    uint64_t end = sa->end;
     u_int64_t *latencies = sa->latencies;
     int check_value = (YCSB_SIZE == 6464000000);
 
@@ -574,7 +574,7 @@ void *section_ycsb_run(void *arg) {
     u_int64_t a, b;
 
 
-    for (uint64_t i = start; i != end; i++) {
+    for (uint64_t i = start; i < n; i += num_thread) {
 
         rdtscll(a)
 
@@ -603,7 +603,7 @@ void *section_insert(void *arg) {
 
 
     uint64_t start = sa->start;
-    uint64_t end = sa->end;
+//    uint64_t end = sa->end;
     masstree::masstree *tree = sa->tree;
     uint64_t *keys = sa->keys;
     uint64_t *rands = sa->rands;
@@ -614,7 +614,7 @@ void *section_insert(void *arg) {
 
     u_int64_t a, b;
 
-    for (uint64_t i = start; i != end; i++) {
+    for (uint64_t i = start; i < n; i += num_thread) {
 
         rdtscll(a)
 
@@ -633,7 +633,7 @@ void *section_update(void *arg) {
 
 
     uint64_t start = sa->start;
-    uint64_t end = sa->end;
+//    uint64_t end = sa->end;
     masstree::masstree *tree = sa->tree;
     uint64_t *keys = sa->keys;
     u_int64_t *latencies = sa->latencies;
@@ -643,7 +643,7 @@ void *section_update(void *arg) {
 
     u_int64_t a, b;
 
-    for (uint64_t i = start; i != end; i++) {
+    for (uint64_t i = start; i < n; i += num_thread) {
 
         rdtscll(a)
 
@@ -662,7 +662,7 @@ void *section_lookup(void *arg) {
 
 
     uint64_t start = sa->start;
-    uint64_t end = sa->end;
+//    uint64_t end = sa->end;
     masstree::masstree *tree = sa->tree;
     uint64_t *keys = sa->keys;
     u_int64_t *latencies = sa->latencies;
@@ -672,7 +672,7 @@ void *section_lookup(void *arg) {
 
     u_int64_t a, b;
 
-    for (uint64_t i = start; i != end; i++) {
+    for (uint64_t i = start; i < n; i += num_thread) {
 
         rdtscll(a)
 
@@ -691,7 +691,7 @@ void *section_delete(void *arg) {
 
 
     uint64_t start = sa->start;
-    uint64_t end = sa->end;
+//    uint64_t end = sa->end;
     masstree::masstree *tree = sa->tree;
     uint64_t *keys = sa->keys;
     u_int64_t *latencies = sa->latencies;
@@ -701,7 +701,7 @@ void *section_delete(void *arg) {
 
     u_int64_t a, b;
 
-    for (uint64_t i = start; i != end; i++) {
+    for (uint64_t i = start; i < n; i += num_thread) {
 
         rdtscll(a)
 
@@ -975,17 +975,18 @@ int main(int argc, char **argv) {
         pthread_attr_setaffinity_np(attrs + i, sizeof(cpu_set_t), cpus + i);
 
         // todo: possible uneven workload
-        if (i == 0) {
-            section_args[i].start = 0;
-        } else {
-            section_args[i].start = section_args[i - 1].end;
-        }
+//        if (i == 0) {
+//            section_args[i].start = 0;
+//        } else {
+//            section_args[i].start = section_args[i - 1].end;
+//        }
 
-        section_args[i].end = section_args[i].start + n_per_thread;
-        if (n_remainder > 0) {
-            n_remainder--;
-            section_args[i].end++;
-        }
+        section_args[i].start = i;
+//        section_args[i].end = section_args[i].start + n_per_thread;
+//        if (n_remainder > 0) {
+//            n_remainder--;
+//            section_args[i].end++;
+//        }
 
 //        printf("thread %d from %lu to %lu\n", i, section_args[i].start, section_args[i].end - 1);
 
