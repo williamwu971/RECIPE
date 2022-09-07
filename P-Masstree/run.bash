@@ -47,6 +47,7 @@ for var in "$@"; do
 done
 
 cd build || exit
+rm -f ./*.latencies ./*.png ./*.csv
 
 pmdk_flush=("0" "1")
 index_location=("dram" "ralloc" "obj")
@@ -92,8 +93,6 @@ for fp in "${file_prefixes[@]}"; do
 
   echo "" >>"$fp".csv
 done
-
-rm -f ./*.latencies ./*.png
 
 for i in "${index_location[@]}"; do
   for v in "${value_location[@]}"; do
