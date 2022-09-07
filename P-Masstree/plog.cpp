@@ -968,8 +968,10 @@ int log_start_perf(const char *perf_fn) {
 //            "/home/blepers/linux/tools/perf/perf record -p %d -o %s -g >> perf.out 2>&1 &",
 //            getpid(), perf_fn);
 
+    int cores = sysconf(_SC_NPROCESSORS_ONLN);
     char real_command[4096];
-    sprintf(real_command, "sudo /home/blepers/linux-huge/tools/perf/perf %s", command);
+    sprintf(real_command, "sudo taskset -c %d-%d /home/blepers/linux-huge/tools/perf/perf %s", cores * 3 / 4, cores - 1,
+            command);
 
 //    printf("perf: %s\n", command);
 
