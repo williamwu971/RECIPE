@@ -93,7 +93,7 @@ for fp in "${file_prefixes[@]}"; do
   echo "" >>"$fp".csv
 done
 
-rm -f latency.csv ./*.png
+rm -f ./*.latencies ./*.png
 
 for i in "${index_location[@]}"; do
   for v in "${value_location[@]}"; do
