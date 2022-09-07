@@ -37,6 +37,7 @@ done
 
 cd build || exit
 
+pmdk_flush=("0" "1")
 index_location=("dram" "ralloc" "obj")
 value_location=("ralloc" "log" "obj")
 index_location=("dram")
@@ -69,7 +70,7 @@ for fp in "${file_prefixes[@]}"; do
   #  } >>"$fp".csv
 
   {
-    printf "index,value,threads,gc,"
+    printf "index,value,threads,gc,pmdk_flush,"
     printf "load_rb(gb/s),load_wb(gb/s),load_TP(ops/us),"
     printf "run_rb(gb/s),run_wb(gb/s),run_TP(ops/us),"
   } >>"$fp".csv
@@ -87,38 +88,40 @@ for i in "${index_location[@]}"; do
   for v in "${value_location[@]}"; do
     for n in "${num_threads[@]}"; do
       for g in "${num_of_gc[@]}"; do
+        for f in "${pmdk_flush[@]}"; do
 
-        # backup perf files
-        #        cd .. || exit
-        for pfn in *.perf; do
-          [ -f "$pfn" ] || break
-          echo "backing up $pfn"
-          cp "$pfn" "$pfn".old
-        done
-        #        cd - || exit
-
-        # the first three columns
-        printf '%s,%s,%s,%s,' "$i" "$v" "$n" "$g" >>perf.csv
-
-        # drop system cache and clear pmem device
-        echo 1 >/proc/sys/vm/drop_caches
-        rm -rf /pmem0/masstree*
-        killall -w perf >/dev/null 2>&1
-        #      /home/blepers/linux/tools/perf/perf record -g ./example "$workload" "$n" index="$i" value="$v" key="$key_order"
-        PMEM_NO_FLUSH=1 ./example "$workload" "$n" value_size="$value_size" index="$i" value="$v" key="$key_order" perf="$use_perf" gc="$g" latency="$record_latency" ycsb="a"
-
-        if [ "$record_latency" = "yes" ]; then
-          for filename in *.latencies; do
-            python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-"$filename" --ylim 20000000 || exit
+          # backup perf files
+          #        cd .. || exit
+          for pfn in *.perf; do
+            [ -f "$pfn" ] || break
+            echo "backing up $pfn"
+            cp "$pfn" "$pfn".old
           done
-        fi
-        #      mv out.png out_"$i"_"$v".png
-        #      ./example 100 "$n" index="$i" value="$v"
+          #        cd - || exit
 
-        # this should result in two csv files insert.csv and lookup.csv
-        # just append a new line to it
-        for fp in "${file_prefixes[@]}"; do
-          echo "" >>"$fp".csv
+          # the first three columns
+          printf '%s,%s,%s,%s,%s,' "$i" "$v" "$n" "$g" "$f" >>perf.csv
+
+          # drop system cache and clear pmem device
+          echo 1 >/proc/sys/vm/drop_caches
+          rm -rf /pmem0/masstree*
+          killall -w perf >/dev/null 2>&1
+          #      /home/blepers/linux/tools/perf/perf record -g ./example "$workload" "$n" index="$i" value="$v" key="$key_order"
+          PMEM_NO_FLUSH="$f" ./example "$workload" "$n" value_size="$value_size" index="$i" value="$v" key="$key_order" perf="$use_perf" gc="$g" latency="$record_latency" ycsb="a"
+
+          if [ "$record_latency" = "yes" ]; then
+            for filename in *.latencies; do
+              python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-"$filename" --ylim 20000000 || exit
+            done
+          fi
+          #      mv out.png out_"$i"_"$v".png
+          #      ./example 100 "$n" index="$i" value="$v"
+
+          # this should result in two csv files insert.csv and lookup.csv
+          # just append a new line to it
+          for fp in "${file_prefixes[@]}"; do
+            echo "" >>"$fp".csv
+          done
         done
       done
     done
