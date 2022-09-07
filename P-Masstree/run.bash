@@ -18,7 +18,7 @@ for var in "$@"; do
       exit
     fi
 
-    echo "" && echo "############" && echo "OK" && echo "############" && echo ""
+    echo "" && echo "############" && echo "masstree build OK" && echo "############" && echo ""
     exit
   fi
 
@@ -32,7 +32,18 @@ for var in "$@"; do
       echo "Failed to build ralloc!"
       exit
     fi
+    echo "" && echo "############" && echo "ralloc build OK" && echo "############" && echo ""
   fi
+
+  if [ "$var" = "pmdk" ]; then
+    # build ralloc
+    cd /mnt/sdb/xiaoxiang/pmdk/ || exit
+    git pull
+    make -j || exit
+    make -j install || exit
+    echo "" && echo "############" && echo "pmdk build OK" && echo "############" && echo ""
+  fi
+
 done
 
 cd build || exit
