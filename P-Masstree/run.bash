@@ -93,7 +93,7 @@ for fp in "${file_prefixes[@]}"; do
   echo "" >>"$fp".csv
 done
 
-rm -f latency.csv out.png
+rm -f latency.csv ./*.png
 
 for i in "${index_location[@]}"; do
   for v in "${value_location[@]}"; do
@@ -122,7 +122,7 @@ for i in "${index_location[@]}"; do
 
           if [ "$record_latency" = "yes" ]; then
             for filename in *.latencies; do
-              python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-f"$f"-"$filename" --ylim 20000000 || exit
+              python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$filename" --ylim 20000000 || exit
             done
           fi
           #      mv out.png out_"$i"_"$v".png
