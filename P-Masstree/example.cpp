@@ -960,8 +960,8 @@ int main(int argc, char **argv) {
     cpu_set_t *cpus = (cpu_set_t *) calloc(num_thread, sizeof(cpu_set_t));
     struct section_arg *section_args = (struct section_arg *) calloc(num_thread, sizeof(struct section_arg));
 
-    uint64_t n_per_thread = n / num_thread;
-    uint64_t n_remainder = n % num_thread;
+//    uint64_t n_per_thread = n / num_thread;
+//    uint64_t n_remainder = n % num_thread;
     int numberOfProcessors = sysconf(_SC_NPROCESSORS_ONLN);
     printf("\tNumber of processors: %d\n", numberOfProcessors);
 
