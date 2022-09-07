@@ -6,7 +6,7 @@
 //#include "tbb/tbb.h"
 #include "plog.cpp"
 
-#define PMEM_POOL_SIZE (8*1024*1024*1024ULL)
+#define PMEM_POOL_SIZE (32*1024*1024*1024ULL)
 
 // todo: make templates/cpp (modular) <- important
 int (*which_memalign)(void **memptr, size_t alignment, size_t size) = posix_memalign;

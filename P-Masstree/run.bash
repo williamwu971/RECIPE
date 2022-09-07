@@ -44,12 +44,12 @@ index_location=("dram")
 #value_location=("log")
 value_location=("obj")
 #num_threads=(1 3 5 7 9 11 13 15)
-num_threads=(1)
+num_threads=(16)
 use_perf="yes"
-record_latency="yes"
+record_latency="no"
 num_of_gc=(8)
 
-workload=4000000
+workload=64000000
 key_order="random"
 #key_order="seq"
 value_size=256 # the size of the value impact performance a lot
@@ -103,10 +103,9 @@ for i in "${index_location[@]}"; do
         # drop system cache and clear pmem device
         echo 1 >/proc/sys/vm/drop_caches
         rm -rf /pmem0/masstree*
-        killall -w perf
+        killall -w perf >/dev/null 2>&1
         #      /home/blepers/linux/tools/perf/perf record -g ./example "$workload" "$n" index="$i" value="$v" key="$key_order"
-        ./example "$workload" "$n" value_size="$value_size" index="$i" value="$v" key="$key_order" perf="$use_perf" \
-          gc="$g" latency="$record_latency" ycsb="a"
+        PMEM_NO_FLUSH=1 ./example "$workload" "$n" value_size="$value_size" index="$i" value="$v" key="$key_order" perf="$use_perf" gc="$g" latency="$record_latency" ycsb="a"
 
         if [ "$record_latency" = "yes" ]; then
           for filename in *.latencies; do
