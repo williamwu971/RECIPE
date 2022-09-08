@@ -84,10 +84,18 @@ for fp in "${file_prefixes[@]}"; do
   #    printf "delete_rb(gb/s),delete_wb(gb/s),delete_TP(ops/us),"
   #  } >>"$fp".csv
 
+  #  {
+  #    printf "index,value,threads,gc,pmdk_flush,"
+  #    printf "load_rb(gb/s),load_wb(gb/s),load_TP(ops/us),"
+  #    printf "run_rb(gb/s),run_wb(gb/s),run_TP(ops/us),"
+  #  } >>"$fp".csv
+
   {
     printf "index,value,threads,gc,pmdk_flush,"
-    printf "load_rb(gb/s),load_wb(gb/s),load_TP(ops/us),"
-    printf "run_rb(gb/s),run_wb(gb/s),run_TP(ops/us),"
+    printf "insert_TP(ops/us),"
+    printf "update_TP(ops/us),"
+    printf "get_TP(ops/us),"
+    printf "delete_TP(ops/us),"
   } >>"$fp".csv
 
   #  for n in "${num_threads[@]}"; do
