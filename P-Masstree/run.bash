@@ -120,7 +120,7 @@ for i in "${index_location[@]}"; do
           rm -rf /pmem0/masstree*
           killall -w perf >/dev/null 2>&1
           #      /home/blepers/linux/tools/perf/perf record -g ./example "$workload" "$n" index="$i" value="$v" key="$key_order"
-          PMEM_NO_FLUSH="$f" ./example "$workload" "$n" value_size="$value_size" index="$i" value="$v" key="$key_order" perf="$use_perf" gc="$g" latency="$record_latency" ycsb="a"
+          PMEM_NO_FLUSH="$f" ./example "$workload" "$n" value_size="$value_size" index="$i" value="$v" key="$key_order" perf="$use_perf" gc="$g" latency="$record_latency"
 
           if [ "$record_latency" = "yes" ]; then
             for filename in *.latencies; do
