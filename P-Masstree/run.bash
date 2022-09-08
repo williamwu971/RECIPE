@@ -33,6 +33,7 @@ for var in "$@"; do
       exit
     fi
     echo "" && echo "############" && echo "ralloc build OK" && echo "############" && echo ""
+    exit
   fi
 
   if [ "$var" = "pmdk" ]; then
@@ -42,6 +43,7 @@ for var in "$@"; do
     make -j || exit
     make -j install || exit
     echo "" && echo "############" && echo "pmdk build OK" && echo "############" && echo ""
+    exit
   fi
 
 done
@@ -59,7 +61,7 @@ index_location=("dram")
 value_location=("log" "obj")
 #num_threads=(1 3 5 7 9 11 13 15)
 num_threads=(16)
-use_perf="yes"
+use_perf="no"
 record_latency="yes"
 num_of_gc=(8)
 
