@@ -60,12 +60,12 @@ index_location=("dram")
 #value_location=("obj")
 #value_location=("log" "obj")
 #num_threads=(1 3 5 7 9 11 13 15)
-num_threads=(1)
+num_threads=(16)
 use_perf="no"
 record_latency="yes"
 num_of_gc=(8)
 
-workload=1000000
+workload=64000000
 key_order="random"
 #key_order="seq"
 value_size=1024 # the size of the value impact performance a lot
