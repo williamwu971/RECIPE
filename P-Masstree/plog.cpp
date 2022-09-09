@@ -969,7 +969,7 @@ int log_start_perf(const char *perf_fn) {
     int cores = sysconf(_SC_NPROCESSORS_ONLN);
 
     sprintf(command,
-            "sudo taskset -c %d-%d record --call-graph dwarf -F 100 -p %d -o %s -g >> perf.out 2>&1 &",
+            "sudo taskset -c %d-%d /home/blepers/linux-huge/tools/perf/perf record --call-graph dwarf -F 100 -p %d -o %s -g >> perf.out 2>&1 &",
             cores * 3 / 4, cores - 1, getpid(), perf_fn);
     int res = system(command);
 //    perf_stat = 0;
