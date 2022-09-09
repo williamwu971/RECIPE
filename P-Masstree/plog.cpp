@@ -878,35 +878,35 @@ void log_debug_print(int to_file, int show) {
 
 int log_start_perf(const char *perf_fn) {
 
-    char command[2048];
-
-    int sticks[] = {0, 1, 2, 3, 4, 5, 6, 7};
-    int num_of_sticks = 8;
-
-    char *chaser = command;
-
-
-    for (int i = 0; i < num_of_sticks; i++) {
-
-        if (i == 0) {
-            chaser += sprintf(chaser, "stat -e ");
-        }
-
-        chaser += sprintf(chaser,
-                          "uncore_imc_%d/event=0xe2,umask=0x0/,"
-                          "uncore_imc_%d/event=0xe3,umask=0x0/,"
-                          "uncore_imc_%d/event=0xe6,umask=0x0/,"
-                          "uncore_imc_%d/event=0xe7,umask=0x0/",
-                          sticks[i], sticks[i], sticks[i], sticks[i]
-        );
-
-        if (i == num_of_sticks - 1) {
-            chaser += sprintf(chaser, " > %s 2>&1 &", perf_fn);
-        } else {
-            chaser += sprintf(chaser, ",");
-        }
-
-    }
+//    char command[2048];
+//
+//    int sticks[] = {0, 1, 2, 3, 4, 5, 6, 7};
+//    int num_of_sticks = 8;
+//
+//    char *chaser = command;
+//
+//
+//    for (int i = 0; i < num_of_sticks; i++) {
+//
+//        if (i == 0) {
+//            chaser += sprintf(chaser, "stat -e ");
+//        }
+//
+//        chaser += sprintf(chaser,
+//                          "uncore_imc_%d/event=0xe2,umask=0x0/,"
+//                          "uncore_imc_%d/event=0xe3,umask=0x0/,"
+//                          "uncore_imc_%d/event=0xe6,umask=0x0/,"
+//                          "uncore_imc_%d/event=0xe7,umask=0x0/",
+//                          sticks[i], sticks[i], sticks[i], sticks[i]
+//        );
+//
+//        if (i == num_of_sticks - 1) {
+//            chaser += sprintf(chaser, " > %s 2>&1 &", perf_fn);
+//        } else {
+//            chaser += sprintf(chaser, ",");
+//        }
+//
+//    }
 
 //    sprintf(command,
 //            "sudo /home/blepers/linux-huge/tools/perf/perf stat -e "
@@ -936,10 +936,10 @@ int log_start_perf(const char *perf_fn) {
 //            perf_fn
 //    );
 
-    sprintf(command,
-            "record --call-graph dwarf -p %d -o %s -g >> perf.out 2>&1 &",
-            getpid(), perf_fn);
-    perf_stat = 0;
+//    sprintf(command,
+//            "record --call-graph dwarf -p %d -o %s -g >> perf.out 2>&1 &",
+//            getpid(), perf_fn);
+//    perf_stat = 0;
 
 
 //    sleep(1);
@@ -970,10 +970,14 @@ int log_start_perf(const char *perf_fn) {
 
     int cores = sysconf(_SC_NPROCESSORS_ONLN);
     char real_command[4096];
-    sprintf(real_command, "sudo taskset -c %d-%d /home/blepers/linux-huge/tools/perf/perf %s", cores * 3 / 4, cores - 1,
-            command);
+//    sprintf(real_command, "sudo taskset -c %d-%d /home/blepers/linux-huge/tools/perf/perf %s", cores * 3 / 4, cores - 1,
+//            command);
 
 //    printf("perf: %s\n", command);
+
+    remove("/mnt/sdb/xiaoxiang/pcm.txt");
+    sprintf(real_command, "sudo taskset -c %d-%d /mnt/sdb/xiaoxiang/pcm/build/bin/pcm-memory -all >/dev/null 2>&1 &",
+            cores * 3 / 4, cores - 1);
 
     int res = system(real_command);
     sleep(1);
@@ -992,7 +996,12 @@ int log_stop_perf() {
 //    printf("perf: %s\n", command);
 
 
+    sprintf(command, "sudo pkill --signal SIGHUP -f pcm-memory");
+
     int res = system(command);
+    sleep(1);
+
+
     return res;
 }
 
@@ -1005,109 +1014,132 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed, FILE *f) {
         return;
     }
 
-    const char *pmem_sticks[] = {
+//    const char *pmem_sticks[] = {
+////            "uncore_imc_1/",
+////            "uncore_imc_4/",
+////            "uncore_imc_7/",
+////            "uncore_imc_10/"
+//
+//            "uncore_imc_0/",
 //            "uncore_imc_1/",
+//            "uncore_imc_2/",
+//            "uncore_imc_3/",
 //            "uncore_imc_4/",
+//            "uncore_imc_5/",
+//            "uncore_imc_6/",
 //            "uncore_imc_7/",
-//            "uncore_imc_10/"
-
-            "uncore_imc_0/",
-            "uncore_imc_1/",
-            "uncore_imc_2/",
-            "uncore_imc_3/",
-            "uncore_imc_4/",
-            "uncore_imc_5/",
-            "uncore_imc_6/",
-            "uncore_imc_7/",
-    };
-    int length = 8;
-
-    char buf[1024];
-    double elapsed_perf = 0;
+//    };
+//    int length = 8;
+//
+//    char buf[1024];
+//    double elapsed_perf = 0;
 
     uint64_t read;
     uint64_t write;
-    uint64_t read_b_cycle;
-    uint64_t write_b_cycle;
-    int repeat = 0;
+//    uint64_t read_b_cycle;
+//    uint64_t write_b_cycle;
+//    int repeat = 0;
 
 
-    for (; repeat < 3 && elapsed_perf < 0.01; repeat++) {
-
-        if (repeat != 0)sleep(1);
-
-        read = 0;
-        write = 0;
-        read_b_cycle = 0;
-        write_b_cycle = 0;
-
-
-        FILE *file = fopen(perf_fn, "r");
-        if (file == NULL) continue;
-
-        while (fgets(buf, 1024, file)) {
-
-//            printf("%s", buf);
-            char no_use[1024];
-
-            for (int i = 0; i < length; i++) {
-
-                if (strstr(buf, pmem_sticks[i])) {
-
-                    uint64_t number;
-
-                    char num_str[1024];
-                    num_str[0] = '\0';
-
-                    char num_raw[1024];
-                    sscanf(buf, "%s %s", num_raw, no_use);
-
-                    strcat(num_str, strtok(num_raw, ","));
-                    char *curr;
-                    while ((curr = strtok(NULL, ",")) != NULL) {
-                        strcat(num_str, curr);
-                    }
-
-                    sscanf(num_str, "%lu", &number);
-//                    printf("number: %s\n", num_str);
-
-                    if (strstr(buf, "0xe2")) {
-                        if (number > read_b_cycle)read_b_cycle = number;
-                    } else if (strstr(buf, "0xe3")) {
-                        read += number;
-                    } else if (strstr(buf, "0xe6")) {
-                        if (number > write_b_cycle)write_b_cycle = number;
-                    } else if (strstr(buf, "0xe7")) {
-                        write += number;
-                    }
-                }
-            }
-
-            if (strstr(buf, "elapsed"))
-                sscanf(buf, "%lf %s %s %s", &elapsed_perf, no_use, no_use, no_use);
-
-        }
-        fclose(file);
-    }
+//    for (; repeat < 3 && elapsed_perf < 0.01; repeat++) {
+//
+//        if (repeat != 0)sleep(1);
+//
+//        read = 0;
+//        write = 0;
+//        read_b_cycle = 0;
+//        write_b_cycle = 0;
+//
+//
+//        FILE *file = fopen(perf_fn, "r");
+//        if (file == NULL) continue;
+//
+//        while (fgets(buf, 1024, file)) {
+//
+////            printf("%s", buf);
+//            char no_use[1024];
+//
+//            for (int i = 0; i < length; i++) {
+//
+//                if (strstr(buf, pmem_sticks[i])) {
+//
+//                    uint64_t number;
+//
+//                    char num_str[1024];
+//                    num_str[0] = '\0';
+//
+//                    char num_raw[1024];
+//                    sscanf(buf, "%s %s", num_raw, no_use);
+//
+//                    strcat(num_str, strtok(num_raw, ","));
+//                    char *curr;
+//                    while ((curr = strtok(NULL, ",")) != NULL) {
+//                        strcat(num_str, curr);
+//                    }
+//
+//                    sscanf(num_str, "%lu", &number);
+////                    printf("number: %s\n", num_str);
+//
+//                    if (strstr(buf, "0xe2")) {
+//                        if (number > read_b_cycle)read_b_cycle = number;
+//                    } else if (strstr(buf, "0xe3")) {
+//                        read += number;
+//                    } else if (strstr(buf, "0xe6")) {
+//                        if (number > write_b_cycle)write_b_cycle = number;
+//                    } else if (strstr(buf, "0xe7")) {
+//                        write += number;
+//                    }
+//                }
+//            }
+//
+//            if (strstr(buf, "elapsed"))
+//                sscanf(buf, "%lf %s %s %s", &elapsed_perf, no_use, no_use, no_use);
+//
+//        }
+//        fclose(file);
+//    }
 
 
 //    uint64_t elapsed_cycles = perf_stop_rtd - perf_start_rtd;
-    elapsed = elapsed_perf - 1; // todo: offset to adjust sleep(1)
+//    elapsed = elapsed_perf - 1; // todo: offset to adjust sleep(1)
 
+    int scanned_channel = 0;
+
+    while (scanned_channel < 12) {
+        FILE *file = fopen("/mnt/sdb/xiaoxiang/pcm.txt", "r");
+
+
+        char buffer[256];
+        int is_first_line = 1;
+        while (fgets(buffer, 256, file) != NULL) {
+            if (is_first_line) {
+                is_first_line = 0;
+                continue;
+            }
+            uint64_t skt, channel, pmmReads, pmmWrites, elapsedTime;
+            sscanf(buffer, "%llu %llu %llu %llu %llu", &skt, &channel, &pmmReads, &pmmWrites, &elapsedTime);
+            scanned_channel++;
+            read += pmmReads;
+            write += pmmWrites;
+        }
+    }
 
 //    double read_b_percent = (double) read_b_cycle / (double) elapsed_cycles * 100.0f;
-    double read_bw = (double) read * 64.0f / 1024.0f / 1024.0f / 1024.0f / elapsed;
+//    double read_bw = (double) read * 64.0f / 1024.0f / 1024.0f / 1024.0f / elapsed;
 //    double write_b_percent = (double) write_b_cycle / (double) elapsed_cycles * 100.0f;
-    double write_bw = (double) write * 64.0f / 1024.0f / 1024.0f / 1024.0f / elapsed;
+//    double write_bw = (double) write * 64.0f / 1024.0f / 1024.0f / 1024.0f / elapsed;
+
+    double read_bw = (double) read / 1024.0f / 1024.0f / 1024.0f / elapsed;
+    double write_bw = (double) write / 1024.0f / 1024.0f / 1024.0f / elapsed;
 
     printf("\n");
 
 
-    if (repeat == 3 && elapsed_perf < 0.01) {
-        printf("time too short to display bandwidth!\n");
-        if (f != NULL)fprintf(f, ",,");
-        return;
-    }
+//    if (repeat == 3 && elapsed_perf < 0.01) {
+//        printf("time too short to display bandwidth!\n");
+//        if (f != NULL)fprintf(f, ",,");
+//        return;
+//    }
 
     printf("read: ");
 //    printf("%.2f%% ", read_b_percent);
