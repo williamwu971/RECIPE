@@ -881,7 +881,7 @@ int log_start_perf(const char *perf_fn) {
 
     (void) perf_fn;
 
-//    char command[2048];
+    char command[2048];
 //
 //    int sticks[] = {0, 1, 2, 3, 4, 5, 6, 7};
 //    int num_of_sticks = 8;
@@ -939,9 +939,10 @@ int log_start_perf(const char *perf_fn) {
 //            perf_fn
 //    );
 
-//    sprintf(command,
-//            "record --call-graph dwarf -p %d -o %s -g >> perf.out 2>&1 &",
-//            getpid(), perf_fn);
+    sprintf(command,
+            "record --call-graph dwarf -p %d -o %s -g >> perf.out 2>&1 &",
+            getpid(), perf_fn);
+    system(command);
 //    perf_stat = 0;
 
 
@@ -998,6 +999,7 @@ int log_stop_perf() {
     sprintf(command, "sudo killall -s INT perf");
 //    printf("perf: %s\n", command);
 
+    system(command);
 
     sprintf(command, "sudo pkill --signal SIGHUP -f pcm-memory");
 

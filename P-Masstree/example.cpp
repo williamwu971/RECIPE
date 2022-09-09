@@ -27,6 +27,7 @@ int use_ralloc = 0;
 int use_log = 0;
 int value_size = sizeof(struct log_cell) + sizeof(uint64_t);
 int memset_size = 0;
+char *prefix = NULL;
 
 uint64_t n;
 int num_thread;
@@ -733,7 +734,7 @@ void run(
         void *(*routine)(void *)) {
 
     char perf_fn[64];
-    sprintf(perf_fn, "%s.perf", section_name);
+    sprintf(perf_fn, "%s-%s.perf", prefix == NULL ? "" : prefix, section_name);
     pthread_t *threads = (pthread_t *) calloc(num_thread, sizeof(pthread_t));
 
     if (use_perf)log_start_perf(perf_fn);
@@ -880,6 +881,10 @@ int main(int argc, char **argv) {
             if (n > 64000000) n = 64000000;
 
             ycsb_load();
+        } else if (strcasestr(argv[ac], "prefix=")) {
+            char *prefix_ptr = strcasestr(argv[ac], "=") + 1;
+            prefix = (char *) malloc(sizeof(char) * (strlen(prefix_ptr) + 1));
+            strcpy(prefix, prefix_ptr);
         }
     }
     puts("");

@@ -113,11 +113,11 @@ for i in "${index_location[@]}"; do
 
           # backup perf files
           #        cd .. || exit
-          for pfn in *.perf; do
-            [ -f "$pfn" ] || break
-            echo "backing up $pfn"
-            mv "$pfn" "$pfn".old
-          done
+#          for pfn in *.perf; do
+#            [ -f "$pfn" ] || break
+#            echo "backing up $pfn"
+#            mv "$pfn" "$pfn".old
+#          done
           #        cd - || exit
 
           # the first three columns
@@ -128,7 +128,7 @@ for i in "${index_location[@]}"; do
           rm -rf /pmem0/masstree*
           killall -w perf >/dev/null 2>&1
           #      /home/blepers/linux/tools/perf/perf record -g ./example "$workload" "$n" index="$i" value="$v" key="$key_order"
-          PMEM_NO_FLUSH="$f" ./example "$workload" "$n" value_size="$value_size" index="$i" value="$v" key="$key_order" perf="$use_perf" gc="$g" latency="$record_latency"
+          PMEM_NO_FLUSH="$f" ./example "$workload" "$n" value_size="$value_size" index="$i" value="$v" key="$key_order" perf="$use_perf" gc="$g" latency="$record_latency" prefix="$i"-"$v"-"$n"-"$g"-NF"$f"
 
           if [ "$record_latency" = "yes" ]; then
             for filename in *.latencies; do
