@@ -251,9 +251,10 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
         sum.store(0);
 
 //        log_start_perf("pre_fault.perf");
-        auto starttime = std::chrono::system_clock::now();
 
         log_start_perf("fault.perf");
+
+        auto starttime = std::chrono::system_clock::now();
 //        int *visit_log = (int *) calloc((mapped_len / step_size), sizeof(int));
 
 //        omp_set_num_threads(pre_fault_threads);
@@ -263,12 +264,12 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
             ((char *) map)[i] = value;
         }
 
-        log_stop_perf();
-        log_print_pmem_bandwidth("fault.perf", 0, NULL);
-
-
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
                 std::chrono::system_clock::now() - starttime);
+
+        log_stop_perf();
+        log_print_pmem_bandwidth("fault.perf", duration.count() / 1000000.0, NULL);
+
 
         printf("\n\t\t\tpre-faulted %-30s %7.2f gb/s %7.2f s sum:%lu \n",
                fn, (mapped_len * 2.0 / 1024.0 / 1024.0 / 1024.0) / (duration.count() / 1000000.0),
