@@ -878,6 +878,8 @@ void log_debug_print(int to_file, int show) {
 
 int log_start_perf(const char *perf_fn) {
 
+    (void) perf_fn;
+
 //    char command[2048];
 //
 //    int sticks[] = {0, 1, 2, 3, 4, 5, 6, 7};
