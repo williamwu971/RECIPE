@@ -10,7 +10,8 @@ for var in "$@"; do
     # build P-Masstree
     cd /mnt/sdb/xiaoxiang/RECIPE/P-Masstree/ || exit
     git pull || exit
-    rm -rf build && mkdir build
+#    rm -rf build && mkdir build
+    rm -rf build/*
     cd build || exit
     cmake .. && make -j
     if [ ! -f example ]; then
