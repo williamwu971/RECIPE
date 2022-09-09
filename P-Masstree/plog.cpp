@@ -971,7 +971,7 @@ int log_start_perf(const char *perf_fn) {
     sprintf(command,
             "sudo taskset -c %d-%d record --call-graph dwarf -F 100 -p %d -o %s -g >> perf.out 2>&1 &",
             cores * 3 / 4, cores - 1, getpid(), perf_fn);
-    (void) system(command);
+    int res = system(command);
 //    perf_stat = 0;
 
     char real_command[4096];
@@ -984,7 +984,7 @@ int log_start_perf(const char *perf_fn) {
     sprintf(real_command, "sudo taskset -c %d-%d /mnt/sdb/xiaoxiang/pcm/build/bin/pcm-memory -all >/dev/null 2>&1 &",
             cores * 3 / 4, cores - 1);
 
-    int res = system(real_command);
+    res &= system(real_command);
     sleep(1);
     rdtscll(perf_start_rtd)
 
@@ -1000,11 +1000,11 @@ int log_stop_perf() {
     sprintf(command, "sudo killall -s INT perf");
 //    printf("perf: %s\n", command);
 
-    (void) system(command);
+    int res = system(command);
 
     sprintf(command, "sudo pkill --signal SIGHUP -f pcm-memory");
 
-    int res = system(command);
+    res &= system(command);
     sleep(1);
 
 
