@@ -1169,7 +1169,7 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed, FILE *f) {
     printf("\n");
 
     if (f != NULL) {
-        fprintf(f, "%.2f,%.2f,", read_bw, write_bw);
+        fprintf(f, "%.2f,%.2f,%.2f,%.2f,", read_gb, read_bw, write_gb, write_bw);
     }
 
 }
