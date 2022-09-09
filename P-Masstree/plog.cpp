@@ -940,7 +940,7 @@ int log_start_perf(const char *perf_fn) {
 //    );
 
     sprintf(command,
-            "record --call-graph dwarf -p %d -o %s -g >> perf.out 2>&1 &",
+            "record --call-graph dwarf -F 100 -p %d -o %s -g >> perf.out 2>&1 &",
             getpid(), perf_fn);
     system(command);
 //    perf_stat = 0;
