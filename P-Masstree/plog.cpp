@@ -939,12 +939,6 @@ int log_start_perf(const char *perf_fn) {
 //            perf_fn
 //    );
 
-    sprintf(command,
-            "record --call-graph dwarf -F 100 -p %d -o %s -g >> perf.out 2>&1 &",
-            getpid(), perf_fn);
-    system(command);
-//    perf_stat = 0;
-
 
 //    sleep(1);
 
@@ -973,6 +967,13 @@ int log_start_perf(const char *perf_fn) {
 //            getpid(), perf_fn);
 
     int cores = sysconf(_SC_NPROCESSORS_ONLN);
+
+    sprintf(command,
+            "sudo taskset -c %d-%d record --call-graph dwarf -F 100 -p %d -o %s -g >> perf.out 2>&1 &",
+            cores * 3 / 4, cores - 1, getpid(), perf_fn);
+    (void) system(command);
+//    perf_stat = 0;
+
     char real_command[4096];
 //    sprintf(real_command, "sudo taskset -c %d-%d /home/blepers/linux-huge/tools/perf/perf %s", cores * 3 / 4, cores - 1,
 //            command);
@@ -985,21 +986,21 @@ int log_start_perf(const char *perf_fn) {
 
     int res = system(real_command);
     sleep(1);
-    rdtscll(perf_start_rtd);
+    rdtscll(perf_start_rtd)
 
     return res;
 }
 
 int log_stop_perf() {
 
-    rdtscll(perf_stop_rtd);
+    rdtscll(perf_stop_rtd)
 
     char command[1024];
     sprintf(command, "sudo killall -s INT -w perf");
     sprintf(command, "sudo killall -s INT perf");
 //    printf("perf: %s\n", command);
 
-    system(command);
+    (void) system(command);
 
     sprintf(command, "sudo pkill --signal SIGHUP -f pcm-memory");
 
