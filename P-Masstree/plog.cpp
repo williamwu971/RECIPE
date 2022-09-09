@@ -1008,6 +1008,8 @@ int log_stop_perf() {
 
 void log_print_pmem_bandwidth(const char *perf_fn, double elapsed, FILE *f) {
 
+    (void) perf_fn;
+
     if (!perf_stat) {
 
         if (f != NULL)fprintf(f, ",,");
@@ -1034,8 +1036,8 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed, FILE *f) {
 //    char buf[1024];
 //    double elapsed_perf = 0;
 
-    uint64_t read;
-    uint64_t write;
+    uint64_t read = 0;
+    uint64_t write = 0;
 //    uint64_t read_b_cycle;
 //    uint64_t write_b_cycle;
 //    int repeat = 0;
@@ -1107,7 +1109,8 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed, FILE *f) {
 
     while (scanned_channel < 12) {
         FILE *file = fopen("/mnt/sdb/xiaoxiang/pcm.txt", "r");
-
+        read = 0;
+        write = 0;
 
         char buffer[256];
         int is_first_line = 1;
@@ -1117,7 +1120,7 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed, FILE *f) {
                 continue;
             }
             uint64_t skt, channel, pmmReads, pmmWrites, elapsedTime;
-            sscanf(buffer, "%llu %llu %llu %llu %llu", &skt, &channel, &pmmReads, &pmmWrites, &elapsedTime);
+            sscanf(buffer, "%lu %lu %lu %lu %lu", &skt, &channel, &pmmReads, &pmmWrites, &elapsedTime);
             scanned_channel++;
             read += pmmReads;
             write += pmmWrites;
