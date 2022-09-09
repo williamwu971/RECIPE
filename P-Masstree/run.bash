@@ -76,13 +76,13 @@ for fp in "${file_prefixes[@]}"; do
   echo "$fp,workload=$workload,value_size=$value_size,key_order=$key_order" >"$fp".csv
 
   # the header of csv file
-  #  {
-  #    printf "index,value,threads,gc,"
-  #    printf "insert_rb(gb/s),insert_wb(gb/s),insert_TP(ops/us),"
-  #    printf "update_rb(gb/s),update_wb(gb/s),update_TP(ops/us),"
-  #    printf "get_rb(gb/s),get_wb(gb/s),get_TP(ops/us),"
-  #    printf "delete_rb(gb/s),delete_wb(gb/s),delete_TP(ops/us),"
-  #  } >>"$fp".csv
+  {
+    printf "index,value,threads,gc,"
+    printf "insert_r(gb),insert_rb(gb/s),insert_w(gb),insert_wb(gb/s),insert_TP(ops/us),"
+    printf "update_r(gb),update_rb(gb/s),update_w(gb),update_wb(gb/s),update_TP(ops/us),"
+    printf "lookup_r(gb),lookup_rb(gb/s),lookup_w(gb),lookup_wb(gb/s),lookup_TP(ops/us),"
+    printf "delete_r(gb),delete_rb(gb/s),delete_w(gb),delete_wb(gb/s),delete_TP(ops/us),"
+  } >>"$fp".csv
 
   #  {
   #    printf "index,value,threads,gc,pmdk_flush,"
@@ -90,13 +90,13 @@ for fp in "${file_prefixes[@]}"; do
   #    printf "run_rb(gb/s),run_wb(gb/s),run_TP(ops/us),"
   #  } >>"$fp".csv
 
-  {
-    printf "index,value,threads,gc,pmdk_flush,"
-    printf "insert_TP(ops/us),"
-    printf "update_TP(ops/us),"
-    printf "get_TP(ops/us),"
-    printf "delete_TP(ops/us),"
-  } >>"$fp".csv
+  #  {
+  #    printf "index,value,threads,gc,pmdk_flush,"
+  #    printf "insert_TP(ops/us),"
+  #    printf "update_TP(ops/us),"
+  #    printf "get_TP(ops/us),"
+  #    printf "delete_TP(ops/us),"
+  #  } >>"$fp".csv
 
   #  for n in "${num_threads[@]}"; do
   #    printf 'T=%s,' "$n" >>$fp.csv
@@ -113,11 +113,11 @@ for i in "${index_location[@]}"; do
 
           # backup perf files
           #        cd .. || exit
-#          for pfn in *.perf; do
-#            [ -f "$pfn" ] || break
-#            echo "backing up $pfn"
-#            mv "$pfn" "$pfn".old
-#          done
+          #          for pfn in *.perf; do
+          #            [ -f "$pfn" ] || break
+          #            echo "backing up $pfn"
+          #            mv "$pfn" "$pfn".old
+          #          done
           #        cd - || exit
 
           # the first three columns

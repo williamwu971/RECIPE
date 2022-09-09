@@ -1138,8 +1138,12 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed, FILE *f) {
 //    double write_b_percent = (double) write_b_cycle / (double) elapsed_cycles * 100.0f;
 //    double write_bw = (double) write * 64.0f / 1024.0f / 1024.0f / 1024.0f / elapsed;
 
-    double read_bw = (double) read / 1024.0f / 1024.0f / 1024.0f / elapsed;
-    double write_bw = (double) write / 1024.0f / 1024.0f / 1024.0f / elapsed;
+    double read_gb = (double) read / 1024.0f / 1024.0f / 1024.0f;
+    double write_gb = (double) write / 1024.0f / 1024.0f / 1024.0f;
+
+    double read_bw = read_gb / elapsed;
+    double write_bw = write_gb / elapsed;
+
 
     printf("\n");
 
@@ -1152,12 +1156,12 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed, FILE *f) {
 
     printf("read: ");
 //    printf("%.2f%% ", read_b_percent);
-    printf("%.2fgb ", (double) read / 1024.0f / 1024.0f / 1024.0f);
+    printf("%.2fgb ", read_gb);
     printf("%.2fgb/s ", read_bw);
 
     printf("write: ");
 //    printf("%.2f%% ", write_b_percent);
-    printf("%.2fgb ", (double) write / 1024.0f / 1024.0f / 1024.0f);
+    printf("%.2fgb ", write_gb);
     printf("%.2fgb/s ", write_bw);
 
     printf("elapsed: %.2f ", elapsed);
