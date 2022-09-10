@@ -314,7 +314,7 @@ static inline void masstree_branched_insert(
 
         uint64_t *value = (uint64_t *) malloc(value_size);
         *value = p_value;
-        memset(value + 1, 7, value_size - sizeof(uint64_t));
+        memset(value + 1, 7, memset_size);
         tree->put_and_return(p_key, value, 1, 0, t);
 
     }
@@ -460,6 +460,7 @@ static inline void masstree_branched_lookup(
 ) {
 
     void *raw = tree->get(g_key, t);
+    char *memset_region;
 
     if (!check_value) {
         (void) raw;
@@ -476,6 +477,7 @@ static inline void masstree_branched_lookup(
                     << std::endl;
             throw;
         }
+        memset_region = reinterpret_cast<char *> (obj + 1);
     } else if (use_log) {
 
         struct log_cell *lc = (struct log_cell *) raw;
@@ -491,12 +493,24 @@ static inline void masstree_branched_lookup(
                     << std::endl;
             throw;
         }
+        memset_region = reinterpret_cast<char *> (ret + 1);
     } else {
         uint64_t *ret = reinterpret_cast<uint64_t *> (raw);
         if (*ret != g_value) {
             std::cout
                     << "wrong value read: " << *ret
                     << " expected:" << g_value
+                    << std::endl;
+            throw;
+        }
+        memset_region = reinterpret_cast<char *> (ret + 1);
+    }
+
+    for (int i = 0; i < memset_size; i++) {
+        if (memset_region[i] != 7) {
+            std::cout
+                    << "wrong value read: " << memset_region[i]
+                    << " expected:" << 7
                     << std::endl;
             throw;
         }
@@ -835,7 +849,7 @@ int main(int argc, char **argv) {
 
             } else {
                 printf("value=dram ");
-
+                memset_size = value_size - sizeof(uint64_t);
             }
         } else if (strcasestr(argv[ac], "key=")) {
             if (strcasestr(argv[ac], "rand")) {
