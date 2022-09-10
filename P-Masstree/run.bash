@@ -63,7 +63,7 @@ index_location=("dram")
 #num_threads=(1 3 5 7 9 11 13 15)
 num_threads=(16)
 use_perf="yes"
-record_latency="no"
+record_latency="yes"
 num_of_gc=(8)
 
 workload=16000000
