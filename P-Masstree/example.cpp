@@ -239,12 +239,9 @@ static inline void masstree_branched_insert(
         struct masstree_obj *mo = (struct masstree_obj *) pmemobj_direct(ht_oid);
         mo->data = p_value;
         mo->ht_oid = ht_oid;
-#ifdef MASSTREE_FLUSH
+
         pmemobj_persist(pop, mo, sizeof(struct masstree_obj));
         pmemobj_memset_persist(pop, mo + 1, 7, memset_size);
-#else
-        memset(mo + 1, 7, memset_size);
-#endif
 
         tree->put_and_return(p_key, mo, 1, 0, t);
 
@@ -283,15 +280,9 @@ static inline void masstree_branched_insert(
 
         uint64_t *value = (uint64_t *) (raw + sizeof(struct log_cell));
         *value = p_value;
-//                memset(value + 1, 7, raw_size - sizeof(struct log_cell) - sizeof(uint64_t));
-//                    pmem_persist(raw, raw_size);
 
-#ifdef MASSTREE_FLUSH
         pmem_persist(raw, sizeof(struct log_cell) + sizeof(uint64_t));
         pmem_memset_persist(value + 1, 7, memset_size);
-#else
-        memset(value + 1, 7, memset_size);
-#endif
 
 
         tree->put_and_return(p_key, raw, 1, 0, t);
@@ -301,13 +292,9 @@ static inline void masstree_branched_insert(
         uint64_t *value = (uint64_t *) RP_malloc(value_size);
         *value = p_value;
 
-#ifdef MASSTREE_FLUSH
-//        clflush((char *) value, value_size, true, true);
         pmem_persist(value, value_size);
         pmem_memset_persist(value + 1, 7, memset_size);
-#else
-        memset(value + 1, 7, memset_size);
-#endif
+
         tree->put_and_return(p_key, value, 1, 0, t);
 
     } else {
@@ -341,12 +328,8 @@ static inline void masstree_branched_update(
         mo->data = u_value;
         mo->ht_oid = ht_oid;
 
-#ifdef MASSTREE_FLUSH
         pmemobj_persist(pop, mo, sizeof(struct masstree_obj));
         pmemobj_memset_persist(pop, mo + 1, 7, memset_size);
-#else
-        memset(mo + 1, 7, memset_size);
-#endif
 
         struct masstree_obj *old_obj =
                 (struct masstree_obj *)
@@ -399,14 +382,8 @@ static inline void masstree_branched_update(
         *value = u_value;
 
 
-//                    pmem_persist(raw, raw_size);
-#ifdef MASSTREE_FLUSH
         pmem_persist(raw, sizeof(struct log_cell) + sizeof(uint64_t));
         pmem_memset_persist(value + 1, 7, memset_size);
-#else
-        memset(value + 1, 7, memset_size);
-#endif
-
 
         void *returned = tree->put_and_return(u_key, raw, 0, 0, t);
 
@@ -419,14 +396,9 @@ static inline void masstree_branched_update(
 
         uint64_t *value = (uint64_t *) RP_malloc(value_size);
         *value = u_value;
-        memset(value + 1, 7, memset_size);
-#ifdef MASSTREE_FLUSH
-//        clflush((char *) value, value_size, true, true);
+
         pmem_persist(value, value_size);
         pmem_memset_persist(value + 1, 7, memset_size);
-#else
-        memset(value + 1, 7, memset_size);
-#endif
 
         void *returned = tree->put_and_return(u_key, value, 0, 0, t);
 
@@ -733,7 +705,6 @@ void *section_delete(void *arg) {
         rdtscll(b)
         latencies[i] = b - a;
 
-        // todo: write -1 here
     }
 
     return NULL;
