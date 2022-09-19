@@ -228,45 +228,26 @@ static inline void masstree_branched_insert(
 ) {
     if (use_obj) {
 
+        TX_BEGIN(pop) {
 
-        PMEMoid ht_oid;
-        if (pmemobj_alloc(pop, &ht_oid,
-                          value_size, TOID_TYPE_NUM(struct masstree_obj),
-                          0, 0)) {
-            fprintf(stderr, "pmemobj_alloc failed for obj_memalign\n");
-            assert(0);
-        }
-        struct masstree_obj *mo = (struct masstree_obj *) pmemobj_direct(ht_oid);
-        mo->data = p_value;
-        mo->ht_oid = ht_oid;
+                        PMEMoid ht_oid = pmemobj_tx_alloc(value_size, TOID_TYPE_NUM(struct masstree_obj));
+                        pmemobj_tx_add_range(ht_oid, 0, value_size);
 
-        pmemobj_persist(pop, mo, sizeof(struct masstree_obj));
-        pmemobj_memset_persist(pop, mo + 1, 7, memset_size);
+                        struct masstree_obj *mo = (struct masstree_obj *) pmemobj_direct(ht_oid);
+                        mo->data = p_value;
+                        mo->ht_oid = ht_oid;
 
-        tree->put_and_return(p_key, mo, 1, 0, t);
+                        memset(mo + 1, 7, memset_size);
+
+                        tree->put_and_return(p_key, mo, 1, 0, t);
 
 
-//                    TX_BEGIN(pop) {
-//
-//                                    TOID(struct masstree_obj) objToid =
-//                                            TX_ALLOC(struct masstree_obj, value_size);
-//
-//                                            D_RW(objToid)->objToid = objToid;
-//                                            D_RW(objToid)->data = p_value;
-//
-//                                    memset(((uint64_t *) (&D_RW(objToid)->data)) + 1, 7,
-//                                           value_size - sizeof(struct masstree_obj)
-//                                    );
-//
-//
-//                                    tree->put_and_return(p_key, D_RW(objToid), 1, 0, t);
-//
-//
-//                                }
-//                                    TX_ONABORT {
-//                                    throw;
-//                                }
-//                    TX_END
+                    }
+                        TX_ONABORT {
+                        throw;
+                    }
+        TX_END
+
 
     } else if (use_log) {
 
@@ -317,57 +298,31 @@ static inline void masstree_branched_update(
 ) {
     if (use_obj) {
 
-        PMEMoid ht_oid;
-        if (pmemobj_alloc(pop, &ht_oid,
-                          value_size, TOID_TYPE_NUM(struct masstree_obj),
-                          0, 0)) {
-            fprintf(stderr, "pmemobj_alloc failed for obj_memalign\n");
-            assert(0);
-        }
-        struct masstree_obj *mo = (struct masstree_obj *) pmemobj_direct(ht_oid);
-        mo->data = u_value;
-        mo->ht_oid = ht_oid;
+        TX_BEGIN(pop) {
 
-        pmemobj_persist(pop, mo, sizeof(struct masstree_obj));
-        pmemobj_memset_persist(pop, mo + 1, 7, memset_size);
+                        PMEMoid ht_oid = pmemobj_tx_alloc(value_size, TOID_TYPE_NUM(struct masstree_obj));
+                        pmemobj_tx_add_range(ht_oid, 0, value_size);
 
-        struct masstree_obj *old_obj =
-                (struct masstree_obj *)
+                        struct masstree_obj *mo = (struct masstree_obj *) pmemobj_direct(ht_oid);
+                        mo->data = u_value;
+                        mo->ht_oid = ht_oid;
+
+                        memset(mo + 1, 7, memset_size);
+
                         tree->put_and_return(u_key, mo, 1, 0, t);
 
-        if (no_allow_prev_null || old_obj != NULL) {
-            pmemobj_free(&old_obj->ht_oid);
-        }
+                        struct masstree_obj *old_obj = (struct masstree_obj *) tree->put_and_return(u_key, mo, 1, 0, t);
+
+                        if (no_allow_prev_null || old_obj != NULL) {
+                            pmemobj_tx_free(old_obj->ht_oid);
+                        }
 
 
-//                    TX_BEGIN(pop) {
-//
-//                                    TOID(struct masstree_obj) objToid =
-//                                            TX_ALLOC(struct masstree_obj, value_size);
-//
-//                                            D_RW(objToid)->objToid = objToid;
-//                                            D_RW(objToid)->data = keys[i];
-//
-//                                    memset(((uint64_t *) (&D_RW(objToid)->data)) + 1, 7,
-//                                           value_size - sizeof(struct masstree_obj)
-//                                    );
-//
-//                                    printf("key: %lu pointer: %p\n", keys[i],
-//                                           tree->get(keys[i], t));
-//
-//                                    struct masstree_obj *obj = (struct masstree_obj *)
-//                                            tree->put_and_return(u_key, D_RW(objToid), 0, 0, t);
-//
-//
-//                                    printf("key: %lu pointer: %p\n", keys[i], obj);
-//
-//                                    TX_FREE(obj->objToid);
-//
-//                                }
-//                                    TX_ONABORT {
-//                                    throw;
-//                                }
-//                    TX_END
+                    }
+                        TX_ONABORT {
+                        throw;
+                    }
+        TX_END
 
     } else if (use_log) {
         char *raw = (char *) log_malloc(value_size);
