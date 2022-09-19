@@ -37,9 +37,9 @@ for fn in args.r:
             diff = time - last_time
             nb_requests += 1
 
-            if diff > 2000000000.0:
+            if diff > 2000000.0:
                 last_time = time
-                op_per_second = nb_requests / (diff / 2000000000.0)
+                op_per_second = nb_requests / (diff / 2000000.0)
                 final_data.append(op_per_second)
                 nb_requests = 0
 
