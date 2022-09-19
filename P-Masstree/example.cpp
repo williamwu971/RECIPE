@@ -1002,7 +1002,7 @@ int main(int argc, char **argv) {
             section_args[i].start = section_args[i - 1].end;
         }
 
-        section_args[i].start = i;
+//        section_args[i].start = i;
         section_args[i].end = section_args[i].start + n_per_thread;
         if (n_remainder > 0) {
             n_remainder--;
