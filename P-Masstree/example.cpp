@@ -313,9 +313,9 @@ static inline void masstree_branched_update(
 
                         struct masstree_obj *old_obj = (struct masstree_obj *) tree->put_and_return(u_key, mo, 1, 0, t);
 
-//                        if (no_allow_prev_null || old_obj != NULL) {
-//                            pmemobj_tx_free(old_obj->ht_oid);
-//                        }
+                        if (no_allow_prev_null || old_obj != NULL) {
+                            pmemobj_tx_free(old_obj->ht_oid);
+                        }
 
 
                     }
