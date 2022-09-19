@@ -301,7 +301,7 @@ static inline void masstree_branched_update(
         TX_BEGIN(pop) {
 
                         PMEMoid ht_oid = pmemobj_tx_alloc(value_size, TOID_TYPE_NUM(struct masstree_obj));
-                        pmemobj_tx_add_range(ht_oid, 0, value_size);
+//                        pmemobj_tx_add_range(ht_oid, 0, value_size);
 
                         struct masstree_obj *mo = (struct masstree_obj *) pmemobj_direct(ht_oid);
                         mo->data = u_value;
