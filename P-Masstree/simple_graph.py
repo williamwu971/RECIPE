@@ -14,16 +14,35 @@ args = parser.parse_args()
 
 plt.figure(1, figsize=(19, 12))
 
+# for fn in args.r:
+#     with open(fn, "r") as data_file:
+#         data_read = list(map(lambda x: float(x), data_file.read().splitlines()))
+#
+#         if args.ylim != 0:
+#             max_value = max(data_read)
+#             if max_value > args.ylim * 0.9:
+#                 raise Exception("adjust ylim to {}".format(max_value / 0.9))
+#
+#         plt.plot(data_read, label=fn)
+
 for fn in args.r:
     with open(fn, "r") as data_file:
         data_read = list(map(lambda x: float(x), data_file.read().splitlines()))
+        final_data = []
 
-        if args.ylim != 0:
-            max_value = max(data_read)
-            if max_value > args.ylim * 0.9:
-                raise Exception("adjust ylim to {}".format(max_value / 0.9))
+        last_time = data_read[0]
+        nb_requests = 0
 
-        plt.plot(data_read, label=fn)
+        for time in data_read:
+            diff = time - last_time
+            nb_requests += 1
+
+            if diff > 2000000000.0:
+                last_time = time
+                op_per_second = nb_requests / (diff / 2000000000.0)
+                final_data.append(op_per_second)
+
+        plt.plot(final_data, label=fn)
 
 # temp_title = ' '.join(args.t)
 # plt.title(temp_title, fontsize=40)
