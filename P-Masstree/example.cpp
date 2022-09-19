@@ -86,7 +86,7 @@ void dump_latencies(const char *fn, u_int64_t *numbers, uint64_t length) {
 
 struct section_arg {
     uint64_t start;
-//    uint64_t end;
+    uint64_t end;
     masstree::masstree *tree;
     uint64_t *keys;
     uint64_t *rands;
@@ -488,22 +488,32 @@ void *section_ycsb_load(void *arg) {
 
     masstree::masstree *tree = sa->tree;
     uint64_t start = sa->start;
-//    uint64_t end = sa->end;
+    uint64_t end = sa->end;
     u_int64_t *latencies = sa->latencies;
 
     auto t = tree->getThreadInfo();
 
-    u_int64_t a, b;
+    if (start == 0) {
+//        u_int64_t a;
+        u_int64_t b;
 
-    for (uint64_t i = start; i < n; i += num_thread) {
-        rdtscll(a)
+        for (uint64_t i = start; i < end; i++) {
+//            rdtscll(a)
 
-//        tree->put(ycsb_init_keys[i], &ycsb_init_keys[i], t);
-        masstree_branched_insert(tree, t, ycsb_init_keys[i], ycsb_init_keys[i]);
+            masstree_branched_insert(tree, t, ycsb_init_keys[i], ycsb_init_keys[i]);
 
-        rdtscll(b)
-        latencies[i] = b - a;
+            rdtscll(b)
+
+//            latencies[i] = b - a;
+            latencies[i] = b;
+        }
+    } else {
+
+        for (uint64_t i = start; i < end; i++) {
+            masstree_branched_insert(tree, t, ycsb_init_keys[i], ycsb_init_keys[i]);
+        }
     }
+
 
     return NULL;
 }
@@ -515,34 +525,53 @@ void *section_ycsb_run(void *arg) {
 
     masstree::masstree *tree = sa->tree;
     uint64_t start = sa->start;
-//    uint64_t end = sa->end;
+    uint64_t end = sa->end;
     u_int64_t *latencies = sa->latencies;
     int check_value = (YCSB_SIZE == 6464000000);
 
     auto t = tree->getThreadInfo();
 
-    u_int64_t a, b;
+    if (start == 0) {
+//        u_int64_t a;
+        u_int64_t b;
 
+        for (uint64_t i = start; i < end; i++) {
 
-    for (uint64_t i = start; i < n; i += num_thread) {
+//            rdtscll(a)
 
-        rdtscll(a)
+            if (ycsb_ops[i] == OP_INSERT || ycsb_ops[i] == OP_UPDATE) {
+                masstree_branched_update(tree, t, ycsb_keys[i], ycsb_keys[i], 0);
+            } else if (ycsb_ops[i] == OP_READ) {
+                masstree_branched_lookup(tree, t, ycsb_keys[i], ycsb_keys[i], check_value);
+            } else if (ycsb_ops[i] == OP_SCAN) {
+                uint64_t buf[200];
+                int ret = tree->scan(ycsb_keys[i], ycsb_ranges[i], buf, t);
+                (void) ret;
+            } else if (ycsb_ops[i] == OP_DELETE) {
+                masstree_branched_delete(tree, t, ycsb_keys[i]);
+            }
 
-        if (ycsb_ops[i] == OP_INSERT || ycsb_ops[i] == OP_UPDATE) {
-            masstree_branched_update(tree, t, ycsb_keys[i], ycsb_keys[i], 0);
-        } else if (ycsb_ops[i] == OP_READ) {
-            masstree_branched_lookup(tree, t, ycsb_keys[i], ycsb_keys[i], check_value);
-        } else if (ycsb_ops[i] == OP_SCAN) {
-            uint64_t buf[200];
-            int ret = tree->scan(ycsb_keys[i], ycsb_ranges[i], buf, t);
-            (void) ret;
-        } else if (ycsb_ops[i] == OP_DELETE) {
-            masstree_branched_delete(tree, t, ycsb_keys[i]);
+            rdtscll(b)
+//            latencies[i] = b - a;
+            latencies[i] = b;
         }
+    } else {
 
-        rdtscll(b)
-        latencies[i] = b - a;
+        for (uint64_t i = start; i < end; i++) {
+            if (ycsb_ops[i] == OP_INSERT || ycsb_ops[i] == OP_UPDATE) {
+                masstree_branched_update(tree, t, ycsb_keys[i], ycsb_keys[i], 0);
+            } else if (ycsb_ops[i] == OP_READ) {
+                masstree_branched_lookup(tree, t, ycsb_keys[i], ycsb_keys[i], check_value);
+            } else if (ycsb_ops[i] == OP_SCAN) {
+                uint64_t buf[200];
+                int ret = tree->scan(ycsb_keys[i], ycsb_ranges[i], buf, t);
+                (void) ret;
+            } else if (ycsb_ops[i] == OP_DELETE) {
+                masstree_branched_delete(tree, t, ycsb_keys[i]);
+            }
+        }
     }
+
 
     return NULL;
 }
@@ -553,7 +582,7 @@ void *section_insert(void *arg) {
 
 
     uint64_t start = sa->start;
-//    uint64_t end = sa->end;
+    uint64_t end = sa->end;
     masstree::masstree *tree = sa->tree;
     uint64_t *keys = sa->keys;
     uint64_t *rands = sa->rands;
@@ -562,17 +591,27 @@ void *section_insert(void *arg) {
 
     auto t = tree->getThreadInfo();
 
-    u_int64_t a, b;
+    if (start == 0) {
+//        u_int64_t a;
+        u_int64_t b;
 
-    for (uint64_t i = start; i < n; i += num_thread) {
+        for (uint64_t i = start; i < end; i++) {
 
-        rdtscll(a)
+//            rdtscll(a)
 
-        masstree_branched_insert(tree, t, keys[i], rands[i]);
+            masstree_branched_insert(tree, t, keys[i], rands[i]);
 
-        rdtscll(b)
-        latencies[i] = b - a;
+            rdtscll(b)
+//            latencies[i] = b - a;
+            latencies[i] = b;
+        }
+    } else {
+
+        for (uint64_t i = start; i < end; i++) {
+            masstree_branched_insert(tree, t, keys[i], rands[i]);
+        }
     }
+
 
     return NULL;
 }
@@ -583,7 +622,7 @@ void *section_update(void *arg) {
 
 
     uint64_t start = sa->start;
-//    uint64_t end = sa->end;
+    uint64_t end = sa->end;
     masstree::masstree *tree = sa->tree;
     uint64_t *keys = sa->keys;
     u_int64_t *latencies = sa->latencies;
@@ -591,17 +630,28 @@ void *section_update(void *arg) {
 
     auto t = tree->getThreadInfo();
 
-    u_int64_t a, b;
 
-    for (uint64_t i = start; i < n; i += num_thread) {
+    if (start == 0) {
+//        u_int64_t a;
+        u_int64_t b;
 
-        rdtscll(a)
+        for (uint64_t i = start; i < end; i++) {
 
-        masstree_branched_update(tree, t, keys[i], keys[i], 1);
+//            rdtscll(a)
 
-        rdtscll(b)
-        latencies[i] = b - a;
+            masstree_branched_update(tree, t, keys[i], keys[i], 1);
+
+            rdtscll(b)
+//            latencies[i] = b - a;
+            latencies[i] = b;
+        }
+    } else {
+
+        for (uint64_t i = start; i < end; i++) {
+            masstree_branched_update(tree, t, keys[i], keys[i], 1);
+        }
     }
+
 
     return NULL;
 }
@@ -612,7 +662,7 @@ void *section_lookup(void *arg) {
 
 
     uint64_t start = sa->start;
-//    uint64_t end = sa->end;
+    uint64_t end = sa->end;
     masstree::masstree *tree = sa->tree;
     uint64_t *keys = sa->keys;
     u_int64_t *latencies = sa->latencies;
@@ -620,18 +670,28 @@ void *section_lookup(void *arg) {
 
     auto t = tree->getThreadInfo();
 
-    u_int64_t a, b;
+    if (start == 0) {
+//        u_int64_t a;
+        u_int64_t b;
 
-    for (uint64_t i = start; i < n; i += num_thread) {
+        for (uint64_t i = start; i < end; i++) {
 
-        rdtscll(a)
+//            rdtscll(a)
 
-        masstree_branched_lookup(tree, t, keys[i], keys[i], 1);
+            masstree_branched_lookup(tree, t, keys[i], keys[i], 1);
 
-        rdtscll(b)
-        latencies[i] = b - a;
+            rdtscll(b)
+//            latencies[i] = b - a;
+            latencies[i] = b;
 
+        }
+    } else {
+
+        for (uint64_t i = start; i < end; i++) {
+            masstree_branched_lookup(tree, t, keys[i], keys[i], 1);
+        }
     }
+
 
     return NULL;
 }
@@ -641,7 +701,7 @@ void *section_delete(void *arg) {
 
 
     uint64_t start = sa->start;
-//    uint64_t end = sa->end;
+    uint64_t end = sa->end;
     masstree::masstree *tree = sa->tree;
     uint64_t *keys = sa->keys;
     u_int64_t *latencies = sa->latencies;
@@ -649,18 +709,28 @@ void *section_delete(void *arg) {
 
     auto t = tree->getThreadInfo();
 
-    u_int64_t a, b;
+    if (start == 0) {
+//        u_int64_t a;
+        u_int64_t b;
 
-    for (uint64_t i = start; i < n; i += num_thread) {
+        for (uint64_t i = start; i < end; i++) {
 
-        rdtscll(a)
+//            rdtscll(a)
 
-        masstree_branched_delete(tree, t, keys[i]);
+            masstree_branched_delete(tree, t, keys[i]);
 
-        rdtscll(b)
-        latencies[i] = b - a;
+            rdtscll(b)
+//            latencies[i] = b - a;
+            latencies[i] = b;
 
+        }
+    } else {
+
+        for (uint64_t i = start; i < end; i++) {
+            masstree_branched_delete(tree, t, keys[i]);
+        }
     }
+
 
     return NULL;
 }
@@ -702,7 +772,7 @@ void run(
                section_name, n, (n * 1.0) / duration.count(), duration.count() / 1000000.0);
 
     sprintf(perf_fn, "%s.latencies", section_name);
-    if (record_latency) dump_latencies(perf_fn, latencies, n);
+    if (record_latency) dump_latencies(perf_fn, latencies, section_args[0].end);
 
     if (throughput_file != NULL) {
         fprintf(throughput_file, "%.2f,", (n * 1.0) / duration.count());
@@ -906,15 +976,14 @@ int main(int argc, char **argv) {
     masstree::masstree *tree = new masstree::masstree();
 
     FILE *throughput_file = fopen("perf.csv", "a");
-    u_int64_t *latencies = (u_int64_t *) malloc(sizeof(u_int64_t) * n);
-
+    u_int64_t *latencies = NULL;
 
     pthread_attr_t *attrs = (pthread_attr_t *) calloc(num_thread, sizeof(pthread_attr_t));
     cpu_set_t *cpus = (cpu_set_t *) calloc(num_thread, sizeof(cpu_set_t));
     struct section_arg *section_args = (struct section_arg *) calloc(num_thread, sizeof(struct section_arg));
 
-//    uint64_t n_per_thread = n / num_thread;
-//    uint64_t n_remainder = n % num_thread;
+    uint64_t n_per_thread = n / num_thread;
+    uint64_t n_remainder = n % num_thread;
     int numberOfProcessors = sysconf(_SC_NPROCESSORS_ONLN);
     printf("\tNumber of processors: %d\n", numberOfProcessors);
 
@@ -927,26 +996,32 @@ int main(int argc, char **argv) {
         pthread_attr_init(attrs + i);
         pthread_attr_setaffinity_np(attrs + i, sizeof(cpu_set_t), cpus + i);
 
-        // todo: possible uneven workload
-//        if (i == 0) {
-//            section_args[i].start = 0;
-//        } else {
-//            section_args[i].start = section_args[i - 1].end;
-//        }
+        if (i == 0) {
+            section_args[i].start = 0;
+        } else {
+            section_args[i].start = section_args[i - 1].end;
+        }
 
         section_args[i].start = i;
-//        section_args[i].end = section_args[i].start + n_per_thread;
-//        if (n_remainder > 0) {
-//            n_remainder--;
-//            section_args[i].end++;
-//        }
+        section_args[i].end = section_args[i].start + n_per_thread;
+        if (n_remainder > 0) {
+            n_remainder--;
+            section_args[i].end++;
+        }
 
-//        printf("thread %d from %lu to %lu\n", i, section_args[i].start, section_args[i].end - 1);
+        printf("thread %d from %lu to %lu\n", i, section_args[i].start, section_args[i].end - 1);
 
         section_args[i].tree = tree;
         section_args[i].keys = keys;
         section_args[i].rands = rands;
-        section_args[i].latencies = latencies;
+
+        if (i == 0) {
+            latencies = (u_int64_t *) malloc(sizeof(u_int64_t) * section_args[i].end);
+            section_args[i].latencies = latencies;
+        } else {
+            section_args[i].latencies = NULL;
+        }
+
     }
 
     if (require_log_init) {
