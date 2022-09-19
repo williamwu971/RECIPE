@@ -1009,7 +1009,7 @@ int main(int argc, char **argv) {
             section_args[i].end++;
         }
 
-        printf("thread %d from %lu to %lu\n", i, section_args[i].start, section_args[i].end - 1);
+//        printf("thread %d from %lu to %lu\n", i, section_args[i].start, section_args[i].end - 1);
 
         section_args[i].tree = tree;
         section_args[i].keys = keys;
