@@ -771,7 +771,7 @@ void *log_garbage_collection(void *arg) {
 
 void log_start_gc(masstree::masstree *t) {
 
-    static int use_me = sysconf(_SC_NPROCESSORS_ONLN) / 2 - 2;
+    static int use_me = 1;
     pthread_attr_t attr;
     cpu_set_t cpu;
     CPU_ZERO(&cpu);
@@ -785,7 +785,7 @@ void log_start_gc(masstree::masstree *t) {
 
     pthread_create(gc_ids + (num_gcs - 1), &attr, log_garbage_collection, t);
 
-    use_me--;
+    use_me++;
 //    pthread_detach(gc_ids[num_gcs - 1]);
 
 }
