@@ -66,6 +66,7 @@ num_threads=(16)
 use_perf="yes"
 record_latency="yes"
 num_of_gc=(8 0)
+num_of_gc=(8)
 
 workload=16000000
 key_order="random"
