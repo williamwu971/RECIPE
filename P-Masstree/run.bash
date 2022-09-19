@@ -52,8 +52,8 @@ done
 cd build || exit
 rm -f ./*.latencies ./*.png ./*.csv
 
-pmdk_flush=("0" "1")
-#pmdk_flush=("0")
+pmdk_no_flush=("0" "1")
+pmdk_no_flush=("0")
 index_location=("dram" "ralloc" "obj")
 value_location=("ralloc" "log" "obj")
 index_location=("dram")
@@ -87,13 +87,13 @@ for fp in "${file_prefixes[@]}"; do
   } >>"$fp".csv
 
   #  {
-  #    printf "index,value,threads,gc,pmdk_flush,"
+  #    printf "index,value,threads,gc,pmdk_no_flush,"
   #    printf "load_rb(gb/s),load_wb(gb/s),load_TP(ops/us),"
   #    printf "run_rb(gb/s),run_wb(gb/s),run_TP(ops/us),"
   #  } >>"$fp".csv
 
   #  {
-  #    printf "index,value,threads,gc,pmdk_flush,"
+  #    printf "index,value,threads,gc,pmdk_no_flush,"
   #    printf "insert_TP(ops/us),"
   #    printf "update_TP(ops/us),"
   #    printf "get_TP(ops/us),"
@@ -111,7 +111,7 @@ for i in "${index_location[@]}"; do
   for v in "${value_location[@]}"; do
     for n in "${num_threads[@]}"; do
       for g in "${num_of_gc[@]}"; do
-        for f in "${pmdk_flush[@]}"; do
+        for f in "${pmdk_no_flush[@]}"; do
 
           # backup perf files
           #        cd .. || exit
