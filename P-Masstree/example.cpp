@@ -292,8 +292,8 @@ static inline void masstree_branched_insert(
         uint64_t *value = (uint64_t *) RP_malloc(value_size);
         *value = p_value;
 
-//        pmem_persist(value, value_size);
-//        pmem_memset_persist(value + 1, 7, memset_size);
+        pmem_persist(value, sizeof(uint64_t));
+        pmem_memset_persist(value + 1, 7, memset_size);
 
         tree->put_and_return(p_key, value, 1, 0, t);
 
@@ -397,7 +397,7 @@ static inline void masstree_branched_update(
         uint64_t *value = (uint64_t *) RP_malloc(value_size);
         *value = u_value;
 
-        pmem_persist(value, value_size);
+        pmem_persist(value, sizeof(uint64_t));
         pmem_memset_persist(value + 1, 7, memset_size);
 
         void *returned = tree->put_and_return(u_key, value, 0, 0, t);
