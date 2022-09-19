@@ -41,6 +41,7 @@ for fn in args.r:
                 last_time = time
                 op_per_second = nb_requests / (diff / 2000000000.0)
                 final_data.append(op_per_second)
+                nb_requests = 0
 
         plt.plot(final_data, label=fn)
 
