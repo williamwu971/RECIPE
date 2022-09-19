@@ -771,6 +771,7 @@ void *log_garbage_collection(void *arg) {
 
 void log_start_gc(masstree::masstree *t) {
 
+    // interfering main threads
     static int use_me = 1;
     pthread_attr_t attr;
     cpu_set_t cpu;
