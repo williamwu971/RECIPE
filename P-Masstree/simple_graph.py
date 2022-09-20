@@ -27,7 +27,7 @@ plt.figure(1, figsize=(19, 12))
 
 for fn in args.r:
     with open(fn, "r") as data_file:
-        data_read = list(map(lambda x: float(x), data_file.read().splitlines()))
+        data_read = list(map(lambda x: int(x), data_file.read().splitlines()))
         final_data = []
 
         last_time = data_read[0]
@@ -37,13 +37,15 @@ for fn in args.r:
             diff = time - last_time
             nb_requests += 1
 
-            if diff > 2000000.0:
+            if diff > 2000000:
                 last_time = time
-                op_per_second = nb_requests / (diff / 2000000.0)
-                final_data.append(op_per_second)
+                op_per_second = nb_requests / (diff / 2000000)
+
+                for i in range(0, diff, 2000000):
+                    final_data.append(op_per_second)
                 nb_requests = 0
 
-        print("{} total cycle: {}".format(fn, data_read[-1] - data_read[0]))
+        # print("{} total cycle: {}".format(fn, data_read[-1] - data_read[0]))
 
         plt.plot(final_data, label=fn)
 
