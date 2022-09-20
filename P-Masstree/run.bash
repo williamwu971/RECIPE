@@ -53,7 +53,7 @@ cd build || exit
 rm -f ./*.latencies ./*.png ./*.csv
 
 pmdk_no_flush=("0" "1")
-pmdk_no_flush=("0")
+#pmdk_no_flush=("0")
 index_location=("dram" "ralloc" "obj")
 value_location=("ralloc" "log" "obj")
 index_location=("dram")
