@@ -41,6 +41,9 @@ for fn in args.r:
                 last_time = time
                 op_per_second = nb_requests / (diff / 2000000)
 
+                if args.ylim != 0 and op_per_second > args.ylim:
+                    raise Exception("adjust ylim to {}".format(op_per_second))
+
                 for i in range(0, diff, 2000000):
                     final_data.append(op_per_second)
                 nb_requests = 0
