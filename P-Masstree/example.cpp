@@ -228,18 +228,18 @@ static inline void masstree_branched_insert(
 ) {
     if (use_obj) {
 
+        struct masstree_obj *mo = NULL;
+
         TX_BEGIN(pop) {
 
                         PMEMoid ht_oid = pmemobj_tx_alloc(value_size, TOID_TYPE_NUM(struct masstree_obj));
                         pmemobj_tx_add_range(ht_oid, 0, value_size);
 
-                        struct masstree_obj *mo = (struct masstree_obj *) pmemobj_direct(ht_oid);
+                        mo = (struct masstree_obj *) pmemobj_direct(ht_oid);
                         mo->data = p_value;
                         mo->ht_oid = ht_oid;
 
                         memset(mo + 1, 7, memset_size);
-
-                        tree->put_and_return(p_key, mo, 1, 0, t);
 
 
                     }
@@ -248,6 +248,7 @@ static inline void masstree_branched_insert(
                     }
         TX_END
 
+        tree->put_and_return(p_key, mo, 1, 0, t);
 
     } else if (use_log) {
 
@@ -298,29 +299,29 @@ static inline void masstree_branched_update(
 ) {
     if (use_obj) {
 
+        struct masstree_obj *mo = NULL;
         TX_BEGIN(pop) {
 
                         PMEMoid ht_oid = pmemobj_tx_alloc(value_size, TOID_TYPE_NUM(struct masstree_obj));
                         pmemobj_tx_add_range(ht_oid, 0, value_size);
 
-                        struct masstree_obj *mo = (struct masstree_obj *) pmemobj_direct(ht_oid);
+                        mo = (struct masstree_obj *) pmemobj_direct(ht_oid);
                         mo->data = u_value;
                         mo->ht_oid = ht_oid;
 
                         memset(mo + 1, 7, memset_size);
-
-                        struct masstree_obj *old_obj = (struct masstree_obj *) tree->put_and_return(u_key, mo, 1, 0, t);
-
-                        if (no_allow_prev_null || old_obj != NULL) {
-                            pmemobj_tx_free(old_obj->ht_oid);
-                        }
-
 
                     }
                         TX_ONABORT {
                         throw;
                     }
         TX_END
+
+        struct masstree_obj *old_obj = (struct masstree_obj *) tree->put_and_return(u_key, mo, 1, 0, t);
+
+        if (no_allow_prev_null || old_obj != NULL) {
+            pmemobj_free(&old_obj->ht_oid);
+        }
 
     } else if (use_log) {
         char *raw = (char *) log_malloc(value_size);
