@@ -761,6 +761,10 @@ void run(
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now() - starttime);
 
+    log_wait_all_gc();
+    auto duration_with_gc = std::chrono::duration_cast<std::chrono::microseconds>(
+            std::chrono::system_clock::now() - starttime);
+
     if (use_perf) {
         log_stop_perf();
         log_print_pmem_bandwidth(perf_fn, duration.count() / 1000000.0, throughput_file);
@@ -773,7 +777,9 @@ void run(
     if (record_latency) dump_latencies(perf_fn, latencies, section_args[0].end);
 
     if (throughput_file != NULL) {
-        fprintf(throughput_file, "%.2f,", (n * 1.0) / duration.count());
+        fprintf(throughput_file, "%.2f,%.2f,",
+                (n * 1.0) / duration.count(),
+                (n * 1.0) / duration_with_gc.count());
     }
 }
 

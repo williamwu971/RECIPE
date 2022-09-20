@@ -124,6 +124,8 @@ void log_free(void *ptr);
 
 void log_start_gc(masstree::masstree *);
 
+void log_wait_all_gc();
+
 void log_join_all_gc();
 
 void log_debug_print(int to_file, int show);

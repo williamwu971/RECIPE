@@ -797,6 +797,20 @@ void log_end_gc() {
     gc_ids = (pthread_t *) realloc(gc_ids, sizeof(pthread_t) * (--num_gcs));
 }
 
+
+void log_wait_all_gc() {
+
+    while (1) {
+        pthread_mutex_lock(&gq.lock);
+        if (gq.num == 0) {
+            pthread_mutex_unlock(&gq.lock);
+            break;
+        }
+        pthread_mutex_unlock(&gq.lock);
+        usleep(4);
+    }
+}
+
 void log_join_all_gc() {
 
     puts("waiting gc");
