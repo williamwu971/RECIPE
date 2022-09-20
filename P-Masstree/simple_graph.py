@@ -43,7 +43,7 @@ for fn in args.r:
                 final_data.append(op_per_second)
                 nb_requests = 0
 
-        print("total cycle: {}".format(data_read[-1] - data_read[0]))
+        print("{} total cycle: {}".format(fn, data_read[-1] - data_read[0]))
 
         plt.plot(final_data, label=fn)
 
