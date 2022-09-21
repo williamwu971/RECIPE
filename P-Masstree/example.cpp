@@ -6,7 +6,7 @@
 //#include "tbb/tbb.h"
 #include "plog.cpp"
 
-#define PMEM_POOL_SIZE (8*1024*1024*1024ULL)
+#define PMEM_POOL_SIZE (4*1024*1024*1024ULL)
 #define FOOTER 0xdeadbeef
 
 // todo: make templates/cpp (modular) <- important
