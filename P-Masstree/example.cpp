@@ -333,8 +333,6 @@ static inline void masstree_branched_update(
 
         struct masstree_obj *old_obj = (struct masstree_obj *) tree->put_and_return(u_key, mo, 1, 0, t);
 
-        uint64_t aa, bb;
-        rdtscll(aa)
 
         if (no_allow_prev_null || old_obj != NULL) {
             TX_BEGIN(pop) {
@@ -349,8 +347,6 @@ static inline void masstree_branched_update(
                         }
             TX_END
         }
-        rdtscll(bb)
-        printf("late: %lu\n", bb - aa);
 
     } else if (use_log) {
         char *raw = (char *) log_malloc(value_size);
@@ -508,6 +504,8 @@ static inline void masstree_branched_delete(
         struct masstree_obj *old_obj = (struct masstree_obj *)
                 tree->del_and_return(d_key, 0, 0,
                                      NULL, t);
+        uint64_t aa, bb;
+        rdtscll(aa)
 
 
         TX_BEGIN(pop) {
@@ -521,6 +519,9 @@ static inline void masstree_branched_delete(
                         throw;
                     }
         TX_END
+
+        rdtscll(bb)
+        printf("late: %lu\n", bb - aa);
 
     } else if (use_log) {
         log_free(tree->del_and_return(d_key, 0, 0,
