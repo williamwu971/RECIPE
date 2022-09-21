@@ -315,7 +315,12 @@ static inline void masstree_branched_update(
         struct masstree_obj *mo = NULL;
         TX_BEGIN(pop) {
 
+                        uint64_t aa, bb;
+                        rdtscll(aa)
                         PMEMoid ht_oid = pmemobj_tx_alloc(value_size, TOID_TYPE_NUM(struct masstree_obj));
+                        rdtscll(bb)
+                        printf("late: %lu\n", bb - aa);
+
                         pmemobj_tx_add_range(ht_oid, 0, value_size);
 
                         mo = (struct masstree_obj *) pmemobj_direct(ht_oid);

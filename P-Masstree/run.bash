@@ -52,23 +52,25 @@ done
 cd build || exit
 rm -f ./*.latencies ./*.png ./*.csv
 
-pmdk_no_flush=("0" "1")
-#pmdk_no_flush=("0")
+#pmdk_no_flush=("0" "1")
+pmdk_no_flush=("0")
 index_location=("dram" "ralloc" "obj")
 value_location=("ralloc" "log" "obj")
 index_location=("dram")
 #value_location=("ralloc")
 #value_location=("log")
-#value_location=("obj")
+value_location=("obj")
 #value_location=("log" "obj")
 #num_threads=(1 3 5 7 9 11 13 15)
 num_threads=(16)
+num_threads=(1)
 use_perf="yes"
 record_latency="yes"
 num_of_gc=(8 0)
 num_of_gc=(8)
 
 workload=16000000
+workload=1000
 key_order="random"
 #key_order="seq"
 value_size=1024 # the size of the value impact performance a lot
