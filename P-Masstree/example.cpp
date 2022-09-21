@@ -231,9 +231,6 @@ static inline void masstree_branched_insert(
 
         struct masstree_obj *mo = NULL;
 
-        uint64_t aa, bb;
-        rdtscll(aa)
-
         TX_BEGIN(pop) {
 
                         PMEMoid ht_oid = pmemobj_tx_alloc(value_size, TOID_TYPE_NUM(struct masstree_obj));
@@ -252,9 +249,6 @@ static inline void masstree_branched_insert(
                         throw;
                     }
         TX_END
-
-        rdtscll(bb)
-        printf("insert late: %lu\n", bb - aa);
 
         tree->put_and_return(p_key, mo, 1, 0, t);
 
@@ -318,9 +312,6 @@ static inline void masstree_branched_update(
 ) {
     if (use_obj) {
 
-        uint64_t aa, bb;
-        rdtscll(aa)
-
         struct masstree_obj *mo = NULL;
         TX_BEGIN(pop) {
 
@@ -340,12 +331,9 @@ static inline void masstree_branched_update(
                     }
         TX_END
 
-        rdtscll(bb)
-        printf("update late 0: %lu\n", bb - aa);
 
         struct masstree_obj *old_obj = (struct masstree_obj *) tree->put_and_return(u_key, mo, 1, 0, t);
 
-        rdtscll(aa)
 
         if (no_allow_prev_null || old_obj != NULL) {
             TX_BEGIN(pop) {
@@ -361,8 +349,6 @@ static inline void masstree_branched_update(
             TX_END
         }
 
-        rdtscll(bb)
-        printf("update late 1: %lu\n", bb - aa);
 
     } else if (use_log) {
         char *raw = (char *) log_malloc(value_size);
@@ -520,8 +506,7 @@ static inline void masstree_branched_delete(
         struct masstree_obj *old_obj = (struct masstree_obj *)
                 tree->del_and_return(d_key, 0, 0,
                                      NULL, t);
-        uint64_t aa, bb;
-        rdtscll(aa)
+
 
         TX_BEGIN(pop) {
 
@@ -535,8 +520,6 @@ static inline void masstree_branched_delete(
                     }
         TX_END
 
-        rdtscll(bb)
-        printf("dalete late: %lu\n", bb - aa);
 
     } else if (use_log) {
         log_free(tree->del_and_return(d_key, 0, 0,
