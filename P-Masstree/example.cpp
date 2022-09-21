@@ -318,11 +318,11 @@ static inline uint64_t masstree_branched_update(
 
         TX_BEGIN(pop) {
 
-
-                        PMEMoid ht_oid = pmemobj_tx_alloc(value_size, TOID_TYPE_NUM(struct masstree_obj));
                         rdtscll(aa)
-                        pmemobj_tx_add_range(ht_oid, 0, value_size);
+                        PMEMoid ht_oid = pmemobj_tx_alloc(value_size, TOID_TYPE_NUM(struct masstree_obj));
                         rdtscll(bb)
+                        pmemobj_tx_add_range(ht_oid, 0, value_size);
+
 
                         mo = (struct masstree_obj *) pmemobj_direct(ht_oid);
                         mo->data = u_value;
