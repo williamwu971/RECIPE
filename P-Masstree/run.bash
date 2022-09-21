@@ -70,7 +70,7 @@ num_of_gc=(8 0)
 num_of_gc=(8)
 
 workload=16000000
-#workload=1000000
+workload=1600000
 key_order="random"
 #key_order="seq"
 value_size=1024 # the size of the value impact performance a lot
