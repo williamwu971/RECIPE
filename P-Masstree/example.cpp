@@ -315,12 +315,7 @@ static inline void masstree_branched_update(
         struct masstree_obj *mo = NULL;
         TX_BEGIN(pop) {
 
-                        uint64_t aa, bb;
-                        rdtscll(aa)
                         PMEMoid ht_oid = pmemobj_tx_alloc(value_size, TOID_TYPE_NUM(struct masstree_obj));
-                        rdtscll(bb)
-                        printf("late: %lu\n", bb - aa);
-
                         pmemobj_tx_add_range(ht_oid, 0, value_size);
 
                         mo = (struct masstree_obj *) pmemobj_direct(ht_oid);
@@ -338,19 +333,24 @@ static inline void masstree_branched_update(
 
         struct masstree_obj *old_obj = (struct masstree_obj *) tree->put_and_return(u_key, mo, 1, 0, t);
 
-//        if (no_allow_prev_null || old_obj != NULL) {
-//            TX_BEGIN(pop) {
-//
-//                            pmemobj_tx_add_range(old_obj->ht_oid, sizeof(struct masstree_obj) + memset_size,
-//                                                 sizeof(uint64_t));
-//                            ((uint64_t *) (((char *) (old_obj + 1)) + memset_size))[0] = 0;
-//                            pmemobj_tx_free(old_obj->ht_oid);
-//                        }
-//                            TX_ONABORT {
-//                            throw;
-//                        }
-//            TX_END
-//        }
+        uint64_t aa, bb;
+        rdtscll(aa)
+
+        if (no_allow_prev_null || old_obj != NULL) {
+            TX_BEGIN(pop) {
+
+                            pmemobj_tx_add_range(old_obj->ht_oid, sizeof(struct masstree_obj) + memset_size,
+                                                 sizeof(uint64_t));
+                            ((uint64_t *) (((char *) (old_obj + 1)) + memset_size))[0] = 0;
+                            pmemobj_tx_free(old_obj->ht_oid);
+                        }
+                            TX_ONABORT {
+                            throw;
+                        }
+            TX_END
+        }
+        rdtscll(bb)
+        printf("late: %lu\n", bb - aa);
 
     } else if (use_log) {
         char *raw = (char *) log_malloc(value_size);
