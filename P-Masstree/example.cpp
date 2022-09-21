@@ -338,19 +338,19 @@ static inline void masstree_branched_update(
 
         struct masstree_obj *old_obj = (struct masstree_obj *) tree->put_and_return(u_key, mo, 1, 0, t);
 
-        if (no_allow_prev_null || old_obj != NULL) {
-            TX_BEGIN(pop) {
-
-                            pmemobj_tx_add_range(old_obj->ht_oid, sizeof(struct masstree_obj) + memset_size,
-                                                 sizeof(uint64_t));
-                            ((uint64_t *) (((char *) (old_obj + 1)) + memset_size))[0] = 0;
-                            pmemobj_tx_free(old_obj->ht_oid);
-                        }
-                            TX_ONABORT {
-                            throw;
-                        }
-            TX_END
-        }
+//        if (no_allow_prev_null || old_obj != NULL) {
+//            TX_BEGIN(pop) {
+//
+//                            pmemobj_tx_add_range(old_obj->ht_oid, sizeof(struct masstree_obj) + memset_size,
+//                                                 sizeof(uint64_t));
+//                            ((uint64_t *) (((char *) (old_obj + 1)) + memset_size))[0] = 0;
+//                            pmemobj_tx_free(old_obj->ht_oid);
+//                        }
+//                            TX_ONABORT {
+//                            throw;
+//                        }
+//            TX_END
+//        }
 
     } else if (use_log) {
         char *raw = (char *) log_malloc(value_size);
