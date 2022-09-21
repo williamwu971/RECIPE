@@ -314,7 +314,7 @@ static inline uint64_t masstree_branched_update(
 
         uint64_t aa,bb;
 
-        rdtscll(aa);
+
         struct masstree_obj *mo = NULL;
         TX_BEGIN(pop) {
 
@@ -333,9 +333,10 @@ static inline uint64_t masstree_branched_update(
                         throw;
                     }
         TX_END
-        rdtscll(bb);
 
         struct masstree_obj *old_obj = (struct masstree_obj *) tree->put_and_return(u_key, mo, 1, 0, t);
+
+        rdtscll(aa);
 
 
         if (no_allow_prev_null || old_obj != NULL) {
@@ -351,6 +352,7 @@ static inline uint64_t masstree_branched_update(
                         }
             TX_END
         }
+        rdtscll(bb);
         return bb-aa;
 
     } else if (use_log) {
