@@ -44,10 +44,9 @@ for fn in args.r:
                 if args.ylim != 0 and op_per_second > args.ylim:
                     raise Exception("adjust ylim to {}".format(op_per_second))
 
-                # for i in range(0, diff, 2000000):
-                #     final_data.append(op_per_second)
+                for i in range(0, diff - 2000000, 2000000):
+                    final_data.append(op_per_second)
 
-                final_data.append(op_per_second)
                 nb_requests = 0
 
         # print("{} total cycle: {}".format(fn, data_read[-1] - data_read[0]))
