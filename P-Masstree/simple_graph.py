@@ -53,6 +53,7 @@ for fn in args.r:
         # print("{} total cycle: {}".format(fn, data_read[-1] - data_read[0]))
 
         plt.plot(final_data, label=fn)
+        print(len(final_data))
 
 # temp_title = ' '.join(args.t)
 # plt.title(temp_title, fontsize=40)
