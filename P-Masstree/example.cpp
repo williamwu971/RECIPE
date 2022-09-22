@@ -302,7 +302,7 @@ static inline void masstree_branched_insert(
     }
 }
 
-static inline uint64_t masstree_branched_update(
+static inline void masstree_branched_update(
         masstree::masstree *tree,
         MASS::ThreadInfo t,
         uint64_t u_key,
@@ -314,13 +314,9 @@ static inline uint64_t masstree_branched_update(
 
         struct masstree_obj *mo = NULL;
 
-        uint64_t aa,bb;
-
         TX_BEGIN(pop) {
 
-                        rdtscll(aa)
                         PMEMoid ht_oid = pmemobj_tx_alloc(value_size, TOID_TYPE_NUM(struct masstree_obj));
-                        rdtscll(bb)
                         pmemobj_tx_add_range(ht_oid, 0, value_size);
 
 
@@ -352,7 +348,6 @@ static inline uint64_t masstree_branched_update(
                         }
             TX_END
         }
-        return bb-aa;
 
     } else if (use_log) {
         char *raw = (char *) log_malloc(value_size);
@@ -423,7 +418,6 @@ static inline uint64_t masstree_branched_update(
 
 
     }
-    return 0;
 }
 
 static inline void masstree_branched_lookup(
@@ -709,12 +703,11 @@ void *section_update(void *arg) {
 
 //            rdtscll(a)
 
-            uint64_t tmp = masstree_branched_update(tree, t, keys[i], keys[i], 1);
+            masstree_branched_update(tree, t, keys[i], keys[i], 1);
 
             rdtscll(b)
 //            latencies[i] = b - a;
             latencies[i] = b;
-            latencies[i] = tmp;
         }
     } else {
 
