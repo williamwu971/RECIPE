@@ -14,43 +14,43 @@ args = parser.parse_args()
 
 plt.figure(1, figsize=(19, 12))
 
-for fn in args.r:
-    with open(fn, "r") as data_file:
-        data_read = list(map(lambda x: float(x), data_file.read().splitlines()))
-
-        if args.ylim != 0:
-            max_value = max(data_read)
-            if max_value > args.ylim * 0.9:
-                raise Exception("adjust ylim to {}".format(max_value / 0.9))
-
-        plt.plot(data_read, label=fn)
-
 # for fn in args.r:
 #     with open(fn, "r") as data_file:
-#         data_read = list(map(lambda x: int(x), data_file.read().splitlines()))
-#         final_data = []
+#         data_read = list(map(lambda x: float(x), data_file.read().splitlines()))
 #
-#         last_time = data_read[0]
-#         nb_requests = 0
+#         if args.ylim != 0:
+#             max_value = max(data_read)
+#             if max_value > args.ylim * 0.9:
+#                 raise Exception("adjust ylim to {}".format(max_value / 0.9))
 #
-#         for time in data_read:
-#             diff = time - last_time
-#             nb_requests += 1
-#
-#             if diff > 2000000:
-#                 last_time = time
-#                 op_per_second = nb_requests / (diff / 2000000)
-#
-#                 if args.ylim != 0 and op_per_second > args.ylim:
-#                     raise Exception("adjust ylim to {}".format(op_per_second))
-#
-#                 for i in range(0, diff, 2000000):
-#                     final_data.append(op_per_second)
-#                 nb_requests = 0
-#
-#         # print("{} total cycle: {}".format(fn, data_read[-1] - data_read[0]))
-#
-#         plt.plot(final_data, label=fn)
+#         plt.plot(data_read, label=fn)
+
+for fn in args.r:
+    with open(fn, "r") as data_file:
+        data_read = list(map(lambda x: int(x), data_file.read().splitlines()))
+        final_data = []
+
+        last_time = data_read[0]
+        nb_requests = 0
+
+        for time in data_read:
+            diff = time - last_time
+            nb_requests += 1
+
+            if diff > 2000000:
+                last_time = time
+                op_per_second = nb_requests / (diff / 2000000)
+
+                if args.ylim != 0 and op_per_second > args.ylim:
+                    raise Exception("adjust ylim to {}".format(op_per_second))
+
+                for i in range(0, diff, 2000000):
+                    final_data.append(op_per_second)
+                nb_requests = 0
+
+        # print("{} total cycle: {}".format(fn, data_read[-1] - data_read[0]))
+
+        plt.plot(final_data, label=fn)
 
 # temp_title = ' '.join(args.t)
 # plt.title(temp_title, fontsize=40)
