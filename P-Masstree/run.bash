@@ -68,7 +68,7 @@ use_perf="yes"
 record_latency="yes"
 num_of_gc=(8 0)
 num_of_gc=(8)
-value_size=(64 1024) # the size of the value impact performance a lot
+value_size=(256 1024) # the size of the value impact performance a lot
 
 workload=16000000
 #workload=1600000
