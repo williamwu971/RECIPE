@@ -32,23 +32,14 @@ namespace masstree {
 
     int obj_memalign(void **memptr, size_t alignment, size_t size) {
 
-//        static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
-//        static uint64_t count = 0;
-//
-//        pthread_mutex_lock(&lock);
-//        count++;
-//        printf("count: %lu\n",count);
-//        pthread_mutex_unlock(&lock);
-
         size = (size / alignment + 1) * alignment;
 
         *memptr = NULL;
         PMEMoid ht_oid;
 
         // hack
-        if (pmemobj_tx_stage()!=TX_STAGE_WORK){
+        if (pmemobj_tx_stage() != TX_STAGE_WORK) {
 
-//            printf("hit 000\n"); todo: confirm this branch is hit
 
             if (pmemobj_alloc(pop, &ht_oid, size, TOID_TYPE_NUM(leafvalue), 0, 0)) {
                 fprintf(stderr, "pmemobj_alloc failed for obj_memalign\n");
@@ -57,24 +48,21 @@ namespace masstree {
             *memptr = pmemobj_direct(ht_oid);
 
             return 0;
-//            return posix_memalign(memptr,alignment,size);
-        }else{
+        } else {
 
-//            printf("hit!\n");
-            ht_oid = pmemobj_tx_alloc(size,TOID_TYPE_NUM(leafvalue));
+            ht_oid = pmemobj_tx_alloc(size, TOID_TYPE_NUM(leafvalue));
             *memptr = pmemobj_direct(ht_oid);
 
             return 0;
-
         }
 
         return 1;
 
     }
 
-    void obj_free(void *ptr){
+    void obj_free(void *ptr) {
 //        printf("free!\n");
-        (void)ptr;
+        (void) ptr;
         return;
     }
 
