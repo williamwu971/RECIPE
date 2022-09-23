@@ -52,11 +52,11 @@ done
 cd build || exit
 rm -f ./*.latencies ./*.png ./*.csv ./max_latencies.txt
 
-#pmdk_no_flush=("0" "1")
-pmdk_no_flush=("0")
+pmdk_no_flush=("0" "1")
+#pmdk_no_flush=("0")
 index_location=("dram" "ralloc" "obj")
-value_location=("ralloc" "log" "obj")
-index_location=("ralloc")
+value_location=("dram" "ralloc" "log" "obj")
+#index_location=("ralloc")
 #value_location=("ralloc")
 #value_location=("log")
 #value_location=("obj")
@@ -139,7 +139,7 @@ for i in "${index_location[@]}"; do
             for filename in *.latencies; do
               #              python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$filename" --ylim 100000000 --xlim "$workload" || exit
               python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$filename" --y ops/ms --x time --ylim 1000 || exit
-#              python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$filename"|| exit
+              #              python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$filename"|| exit
             done
           fi
           #      mv out.png out_"$i"_"$v".png
