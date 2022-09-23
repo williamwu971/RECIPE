@@ -32,10 +32,14 @@ for fn in args.r:
 
         last_time = data_read[0]
         nb_requests = 0
+        max_latency = 0
 
         for time in data_read:
             diff = time - last_time
             nb_requests += 1
+
+            if diff > max_latency:
+                max_latency = diff
 
             if diff > 2000000:
                 last_time = time
@@ -52,7 +56,10 @@ for fn in args.r:
         # print("{} total cycle: {}".format(fn, data_read[-1] - data_read[0]))
 
         plt.plot(final_data, label=fn)
-        print(len(final_data))
+        # print(len(final_data))
+
+        with open("max_latencies.txt", "a") as late_file:
+            print("{} max:{}".format(fn, max_latency))
 
 # temp_title = ' '.join(args.t)
 # plt.title(temp_title, fontsize=40)
