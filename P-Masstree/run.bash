@@ -89,24 +89,6 @@ for fp in "${file_prefixes[@]}"; do
     printf "delete_r(gb),delete_rb(gb/s),delete_w(gb),delete_wb(gb/s),delete_TP(ops/us),delete_gc_TP(ops/us),"
   } >>"$fp".csv
 
-  #  {
-  #    printf "index,value,threads,gc,pmdk_no_flush,"
-  #    printf "load_rb(gb/s),load_wb(gb/s),load_TP(ops/us),"
-  #    printf "run_rb(gb/s),run_wb(gb/s),run_TP(ops/us),"
-  #  } >>"$fp".csv
-
-  #  {
-  #    printf "index,value,threads,gc,pmdk_no_flush,"
-  #    printf "insert_TP(ops/us),"
-  #    printf "update_TP(ops/us),"
-  #    printf "get_TP(ops/us),"
-  #    printf "delete_TP(ops/us),"
-  #  } >>"$fp".csv
-
-  #  for n in "${num_threads[@]}"; do
-  #    printf 'T=%s,' "$n" >>$fp.csv
-  #  done
-
   echo "" >>"$fp".csv
 done
 
@@ -133,16 +115,10 @@ for i in "${index_location[@]}"; do
             echo 1 >/proc/sys/vm/drop_caches
             rm -rf /pmem0/masstree*
             killall -w perf >/dev/null 2>&1
+            pkill -f pcm-memory >/dev/null 2>&1
             #      /home/blepers/linux/tools/perf/perf record -g ./example "$workload" "$n" index="$i" value="$v" key="$key_order"
-            PMEM_NO_FLUSH="$f" ./example "$workload" "$n" value_size="$s" index="$i" value="$v" key="$key_order" perf="$use_perf" gc="$g" latency="$record_latency" prefix="$i"-"$v"-"$n"-"$g"-NF"$f"-"$s"
+            PMEM_NO_FLUSH="$f" ./example "$workload" "$n" value_size="$s" index="$i" value="$v" key="$key_order" perf="$use_perf" gc="$g" latency="$record_latency" prefix="$i"-"$v"-"$n"-"$g"-NF"$f"-"$s"B
 
-            if [ "$record_latency" = "yes" ]; then
-              for filename in *.rdtsc; do
-                #              python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$filename" --ylim 100000000 --xlim "$workload" || exit
-                python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$s"B-"$filename" --y ops/ms --x time --ylim 1200 || exit
-                #              python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$filename"|| exit
-              done
-            fi
             #      mv out.png out_"$i"_"$v".png
             #      ./example 100 "$n" index="$i" value="$v"
 
@@ -157,6 +133,14 @@ for i in "${index_location[@]}"; do
     done
   done
 done
+
+if [ "$record_latency" = "yes" ]; then
+  for filename in *.rdtsc; do
+    #              python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$filename" --ylim 100000000 --xlim "$workload" || exit
+    python3 ../simple_graph.py --r "$filename" --fn graph-"$filename" --y "ops/ms" --x "time(ms)" --ylim 1200 || exit
+    #              python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$filename"|| exit
+  done
+fi
 
 # move perf files
 #for pfn in *.perf; do

@@ -839,7 +839,7 @@ void run(
         printf("Throughput: %s,%ld,%.2f ops/us %.2f sec\n",
                section_name, n, (n * 1.0) / duration.count(), duration.count() / 1000000.0);
 
-    sprintf(perf_fn, "%s.rdtsc", section_name);
+    sprintf(perf_fn, "%s-%s.rdtsc", prefix, section_name);
     if (record_latency) dump_latencies(perf_fn, latencies, section_args[0].end);
 
     if (throughput_file != NULL) {
