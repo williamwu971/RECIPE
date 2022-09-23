@@ -136,7 +136,7 @@ for i in "${index_location[@]}"; do
           PMEM_NO_FLUSH="$f" ./example "$workload" "$n" value_size="$value_size" index="$i" value="$v" key="$key_order" perf="$use_perf" gc="$g" latency="$record_latency" prefix="$i"-"$v"-"$n"-"$g"-NF"$f"
 
           if [ "$record_latency" = "yes" ]; then
-            for filename in *.latencies; do
+            for filename in *.rdtsc; do
               #              python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$filename" --ylim 100000000 --xlim "$workload" || exit
               python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$filename" --y ops/ms --x time --ylim 1000 || exit
               #              python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$filename"|| exit
