@@ -68,21 +68,21 @@ use_perf="yes"
 record_latency="yes"
 num_of_gc=(8 0)
 num_of_gc=(8)
+value_size=(64 1024) # the size of the value impact performance a lot
 
 workload=16000000
 #workload=1600000
 key_order="random"
 #key_order="seq"
-value_size=1024 # the size of the value impact performance a lot
 
 file_prefixes=("perf")
 
 for fp in "${file_prefixes[@]}"; do
-  echo "$fp,workload=$workload,value_size=$value_size,key_order=$key_order" >"$fp".csv
+  echo "$fp,workload=$workload,key_order=$key_order" >"$fp".csv
 
   # the header of csv file
   {
-    printf "index,value,threads,gc,pmdk_no_flush,"
+    printf "index,value,threads,gc,pmdk_no_flush,value_size"
     printf "insert_r(gb),insert_rb(gb/s),insert_w(gb),insert_wb(gb/s),insert_TP(ops/us),insert_gc_TP(ops/us),"
     printf "update_r(gb),update_rb(gb/s),update_w(gb),update_wb(gb/s),update_TP(ops/us),update_gc_TP(ops/us),"
     printf "lookup_r(gb),lookup_rb(gb/s),lookup_w(gb),lookup_wb(gb/s),lookup_TP(ops/us),lookup_gc_TP(ops/us),"
@@ -115,40 +115,42 @@ for i in "${index_location[@]}"; do
     for n in "${num_threads[@]}"; do
       for g in "${num_of_gc[@]}"; do
         for f in "${pmdk_no_flush[@]}"; do
+          for s in "${value_size[@]}"; do
 
-          # backup perf files
-          #        cd .. || exit
-          #          for pfn in *.perf; do
-          #            [ -f "$pfn" ] || break
-          #            echo "backing up $pfn"
-          #            mv "$pfn" "$pfn".old
-          #          done
-          #        cd - || exit
+            # backup perf files
+            #        cd .. || exit
+            #          for pfn in *.perf; do
+            #            [ -f "$pfn" ] || break
+            #            echo "backing up $pfn"
+            #            mv "$pfn" "$pfn".old
+            #          done
+            #        cd - || exit
 
-          # the first three columns
-          printf '%s,%s,%s,%s,%s,' "$i" "$v" "$n" "$g" "$f" >>perf.csv
+            # the first three columns
+            printf '%s,%s,%s,%s,%s,%s,' "$i" "$v" "$n" "$g" "$f" "$s" >>perf.csv
 
-          # drop system cache and clear pmem device
-          echo 1 >/proc/sys/vm/drop_caches
-          rm -rf /pmem0/masstree*
-          killall -w perf >/dev/null 2>&1
-          #      /home/blepers/linux/tools/perf/perf record -g ./example "$workload" "$n" index="$i" value="$v" key="$key_order"
-          PMEM_NO_FLUSH="$f" ./example "$workload" "$n" value_size="$value_size" index="$i" value="$v" key="$key_order" perf="$use_perf" gc="$g" latency="$record_latency" prefix="$i"-"$v"-"$n"-"$g"-NF"$f"
+            # drop system cache and clear pmem device
+            echo 1 >/proc/sys/vm/drop_caches
+            rm -rf /pmem0/masstree*
+            killall -w perf >/dev/null 2>&1
+            #      /home/blepers/linux/tools/perf/perf record -g ./example "$workload" "$n" index="$i" value="$v" key="$key_order"
+            PMEM_NO_FLUSH="$f" ./example "$workload" "$n" value_size="$s" index="$i" value="$v" key="$key_order" perf="$use_perf" gc="$g" latency="$record_latency" prefix="$i"-"$v"-"$n"-"$g"-NF"$f"-"$s"
 
-          if [ "$record_latency" = "yes" ]; then
-            for filename in *.rdtsc; do
-              #              python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$filename" --ylim 100000000 --xlim "$workload" || exit
-              python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$filename" --y ops/ms --x time --ylim 1000 || exit
-              #              python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$filename"|| exit
+            if [ "$record_latency" = "yes" ]; then
+              for filename in *.rdtsc; do
+                #              python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$filename" --ylim 100000000 --xlim "$workload" || exit
+                python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$s"B-"$filename" --y ops/ms --x time --ylim 1000 || exit
+                #              python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$filename"|| exit
+              done
+            fi
+            #      mv out.png out_"$i"_"$v".png
+            #      ./example 100 "$n" index="$i" value="$v"
+
+            # this should result in two csv files insert.csv and lookup.csv
+            # just append a new line to it
+            for fp in "${file_prefixes[@]}"; do
+              echo "" >>"$fp".csv
             done
-          fi
-          #      mv out.png out_"$i"_"$v".png
-          #      ./example 100 "$n" index="$i" value="$v"
-
-          # this should result in two csv files insert.csv and lookup.csv
-          # just append a new line to it
-          for fp in "${file_prefixes[@]}"; do
-            echo "" >>"$fp".csv
           done
         done
       done
