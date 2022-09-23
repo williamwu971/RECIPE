@@ -82,7 +82,7 @@ for fp in "${file_prefixes[@]}"; do
 
   # the header of csv file
   {
-    printf "index,value,threads,gc,pmdk_no_flush,value_size"
+    printf "index,value,threads,gc,pmdk_no_flush,value_size,"
     printf "insert_r(gb),insert_rb(gb/s),insert_w(gb),insert_wb(gb/s),insert_TP(ops/us),insert_gc_TP(ops/us),"
     printf "update_r(gb),update_rb(gb/s),update_w(gb),update_wb(gb/s),update_TP(ops/us),update_gc_TP(ops/us),"
     printf "lookup_r(gb),lookup_rb(gb/s),lookup_w(gb),lookup_wb(gb/s),lookup_TP(ops/us),lookup_gc_TP(ops/us),"
