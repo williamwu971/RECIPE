@@ -56,7 +56,7 @@ rm -f ./*.latencies ./*.png ./*.csv
 pmdk_no_flush=("0")
 index_location=("dram" "ralloc" "obj")
 value_location=("ralloc" "log" "obj")
-index_location=("dram")
+index_location=("ralloc")
 #value_location=("ralloc")
 #value_location=("log")
 value_location=("obj")
