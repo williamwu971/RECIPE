@@ -59,7 +59,7 @@ for fn in args.r:
         # print(len(final_data))
 
         with open("max_latencies.txt", "a") as late_file:
-            print("{} max:{}".format(fn, max_latency))
+            print("{} max:{}".format(fn, max_latency), file=late_file)
 
 # temp_title = ' '.join(args.t)
 # plt.title(temp_title, fontsize=40)

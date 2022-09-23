@@ -50,7 +50,7 @@ for var in "$@"; do
 done
 
 cd build || exit
-rm -f ./*.latencies ./*.png ./*.csv
+rm -f ./*.latencies ./*.png ./*.csv ./max_latencies.txt
 
 #pmdk_no_flush=("0" "1")
 pmdk_no_flush=("0")
