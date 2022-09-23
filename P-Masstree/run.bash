@@ -139,7 +139,7 @@ for i in "${index_location[@]}"; do
             if [ "$record_latency" = "yes" ]; then
               for filename in *.rdtsc; do
                 #              python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$filename" --ylim 100000000 --xlim "$workload" || exit
-                python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$s"B-"$filename" --y ops/ms --x time --ylim 1000 || exit
+                python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$s"B-"$filename" --y ops/ms --x time --ylim 1200 || exit
                 #              python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$filename"|| exit
               done
             fi
