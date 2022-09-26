@@ -4,3 +4,4 @@ test
 ralloc.hpp
 libpmemobj*
 pfence_util.h
+*.txt

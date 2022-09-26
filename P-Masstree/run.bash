@@ -50,7 +50,7 @@ for var in "$@"; do
   if [ "$var" = "graph" ]; then
     cd build || exit
     for filename in *.rdtsc; do
-      python3 ../simple_graph.py --r "$filename" --fn graph-"$filename" --y "ops/ms" --x "time(ms)" --xlim 1000 --ylim 1500 || exit
+      python3 ../simple_graph.py --r "$filename" --fn graph-"$filename" --y "ops/ms" --x "time(ms)" --xlim 1000 --ylim 1600 || exit
     done
     exit
   fi

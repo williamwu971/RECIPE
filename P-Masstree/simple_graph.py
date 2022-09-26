@@ -27,13 +27,17 @@ plt.figure(1, figsize=(19, 12))
 
 
 with open(args.r, "r") as data_file:
-    data_read = list(map(lambda x: int(x), data_file.read().splitlines()))
+    lines = data_file.read().splitlines()
+
+    if args.xlim != 0:
+        lines = lines[0:args.xlim]
+
+    data_read = list(map(lambda x: int(x), lines))
     final_data = []
 
     last_time = data_read[0]
     nb_requests = 0
     max_latency = 0
-    count = 0
 
     for time in data_read:
         diff = time - last_time
@@ -51,12 +55,8 @@ with open(args.r, "r") as data_file:
 
             for i in range(0, diff - 2000000, 2000000):
                 final_data.append(op_per_second)
-                count += 1
 
             nb_requests = 0
-
-        if args.xlim != 0 and count > args.xlim:
-            break
 
     # print("{} total cycle: {}".format(fn, data_read[-1] - data_read[0]))
 
