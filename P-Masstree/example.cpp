@@ -26,8 +26,9 @@ int display_throughput = 1;
 int use_obj = 0;
 int use_ralloc = 0;
 int use_log = 0;
-int value_size = sizeof(struct log_cell) + sizeof(uint64_t);
+int total_size = 0;
 int memset_size = 0;
+int base_size = 0;
 char *prefix = NULL;
 
 uint64_t n;
@@ -233,8 +234,8 @@ static inline void masstree_branched_insert(
 
         TX_BEGIN(pop) {
 
-                        PMEMoid ht_oid = pmemobj_tx_alloc(value_size, TOID_TYPE_NUM(struct masstree_obj));
-                        pmemobj_tx_add_range(ht_oid, 0, value_size);
+                        PMEMoid ht_oid = pmemobj_tx_alloc(total_size, TOID_TYPE_NUM(struct masstree_obj));
+                        pmemobj_tx_add_range(ht_oid, 0, total_size);
 
                         mo = (struct masstree_obj *) pmemobj_direct(ht_oid);
                         mo->data = p_value;
@@ -254,10 +255,10 @@ static inline void masstree_branched_insert(
 
     } else if (use_log) {
 
-        char *raw = (char *) log_malloc(value_size);
+        char *raw = (char *) log_malloc(total_size);
 
         struct log_cell *lc = (struct log_cell *) raw;
-        lc->value_size = value_size - sizeof(struct log_cell);
+        lc->value_size = total_size - sizeof(struct log_cell);
         lc->is_delete = 0;
         lc->key = p_key;
         rdtscll(lc->version)
@@ -276,7 +277,7 @@ static inline void masstree_branched_insert(
 
     } else if (use_ralloc) {
 
-        uint64_t *value = (uint64_t *) RP_malloc(value_size);
+        uint64_t *value = (uint64_t *) RP_malloc(total_size);
         *value = p_value;
 
         pmem_persist(value, sizeof(uint64_t));
@@ -290,7 +291,7 @@ static inline void masstree_branched_insert(
 
     } else {
 
-        uint64_t *value = (uint64_t *) malloc(value_size);
+        uint64_t *value = (uint64_t *) malloc(total_size);
         *value = p_value;
         memset(value + 1, 7, memset_size);
 
@@ -316,8 +317,8 @@ static inline void masstree_branched_update(
 
         TX_BEGIN(pop) {
 
-                        PMEMoid ht_oid = pmemobj_tx_alloc(value_size, TOID_TYPE_NUM(struct masstree_obj));
-                        pmemobj_tx_add_range(ht_oid, 0, value_size);
+                        PMEMoid ht_oid = pmemobj_tx_alloc(total_size, TOID_TYPE_NUM(struct masstree_obj));
+                        pmemobj_tx_add_range(ht_oid, 0, total_size);
 
 
                         mo = (struct masstree_obj *) pmemobj_direct(ht_oid);
@@ -350,10 +351,10 @@ static inline void masstree_branched_update(
         }
 
     } else if (use_log) {
-        char *raw = (char *) log_malloc(value_size);
+        char *raw = (char *) log_malloc(total_size);
 
         struct log_cell *lc = (struct log_cell *) raw;
-        lc->value_size = value_size - sizeof(struct log_cell);
+        lc->value_size = total_size - sizeof(struct log_cell);
         lc->is_delete = 0;
         lc->key = u_key;
         rdtscll(lc->version)
@@ -378,7 +379,7 @@ static inline void masstree_branched_update(
 
     } else if (use_ralloc) {
 
-        uint64_t *value = (uint64_t *) RP_malloc(value_size);
+        uint64_t *value = (uint64_t *) RP_malloc(total_size);
         *value = u_value;
 
         pmem_persist(value, sizeof(uint64_t));
@@ -401,7 +402,7 @@ static inline void masstree_branched_update(
 
     } else {
 
-        uint64_t *value = (uint64_t *) malloc(value_size);
+        uint64_t *value = (uint64_t *) malloc(total_size);
         *value = u_value;
         memset(value + 1, 7, memset_size);
 
@@ -897,25 +898,25 @@ int main(int argc, char **argv) {
             if (strcasestr(argv[ac], "ralloc")) {
                 require_RP_init = 1;
                 use_ralloc = 1;
-                memset_size = value_size - sizeof(uint64_t) - sizeof(uint64_t);
+                base_size = sizeof(uint64_t) * 2;
                 printf("value=ralloc ");
 
             } else if (strcasestr(argv[ac], "log")) {
                 require_log_init = 1;
                 use_log = 1;
-                memset_size = value_size - sizeof(uint64_t) - sizeof(struct log_cell) - sizeof(uint64_t);
+                base_size = sizeof(struct log_cell) + sizeof(uint64_t) * 2;
                 printf("value=log ");
 
             } else if (strcasestr(argv[ac], "obj")) {
                 use_obj = 1;
                 require_obj_init = 1;
-                memset_size = value_size - sizeof(struct masstree_obj) - sizeof(uint64_t);
+                base_size = sizeof(struct masstree_obj) + sizeof(uint64_t);
                 printf("value=obj ");
 
 
             } else {
                 printf("value=dram ");
-                memset_size = value_size - sizeof(uint64_t) - sizeof(uint64_t);
+                base_size = sizeof(uint64_t);
             }
         } else if (strcasestr(argv[ac], "key=")) {
             if (strcasestr(argv[ac], "rand")) {
@@ -948,10 +949,9 @@ int main(int argc, char **argv) {
                 printf("latency=no ");
 
             }
-        } else if (strcasestr(argv[ac], "value_size=")) {
-            int desired_size = atoi(strcasestr(argv[ac], "=") + 1);
-            if (desired_size > value_size) value_size = desired_size;
-            printf("value_size=%d ", value_size);
+        } else if (strcasestr(argv[ac], "extra_size=")) {
+            memset_size = atoi(strcasestr(argv[ac], "=") + 1);
+            printf("memset_size=%d ", memset_size);
 
         } else if (strcasestr(argv[ac], "ycsb=")) {
             wl = strcasestr(argv[ac], "=") + 1;
@@ -967,6 +967,10 @@ int main(int argc, char **argv) {
             strcpy(prefix, prefix_ptr);
         }
     }
+
+    total_size = memset_size + base_size;
+    printf("total_size=%d ", total_size);
+
     puts("");
 
     puts("\tbegin generating keys");
