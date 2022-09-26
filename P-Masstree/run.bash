@@ -47,6 +47,12 @@ for var in "$@"; do
     exit
   fi
 
+  if [ "$var" = "graph" ]; then
+    for filename in *.rdtsc; do
+      python3 ../simple_graph.py --r "$filename" --fn graph-"$filename" --y "ops/ms" --x "time(ms)" --ylim 1500 || exit
+    done
+  fi
+
 done
 
 cd build || exit
@@ -137,7 +143,7 @@ done
 if [ "$record_latency" = "yes" ]; then
   for filename in *.rdtsc; do
     #              python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$filename" --ylim 100000000 --xlim "$workload" || exit
-    python3 ../simple_graph.py --r "$filename" --fn graph-"$filename" --y "ops/ms" --x "time(ms)" --ylim 1200 || exit
+    python3 ../simple_graph.py --r "$filename" --fn graph-"$filename" --y "ops/ms" --x "time(ms)" --ylim 1500 || exit
     #              python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$filename"|| exit
   done
 fi
