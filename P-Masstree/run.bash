@@ -58,7 +58,7 @@ for var in "$@"; do
 done
 
 cd build || exit
-rm -f ./*.latencies ./*.png ./*.csv ./max_latencies.txt
+rm -f ./*.rdtsc ./*.png ./*.csv ./max_latencies.txt
 
 pmdk_no_flush=("0" "1")
 #pmdk_no_flush=("0")
@@ -76,7 +76,7 @@ use_perf="yes"
 record_latency="yes"
 num_of_gc=(8 0)
 num_of_gc=(8)
-extra_sizes=(0 2 4 8 16) # the size of the value impact performance a lot
+extra_sizes=(0 8 16 24 32 40 48) # the size of the value impact performance a lot
 
 workload=16000000
 workload=8000000
