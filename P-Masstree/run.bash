@@ -76,7 +76,8 @@ use_perf="yes"
 record_latency="yes"
 num_of_gc=(8 0)
 num_of_gc=(8)
-extra_sizes=(0 8 16 24 32 40 48) # the size of the value impact performance a lot
+extra_sizes=(0)
+extra_sizes=($(seq 0 8 240)) # the size of the value impact performance a lot
 
 workload=16000000
 workload=8000000
