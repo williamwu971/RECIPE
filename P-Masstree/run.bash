@@ -64,8 +64,8 @@ pmdk_no_flush=("0" "1")
 #pmdk_no_flush=("0")
 index_location=("dram" "ralloc" "obj")
 value_location=("ralloc" "log" "obj")
-#index_location=("ralloc")
-#value_location=("ralloc")
+index_location=("dram")
+value_location=("ralloc")
 #value_location=("log")
 #value_location=("obj")
 #value_location=("log" "obj")
@@ -76,10 +76,10 @@ use_perf="yes"
 record_latency="yes"
 num_of_gc=(8 0)
 num_of_gc=(8)
-extra_sizes=(0) # the size of the value impact performance a lot
+extra_sizes=(0 2 4 8 16) # the size of the value impact performance a lot
 
 workload=16000000
-#workload=1600000
+workload=8000000
 key_order="random"
 #key_order="seq"
 
