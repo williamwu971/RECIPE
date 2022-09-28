@@ -1009,7 +1009,6 @@ int log_start_perf(const char *perf_fn) {
                           "-e cycle_activity.stalls_l3_miss "
                           "-e cycle_activity.stalls_mem_any "
                           "-e cycle_activity.stalls_total "
-                          "-e resource_stalls.any "
                           "-e resource_stalls.sb "
                           "-p %d -o %s.stat -g >> perf_stat.out 2>&1 &",
             cores * 3 / 4, cores - 1, getpid(), perf_fn);
