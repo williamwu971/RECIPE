@@ -102,6 +102,8 @@ for fp in "${file_prefixes[@]}"; do
   echo "" >>"$fp".csv
 done
 
+echo 0 > /proc/sys/kernel/nmi_watchdog
+
 for i in "${index_location[@]}"; do
   for v in "${value_location[@]}"; do
     for n in "${num_threads[@]}"; do
@@ -143,6 +145,8 @@ for i in "${index_location[@]}"; do
     done
   done
 done
+
+echo 1 > /proc/sys/kernel/nmi_watchdog
 
 if [ "$record_latency" = "yes" ]; then
   for filename in *.rdtsc; do
