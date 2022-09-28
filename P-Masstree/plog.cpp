@@ -985,7 +985,7 @@ int log_start_perf(const char *perf_fn) {
     int cores = sysconf(_SC_NPROCESSORS_ONLN);
 
     sprintf(command,
-            "sudo taskset -c %d-%d /home/blepers/linux-huge/tools/perf/perf record --call-graph dwarf -F 100 -p %d -o %s -g >> perf.out 2>&1 &",
+            "sudo taskset -c %d-%d /home/blepers/linux-huge/tools/perf/perf record --call-graph dwarf -F 100 -p %d -o %s.record -g >> perf_record.out 2>&1 &",
             cores * 3 / 4, cores - 1, getpid(), perf_fn);
     int res = system(command);
 //    perf_stat = 0;
@@ -1001,6 +1001,13 @@ int log_start_perf(const char *perf_fn) {
             cores * 3 / 4, cores - 1);
 
     res &= system(real_command);
+
+
+    sprintf(real_command,"sudo taskset -c %d-%d /home/blepers/linux-huge/tools/perf/perf stat -e resource_stalls.sb -p %d -o %s.stat -g >> perf_stat.out 2>&1 &",
+            cores * 3 / 4, cores - 1, getpid(), perf_fn);
+
+    res &= system(real_command);
+
     sleep(1);
     rdtscll(perf_start_rtd)
 
