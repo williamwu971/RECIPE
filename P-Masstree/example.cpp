@@ -947,7 +947,7 @@ int main(int argc, char **argv) {
     }
 
     total_size = memset_size + base_size;
-    iter = total_size % 8 - 1;
+    iter = total_size / sizeof(uint64_t) - 1;
     printf("total_size=%d ", total_size);
 
     puts("");
