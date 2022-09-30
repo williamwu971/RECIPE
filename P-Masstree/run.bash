@@ -79,7 +79,7 @@ num_of_gc=(8)
 extra_sizes=(0)
 extra_sizes=(112)
 #extra_sizes=($(seq 0 8 240)) # the size of the value impact performance a lot
-extra_sizes=($(seq 0 16 240))
+extra_sizes=($(seq 0 32 240))
 
 workload=16000000
 workload=8000000
