@@ -77,6 +77,7 @@ record_latency="yes"
 num_of_gc=(8 0)
 num_of_gc=(8)
 extra_sizes=(0)
+extra_sizes=(112)
 #extra_sizes=($(seq 0 8 240)) # the size of the value impact performance a lot
 #extra_sizes=($(seq 0 16 240))
 
