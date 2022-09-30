@@ -24,8 +24,8 @@ with open("perf.csv", "r") as data_file:
 plt.title("Flush vs eADR (Ralloc-{})".format(sys.argv[1]), fontsize=40)
 
 # to change
-# plt.ylim(0, 20)
-plt.ylim(0, 3)
+plt.ylim(0, 20)
+# plt.ylim(0, 3)
 plt.xlim(16, 256)
 
 plt.xticks(fontsize=30)
@@ -34,7 +34,7 @@ plt.yticks(fontsize=30)
 plt.ylabel("Throughput (ops/us)", fontsize=40)
 plt.xlabel("Total Size (Bytes)", fontsize=40)
 
-plt.legend(loc="upper right")
+plt.legend(loc="upper right", fontsize=40)
 plt.grid()
 plt.axvline(x=21, color='r', label='axvline - full height')
 
