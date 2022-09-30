@@ -61,16 +61,16 @@ cd build || exit
 rm -f ./*.rdtsc ./*.png ./*.csv ./max_latencies.txt
 
 pmdk_no_flush=("0" "1")
-pmdk_no_flush=("0")
+#pmdk_no_flush=("0")
 index_location=("dram" "ralloc" "obj")
 value_location=("ralloc" "log" "obj")
 index_location=("dram")
-#value_location=("ralloc")
+value_location=("ralloc")
 #value_location=("log")
 #value_location=("obj")
 #value_location=("log" "obj")
 #num_threads=(1 3 5 7 9 11 13 15)
-num_threads=(16)
+num_threads=(26)
 #num_threads=(1)
 use_perf="yes"
 record_latency="yes"
@@ -78,7 +78,7 @@ num_of_gc=(8 0)
 num_of_gc=(8)
 extra_sizes=(0)
 extra_sizes=(112)
-#extra_sizes=($(seq 0 8 240)) # the size of the value impact performance a lot
+extra_sizes=($(seq 0 8 240)) # the size of the value impact performance a lot
 #extra_sizes=($(seq 0 16 240))
 
 workload=16000000
