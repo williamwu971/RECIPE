@@ -24,7 +24,7 @@ with open("perf.csv", "r") as data_file:
 plt.title("Flush vs eADR (Ralloc-{})".format(sys.argv[1]), fontsize=40)
 
 # to change
-plt.ylim(0, 20)
+plt.ylim(0, 40)
 # plt.ylim(0, 3)
 plt.xlim(16, 256)
 
