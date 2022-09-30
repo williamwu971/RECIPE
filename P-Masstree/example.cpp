@@ -248,10 +248,11 @@ static inline void masstree_branched_insert(
         uint64_t p_value,
         void *tplate
 ) {
-    void *v = NULL;
+
 
     if (use_obj) {
 
+        void *v = NULL;
         TX_BEGIN(pop) {
 
 
@@ -272,6 +273,7 @@ static inline void masstree_branched_insert(
                     }
         TX_END
 
+        tree->put_and_return(p_key, v, 1, 0, t);
 
     } else if (use_log) {
 
@@ -282,29 +284,28 @@ static inline void masstree_branched_insert(
         *((uint64_t *) (lc + 1)) = p_value;
         masstree_checksum(tplate, 0);
 
-        v = log_malloc(total_size);
+        void *v = log_malloc(total_size);
         pmem_memcpy_persist(v, tplate, total_size);
+        tree->put_and_return(p_key, v, 1, 0, t);
 
     } else if (use_ralloc) {
 
         *((uint64_t *) tplate) = p_value;
         masstree_checksum(tplate, 0);
 
-        v = RP_malloc(total_size);
+        void *v = RP_malloc(total_size);
         pmem_memcpy_persist(v, tplate, total_size);
+        tree->put_and_return(p_key, v, 1, 0, t);
 
     } else {
 
         *((uint64_t *) tplate) = p_value;
         masstree_checksum(tplate, 0);
 
-        v = malloc(total_size);
+        void *v = malloc(total_size);
         memcpy(v, tplate, total_size);
-
+        tree->put_and_return(p_key, v, 1, 0, t);
     }
-
-    if (v == NULL) throw;
-    tree->put_and_return(p_key, v, 1, 0, t);
 }
 
 static inline void masstree_branched_update(
