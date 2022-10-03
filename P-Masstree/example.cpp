@@ -6,7 +6,7 @@
 //#include "tbb/tbb.h"
 #include "plog.cpp"
 
-#define PMEM_POOL_SIZE (4*1024*1024*1024ULL)
+//#define PMEM_POOL_SIZE (4*1024*1024*1024ULL)
 //#define FOOTER 0xdeadbeef
 
 // todo: make templates/cpp (modular) <- important
@@ -31,6 +31,7 @@ int memset_size = 0;
 int base_size = 0;
 char *prefix = NULL;
 uint64_t iter;
+uint64_t PMEM_POOL_SIZE = 0;
 
 uint64_t n;
 int num_thread;
@@ -532,7 +533,7 @@ void *section_ycsb_run(void *arg) {
     uint64_t start = sa->start;
     uint64_t end = sa->end;
     u_int64_t *latencies = sa->latencies;
-    int check_value = (YCSB_SIZE == 6464000000);
+    int check_value = (YCSB_SIZE == 64000000);
 
     void *tplate = malloc(total_size);
     memset(tplate, 7, total_size);
@@ -995,6 +996,13 @@ int main(int argc, char **argv) {
     puts("\ttesting eADR");
 #endif
 
+
+    PMEM_POOL_SIZE = total_size * n;
+    uint64_t size_round = 1024 * 1024 * 1024;
+    while (size_round < PMEM_POOL_SIZE) {
+        size_round *= 2;
+    }
+    PMEM_POOL_SIZE = size_round;
 
     if (require_RP_init) {
         puts("\tbegin preparing Ralloc");
