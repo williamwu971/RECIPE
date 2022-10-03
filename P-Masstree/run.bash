@@ -77,9 +77,9 @@ record_latency="yes"
 num_of_gc=(8 0)
 num_of_gc=(8)
 extra_sizes=(0)
-extra_sizes=(112)
+extra_sizes=(896)
 #extra_sizes=($(seq 0 8 240)) # the size of the value impact performance a lot
-extra_sizes=($(seq 0 32 240))
+#extra_sizes=($(seq 0 32 240))
 ycsbs=("a" "b" "c" "d" "e")
 
 workload=16000000
