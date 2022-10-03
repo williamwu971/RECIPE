@@ -1002,9 +1002,9 @@ int main(int argc, char **argv) {
 
 
     PMEM_POOL_SIZE = total_size * n * 3;
-    uint64_t size_round = 1024 * 1024 * 1024;
+    uint64_t size_round = 4ULL * 1024ULL * 1024ULL * 1024ULL;
     while (size_round < PMEM_POOL_SIZE) {
-        size_round *= 2;
+        size_round += 4ULL * 1024ULL * 1024ULL * 1024ULL;
     }
     PMEM_POOL_SIZE = size_round;
 
