@@ -10,7 +10,7 @@
 #done
 
 KEY_TYPE=randint
-for WORKLOAD_TYPE in a b c e; do
+for WORKLOAD_TYPE in a b c d e; do
   echo workload${WORKLOAD_TYPE} > workload_config.inp
   echo ${KEY_TYPE} >> workload_config.inp
   python3 gen_workload.py workload_config.inp
