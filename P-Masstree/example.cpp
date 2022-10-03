@@ -346,7 +346,7 @@ static inline void masstree_branched_update(
                     }
         TX_END
 
-        struct masstree_obj *old_obj = (struct masstree_obj *) tree->put_and_return(u_key, mo, 1, 0, t);
+        struct masstree_obj *old_obj = (struct masstree_obj *) tree->put_and_return(u_key, mo, 0, 0, t);
 
         if (no_allow_prev_null || old_obj != NULL) {
             TX_BEGIN(pop) {
