@@ -80,6 +80,7 @@ extra_sizes=(0)
 extra_sizes=(112)
 #extra_sizes=($(seq 0 8 240)) # the size of the value impact performance a lot
 extra_sizes=($(seq 0 32 240))
+ycsbs=("a" "b" "c" "d" "e")
 
 workload=16000000
 workload=8000000
@@ -92,18 +93,27 @@ for fp in "${file_prefixes[@]}"; do
   echo "$fp,workload=$workload,key_order=$key_order" >"$fp".csv
 
   # the header of csv file
-  {
-    printf "index,value,threads,gc,pmdk_no_flush,extra_sizes,"
-    printf "insert_r(gb),insert_rb(gb/s),insert_w(gb),insert_wb(gb/s),insert_TP(ops/us),insert_gc_TP(ops/us),"
-    printf "update_r(gb),update_rb(gb/s),update_w(gb),update_wb(gb/s),update_TP(ops/us),update_gc_TP(ops/us),"
-    printf "lookup_r(gb),lookup_rb(gb/s),lookup_w(gb),lookup_wb(gb/s),lookup_TP(ops/us),lookup_gc_TP(ops/us),"
-    printf "delete_r(gb),delete_rb(gb/s),delete_w(gb),delete_wb(gb/s),delete_TP(ops/us),delete_gc_TP(ops/us),"
-  } >>"$fp".csv
+
+  if [ "${#ycsbs[@]}" -eq "1" ]; then
+    {
+      printf "index,value,threads,gc,pmdk_no_flush,extra_sizes,ycsb,"
+      printf "insert_r(gb),insert_rb(gb/s),insert_w(gb),insert_wb(gb/s),insert_TP(ops/us),insert_gc_TP(ops/us),"
+      printf "update_r(gb),update_rb(gb/s),update_w(gb),update_wb(gb/s),update_TP(ops/us),update_gc_TP(ops/us),"
+      printf "lookup_r(gb),lookup_rb(gb/s),lookup_w(gb),lookup_wb(gb/s),lookup_TP(ops/us),lookup_gc_TP(ops/us),"
+      printf "delete_r(gb),delete_rb(gb/s),delete_w(gb),delete_wb(gb/s),delete_TP(ops/us),delete_gc_TP(ops/us),"
+    } >>"$fp".csv
+  else
+    {
+      printf "index,value,threads,gc,pmdk_no_flush,extra_sizes,ycsb,"
+      printf "load_r(gb),load_rb(gb/s),load_w(gb),load_wb(gb/s),load_TP(ops/us),load_gc_TP(ops/us),"
+      printf "run_r(gb),run_rb(gb/s),run_w(gb),run_wb(gb/s),run_TP(ops/us),run_gc_TP(ops/us),"
+    } >>"$fp".csv
+  fi
 
   echo "" >>"$fp".csv
 done
 
-echo 0 > /proc/sys/kernel/nmi_watchdog
+echo 0 >/proc/sys/kernel/nmi_watchdog
 
 for i in "${index_location[@]}"; do
   for v in "${value_location[@]}"; do
@@ -111,34 +121,36 @@ for i in "${index_location[@]}"; do
       for g in "${num_of_gc[@]}"; do
         for f in "${pmdk_no_flush[@]}"; do
           for s in "${extra_sizes[@]}"; do
+            for y in "${ycsbs[@]}"; do
 
-            # backup perf files
-            #        cd .. || exit
-            #          for pfn in *.perf; do
-            #            [ -f "$pfn" ] || break
-            #            echo "backing up $pfn"
-            #            mv "$pfn" "$pfn".old
-            #          done
-            #        cd - || exit
+              # backup perf files
+              #        cd .. || exit
+              #          for pfn in *.perf; do
+              #            [ -f "$pfn" ] || break
+              #            echo "backing up $pfn"
+              #            mv "$pfn" "$pfn".old
+              #          done
+              #        cd - || exit
 
-            # the first three columns
-            printf '%s,%s,%s,%s,%s,%s,' "$i" "$v" "$n" "$g" "$f" "$s" >>perf.csv
+              # the first three columns
+              printf '%s,%s,%s,%s,%s,%s,%s,' "$i" "$v" "$n" "$g" "$f" "$s" "$y" >>perf.csv
 
-            # drop system cache and clear pmem device
-            echo 1 >/proc/sys/vm/drop_caches
-            rm -rf /pmem0/masstree*
-            killall -w perf >/dev/null 2>&1
-            pkill -f pcm-memory >/dev/null 2>&1
-            #      /home/blepers/linux/tools/perf/perf record -g ./example "$workload" "$n" index="$i" value="$v" key="$key_order"
-            PMEM_NO_FLUSH="$f" ./example "$workload" "$n" extra_size="$s" index="$i" value="$v" key="$key_order" perf="$use_perf" gc="$g" latency="$record_latency" prefix="$i"-"$v"-"$n"-"$g"-NF"$f"-"$s"B
+              # drop system cache and clear pmem device
+              echo 1 >/proc/sys/vm/drop_caches
+              rm -rf /pmem0/masstree*
+              killall -w perf >/dev/null 2>&1
+              pkill -f pcm-memory >/dev/null 2>&1
+              #      /home/blepers/linux/tools/perf/perf record -g ./example "$workload" "$n" index="$i" value="$v" key="$key_order"
+              PMEM_NO_FLUSH="$f" ./example "$workload" "$n" extra_size="$s" index="$i" value="$v" key="$key_order" perf="$use_perf" gc="$g" ycsb="$y" latency="$record_latency" prefix="$i"-"$v"-"$n"-"$g"-NF"$f"-"$s"B-"$y"
 
-            #      mv out.png out_"$i"_"$v".png
-            #      ./example 100 "$n" index="$i" value="$v"
+              #      mv out.png out_"$i"_"$v".png
+              #      ./example 100 "$n" index="$i" value="$v"
 
-            # this should result in two csv files insert.csv and lookup.csv
-            # just append a new line to it
-            for fp in "${file_prefixes[@]}"; do
-              echo "" >>"$fp".csv
+              # this should result in two csv files insert.csv and lookup.csv
+              # just append a new line to it
+              for fp in "${file_prefixes[@]}"; do
+                echo "" >>"$fp".csv
+              done
             done
           done
         done
@@ -147,7 +159,7 @@ for i in "${index_location[@]}"; do
   done
 done
 
-echo 1 > /proc/sys/kernel/nmi_watchdog
+echo 1 >/proc/sys/kernel/nmi_watchdog
 
 if [ "$record_latency" = "yes" ]; then
   for filename in *.rdtsc; do
