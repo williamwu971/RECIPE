@@ -82,6 +82,7 @@ extra_sizes=(256)
 #extra_sizes=($(seq 0 32 240))
 ycsbs=("#")
 ycsbs=("a" "b" "c" "d" "e")
+ycsbs=("e" "d" "c" "b" "a")
 
 workload=16000000
 workload=8000000
