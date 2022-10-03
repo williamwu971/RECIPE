@@ -422,7 +422,11 @@ static inline void masstree_branched_lookup(
 ) {
 
     void *raw = tree->get(g_key, t);
-    if (check_value && !masstree_checksum(raw, 1)) throw;
+    if (raw != NULL || check_value) {
+        if (!masstree_checksum(raw, 1)) {
+            throw;
+        }
+    }
 }
 
 static inline void masstree_branched_delete(
