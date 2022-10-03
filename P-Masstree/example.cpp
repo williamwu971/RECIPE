@@ -929,6 +929,11 @@ int main(int argc, char **argv) {
 
         } else if (strcasestr(argv[ac], "ycsb=")) {
             wl = strcasestr(argv[ac], "=") + 1;
+
+            if (wl[0] != 'a' && wl[0] != 'b' && wl[0] != 'c' && wl[0] != 'd' && wl[0] != 'e') {
+                continue;
+            }
+
             printf("ycsb=%s ", wl);
 
             if (YCSB_SIZE > 64000000) YCSB_SIZE = 64000000;
