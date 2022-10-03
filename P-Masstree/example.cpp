@@ -892,8 +892,9 @@ int main(int argc, char **argv) {
                 printf("value=log ");
 
 
-                value_offset = sizeof(struct log_cell) / sizeof(uint64_t);
+                value_offset = sizeof(struct log_cell);
                 assert(value_offset % sizeof(uint64_t) == 0);
+                value_offset = value_offset / sizeof(uint64_t);
 
             } else if (strcasestr(argv[ac], "obj")) {
                 use_obj = 1;
@@ -903,8 +904,9 @@ int main(int argc, char **argv) {
 
 
                 struct masstree_obj obj_tmp;
-                value_offset = (char *) (&obj_tmp.data) - (char *) (&obj_tmp);
+                value_offset = ((char *) (&obj_tmp.data) - (char *) (&obj_tmp));
                 assert(value_offset % sizeof(uint64_t) == 0);
+                value_offset = value_offset / sizeof(uint64_t);
 
             } else {
                 printf("value=dram ");
