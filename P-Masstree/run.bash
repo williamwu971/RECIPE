@@ -77,7 +77,7 @@ record_latency="yes"
 num_of_gc=(8 0)
 num_of_gc=(8)
 extra_sizes=(0)
-extra_sizes=(896)
+extra_sizes=(256)
 #extra_sizes=($(seq 0 8 240)) # the size of the value impact performance a lot
 #extra_sizes=($(seq 0 32 240))
 ycsbs=("#")
@@ -85,6 +85,7 @@ ycsbs=("a" "b" "c" "d" "e")
 
 workload=16000000
 workload=8000000
+workload=100000000
 key_order="random"
 #key_order="seq"
 
@@ -142,7 +143,7 @@ for i in "${index_location[@]}"; do
               killall -w perf >/dev/null 2>&1
               pkill -f pcm-memory >/dev/null 2>&1
               #      /home/blepers/linux/tools/perf/perf record -g ./example "$workload" "$n" index="$i" value="$v" key="$key_order"
-              PMEM_NO_FLUSH="$f" ./example "$workload" "$n" extra_size="$s" index="$i" value="$v" key="$key_order" perf="$use_perf" gc="$g" ycsb="$y" latency="$record_latency" prefix="$i"-"$v"-"$n"-"$g"-NF"$f"-"$s"B-"$y"
+              PMEM_NO_FLUSH="$f" ./example "$workload" "$n" extra_size="$s" index="$i" value="$v" key="$key_order" perf="$use_perf" gc="$g" ycsb="$y" latency="$record_latency" prefix="$i"-"$v"-"$n"-"$g"-NF"$f"-"$s"B-"$y" || exit
 
               #      mv out.png out_"$i"_"$v".png
               #      ./example 100 "$n" index="$i" value="$v"
