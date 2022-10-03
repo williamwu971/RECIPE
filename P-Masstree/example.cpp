@@ -32,6 +32,7 @@ int base_size = 0;
 char *prefix = NULL;
 uint64_t iter;
 uint64_t PMEM_POOL_SIZE = 0;
+uint64_t value_offset = 0;
 
 uint64_t n;
 int num_thread;
@@ -224,22 +225,26 @@ void ycsb_load() {
     range_incomplete.store(0);
 }
 
-static inline int masstree_checksum(void *value, int check) {
+static inline int masstree_checksum(void *value, int check, uint64_t v) {
 
     uint64_t *numbers = (uint64_t *) value;
     uint64_t sum = 0;
+    int check_result = 1;
 
     for (uint64_t i = 0; i < iter; i++) {
         sum += numbers[0];
+        if (i == value_offset)check_result &= (numbers[0] == v);
+
         numbers++;
     }
 
     if (check) {
-        return numbers[0] == sum;
+        check_result &= (numbers[0] == sum);
+    } else {
+        numbers[0] = sum;
     }
 
-    numbers[0] = sum;
-    return 1;
+    return check_result;
 }
 
 static inline void masstree_branched_insert(
@@ -262,7 +267,7 @@ static inline void masstree_branched_insert(
                         struct masstree_obj *mo = (struct masstree_obj *) tplate;
                         mo->data = p_value;
                         mo->ht_oid = ht_oid;
-                        masstree_checksum(tplate, 0);
+                        if (!masstree_checksum(tplate, 0, p_value))throw;
 
                         pmemobj_tx_add_range(ht_oid, 0, total_size);
                         v = (struct masstree_obj *) pmemobj_direct(ht_oid);
@@ -283,7 +288,7 @@ static inline void masstree_branched_insert(
         lc->key = p_key;
         rdtscll(lc->version)
         *((uint64_t *) (lc + 1)) = p_value;
-        masstree_checksum(tplate, 0);
+        if (!masstree_checksum(tplate, 0, p_value)) throw;
 
         void *v = log_malloc(total_size);
         pmem_memcpy_persist(v, tplate, total_size);
@@ -292,7 +297,7 @@ static inline void masstree_branched_insert(
     } else if (use_ralloc) {
 
         *((uint64_t *) tplate) = p_value;
-        masstree_checksum(tplate, 0);
+        if (!masstree_checksum(tplate, 0, p_value)) throw;
 
         void *v = RP_malloc(total_size);
         pmem_memcpy_persist(v, tplate, total_size);
@@ -301,7 +306,7 @@ static inline void masstree_branched_insert(
     } else {
 
         *((uint64_t *) tplate) = p_value;
-        masstree_checksum(tplate, 0);
+        if (!masstree_checksum(tplate, 0, p_value)) throw;
 
         void *v = malloc(total_size);
         memcpy(v, tplate, total_size);
@@ -329,7 +334,7 @@ static inline void masstree_branched_update(
                         struct masstree_obj *o = (struct masstree_obj *) tplate;
                         o->data = u_value;
                         o->ht_oid = ht_oid;
-                        masstree_checksum(tplate, 0);
+                        if (!masstree_checksum(tplate, 0, u_value)) throw;
 
                         pmemobj_tx_add_range(ht_oid, 0, total_size);
                         mo = (struct masstree_obj *) pmemobj_direct(ht_oid);
@@ -364,7 +369,7 @@ static inline void masstree_branched_update(
         lc->key = u_key;
         rdtscll(lc->version)
         *((uint64_t *) (lc + 1)) = u_value;
-        masstree_checksum(tplate, 0);
+        if (!masstree_checksum(tplate, 0, u_value)) throw;
 
         char *raw = (char *) log_malloc(total_size);
         pmem_memcpy_persist(raw, tplate, total_size);
@@ -378,7 +383,7 @@ static inline void masstree_branched_update(
     } else if (use_ralloc) {
 
         *((uint64_t *) tplate) = u_value;
-        masstree_checksum(tplate, 0);
+        if (!masstree_checksum(tplate, 0, u_value)) throw;
 
 
         void *value = RP_malloc(total_size);
@@ -398,7 +403,7 @@ static inline void masstree_branched_update(
     } else {
 
         *((uint64_t *) tplate) = u_value;
-        masstree_checksum(tplate, 0);
+        if (!masstree_checksum(tplate, 0, u_value)) throw;
 
         void *value = malloc(total_size);
         memcpy(value, tplate, total_size);
@@ -418,14 +423,13 @@ static inline void masstree_branched_lookup(
         masstree::masstree *tree,
         MASS::ThreadInfo t,
         uint64_t g_key,
+        uint64_t g_value,
         int check_value
 ) {
 
     void *raw = tree->get(g_key, t);
     if (raw != NULL || check_value) {
-        if (!masstree_checksum(raw, 1)) {
-            throw;
-        }
+        if (!masstree_checksum(raw, 1, g_value))throw;
     }
 }
 
@@ -564,7 +568,7 @@ void *section_ycsb_run(void *arg) {
             if (ycsb_ops[i] == OP_INSERT || ycsb_ops[i] == OP_UPDATE) {
                 masstree_branched_update(tree, t, ycsb_keys[i], ycsb_keys[i], 0, tplate);
             } else if (ycsb_ops[i] == OP_READ) {
-                masstree_branched_lookup(tree, t, ycsb_keys[i], check_value);
+                masstree_branched_lookup(tree, t, ycsb_keys[i], ycsb_keys[i], check_value);
             } else if (ycsb_ops[i] == OP_SCAN) {
                 uint64_t buf[200];
                 int ret = tree->scan(ycsb_keys[i], ycsb_ranges[i], buf, t);
@@ -583,7 +587,7 @@ void *section_ycsb_run(void *arg) {
             if (ycsb_ops[i] == OP_INSERT || ycsb_ops[i] == OP_UPDATE) {
                 masstree_branched_update(tree, t, ycsb_keys[i], ycsb_keys[i], 0, tplate);
             } else if (ycsb_ops[i] == OP_READ) {
-                masstree_branched_lookup(tree, t, ycsb_keys[i], check_value);
+                masstree_branched_lookup(tree, t, ycsb_keys[i], ycsb_keys[i], check_value);
             } else if (ycsb_ops[i] == OP_SCAN) {
                 uint64_t buf[200];
                 int ret = tree->scan(ycsb_keys[i], ycsb_ranges[i], buf, t);
@@ -723,7 +727,7 @@ void *section_lookup(void *arg) {
 
 //            rdtscll(a)
 
-            masstree_branched_lookup(tree, t, keys[i], 1);
+            masstree_branched_lookup(tree, t, keys[i], keys[i], 1);
 
             rdtscll(b)
 //            latencies[i] = b - a;
@@ -733,7 +737,7 @@ void *section_lookup(void *arg) {
     } else {
 
         for (uint64_t i = start; i < end; i++) {
-            masstree_branched_lookup(tree, t, keys[i], 1);
+            masstree_branched_lookup(tree, t, keys[i], keys[i], 1);
         }
     }
 
@@ -887,12 +891,20 @@ int main(int argc, char **argv) {
                 base_size = sizeof(struct log_cell) + sizeof(uint64_t) * 2;
                 printf("value=log ");
 
+
+                value_offset = sizeof(struct log_cell) / sizeof(uint64_t);
+                assert(value_offset % sizeof(uint64_t) == 0);
+
             } else if (strcasestr(argv[ac], "obj")) {
                 use_obj = 1;
                 require_obj_init = 1;
                 base_size = sizeof(struct masstree_obj) + sizeof(uint64_t);
                 printf("value=obj ");
 
+
+                struct masstree_obj obj_tmp;
+                value_offset = (char *) (&obj_tmp.data) - (char *) (&obj_tmp);
+                assert(value_offset % sizeof(uint64_t) == 0);
 
             } else {
                 printf("value=dram ");
