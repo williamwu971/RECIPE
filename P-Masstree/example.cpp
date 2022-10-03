@@ -997,7 +997,7 @@ int main(int argc, char **argv) {
 #endif
 
 
-    PMEM_POOL_SIZE = total_size * n;
+    PMEM_POOL_SIZE = total_size * n * 3;
     uint64_t size_round = 1024 * 1024 * 1024;
     while (size_round < PMEM_POOL_SIZE) {
         size_round *= 2;
