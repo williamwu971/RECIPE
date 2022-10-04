@@ -515,7 +515,9 @@ static inline void masstree_branched_update(
         void *tplate
 
 ) {
-//    puts("error");
+
+    // todo: remove this
+    puts("error");
 
     if (use_obj) {
 
@@ -773,16 +775,20 @@ void *section_ycsb_run(void *arg) {
 //            rdtscll(a)
 
             if (ycsb_ops[i] == OP_INSERT) {
+                puts("error");
                 masstree_branched_insert(tree, t, ycsb_keys[i], ycsb_keys[i], tplate);
             } else if (ycsb_ops[i] == OP_UPDATE) {
+                puts("error");
                 masstree_branched_update(tree, t, ycsb_keys[i], ycsb_keys[i], 0, tplate);
             } else if (ycsb_ops[i] == OP_READ) {
                 masstree_branched_lookup(tree, t, ycsb_keys[i], ycsb_keys[i], check_value);
             } else if (ycsb_ops[i] == OP_SCAN) {
+                puts("error");
                 uint64_t buf[200];
                 int ret = tree->scan(ycsb_keys[i], ycsb_ranges[i], buf, t);
                 (void) ret;
             } else if (ycsb_ops[i] == OP_DELETE) {
+                puts("error");
                 masstree_branched_delete(tree, t, ycsb_keys[i]);
             }
 
