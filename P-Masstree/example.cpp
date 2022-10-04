@@ -489,12 +489,6 @@ static inline void masstree_branched_insert(
         pmem_memcpy_persist(v, tplate, total_size);
         tree->put_and_return(p_key, v, 1, 0, t);
 
-        //todo: remove this
-        uint64_t * balala = (uint64_t*)tree->get(p_key, t);
-        if (balala[value_offset]!=p_key){
-            printf("unequal stuff %lu %lu\n",p_key,p_value);
-        }
-
     } else {
 
         *((uint64_t *) tplate) = p_value;
@@ -515,9 +509,6 @@ static inline void masstree_branched_update(
         void *tplate
 
 ) {
-
-    // todo: remove this
-    puts("error");
 
     if (use_obj) {
 
@@ -724,6 +715,7 @@ void *section_ycsb_load(void *arg) {
 //            rdtscll(a)
 
             masstree_branched_insert(tree, t, ycsb_init_keys[i], ycsb_init_keys[i], tplate);
+            masstree_branched_lookup(tree, t, ycsb_init_keys[i], ycsb_init_keys[i], 1); // todo: remove
 
             rdtscll(b)
 
@@ -734,6 +726,7 @@ void *section_ycsb_load(void *arg) {
 
         for (uint64_t i = start; i < end; i++) {
             masstree_branched_insert(tree, t, ycsb_init_keys[i], ycsb_init_keys[i], tplate);
+            masstree_branched_lookup(tree, t, ycsb_init_keys[i], ycsb_init_keys[i], 1); // todo:remove
         }
     }
 
@@ -775,20 +768,16 @@ void *section_ycsb_run(void *arg) {
 //            rdtscll(a)
 
             if (ycsb_ops[i] == OP_INSERT) {
-                puts("error"); // todo: remove
                 masstree_branched_insert(tree, t, ycsb_keys[i], ycsb_keys[i], tplate);
             } else if (ycsb_ops[i] == OP_UPDATE) {
-                puts("error");
                 masstree_branched_update(tree, t, ycsb_keys[i], ycsb_keys[i], 0, tplate);
             } else if (ycsb_ops[i] == OP_READ) {
                 masstree_branched_lookup(tree, t, ycsb_keys[i], ycsb_keys[i], check_value);
             } else if (ycsb_ops[i] == OP_SCAN) {
-                puts("error");
                 uint64_t buf[200];
                 int ret = tree->scan(ycsb_keys[i], ycsb_ranges[i], buf, t);
                 (void) ret;
             } else if (ycsb_ops[i] == OP_DELETE) {
-                puts("error");
                 masstree_branched_delete(tree, t, ycsb_keys[i]);
             }
 
