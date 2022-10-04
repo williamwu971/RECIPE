@@ -724,7 +724,8 @@ void *section_ycsb_load(void *arg) {
 
         //todo: remove
         if (ycsb_init_keys[i]==8671920){
-            puts("CCC check point\n");
+            uint64_t * vvv = (uint64_t*)tree->get(8671920,t);
+            printf("CCC check point VVV is %lu\n",vvv[0]);
         }
 
         if (start == 0) {
