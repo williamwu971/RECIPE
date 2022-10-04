@@ -483,7 +483,7 @@ static inline void masstree_branched_insert(
     } else if (use_ralloc) {
 
         //todo: remove
-        static void* prev_address=NULL;
+        static void *prev_address = NULL;
 
         *((uint64_t *) tplate) = p_value;
         if (!masstree_checksum(tplate, 0, p_value)) throw;
@@ -493,21 +493,21 @@ static inline void masstree_branched_insert(
         tree->put_and_return(p_key, v, 1, 0, t);
 
 
-        if (prev_address==v){
+        if (prev_address == v) {
             printf("*********Ralloc currupted******\n");
         }
-        prev_address=v;
+        prev_address = v;
 
         // todo: remove
         if (p_key == 8671920) {
             uint64_t *sbsbsb = (uint64_t *) v;
-            printf("\t\t pointer %p key %lu value %lu\n", v, p_key, sbsbsb[0]);
+            printf("\t\t pointer %p key %lu value %lu id %lu\n", v, p_key, sbsbsb[0], pthread_self());
         }
 
         // todo remove
         if (p_key == 7386080) {
             uint64_t *sbsbsb = (uint64_t *) v;
-            printf("\t\t pointer %p key %lu value %lu\n", v, p_key, sbsbsb[0]);
+            printf("\t\t pointer %p key %lu value %lu id %lu\n", v, p_key, sbsbsb[0], pthread_self());
         }
 
     } else {
