@@ -491,7 +491,8 @@ static inline void masstree_branched_insert(
 
         // todo: remove
         if (p_key == 8671920) {
-            printf("\t\t pointer %p\n", v);
+            uint64_t * sbsbsb = (uint64_t*)v;
+            printf("\t\t pointer %p value %lu\n", v,sbsbsb[0]);
         }
 
     } else {
