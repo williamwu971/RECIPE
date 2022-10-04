@@ -489,6 +489,11 @@ static inline void masstree_branched_insert(
         pmem_memcpy_persist(v, tplate, total_size);
         tree->put_and_return(p_key, v, 1, 0, t);
 
+        // todo: remove
+        if (p_key == 8671920) {
+            printf("\t\t pointer %p\n", v);
+        }
+
     } else {
 
         *((uint64_t *) tplate) = p_value;
@@ -627,7 +632,7 @@ static inline void masstree_branched_lookup(
             }
 
 
-            printf("error key %lu value %lu\n", g_key, g_value);
+            printf("error key %lu value %lu pointer %p\n", g_key, g_value, raw);
             throw;
         }
     }
