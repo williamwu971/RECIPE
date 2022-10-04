@@ -417,7 +417,7 @@ static inline int masstree_checksum(void *value, int check, uint64_t v) {
         sum += numbers[0];
         if (i == value_offset && numbers[0] != v) {
             check_result = 0;
-            die("value incorrect, expecting %lu got %lu", v, numbers[0]);
+            printf("value incorrect, expecting %lu got %lu\n", v, numbers[0]);
         }
 
         numbers++;
@@ -425,7 +425,7 @@ static inline int masstree_checksum(void *value, int check, uint64_t v) {
 
     if (check && numbers[0] != sum) {
         check_result = 0;
-        die("sum incorrect, expecting %lu got %lu", sum, numbers[0]);
+        printf("sum incorrect, expecting %lu got %lu\n", sum, numbers[0]);
     } else {
         numbers[0] = sum;
     }
@@ -616,7 +616,10 @@ static inline void masstree_branched_lookup(
 
     void *raw = tree->get(g_key, t);
     if (raw != NULL || check_value) {
-        if (!masstree_checksum(raw, 1, g_value))throw;
+        if (!masstree_checksum(raw, 1, g_value)) {
+            printf("error key %lu value %lu\n", g_key, g_value);
+            throw;
+        }
     }
 }
 
