@@ -482,7 +482,7 @@ static inline void masstree_branched_insert(
 
     } else if (use_ralloc) {
 
-        *((uint64_t *) tplate) = p_value;
+        *((volatile uint64_t *) tplate) = p_value;
         if (!masstree_checksum(tplate, 0, p_value)) throw;
 
         void *v = RP_malloc(total_size);
