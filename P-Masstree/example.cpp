@@ -491,14 +491,14 @@ static inline void masstree_branched_insert(
 
         // todo: remove
         if (p_key == 8671920) {
-            uint64_t * sbsbsb = (uint64_t*)v;
-            printf("\t\t pointer %p key %lu value %lu\n", v,p_key,sbsbsb[0]);
+            uint64_t *sbsbsb = (uint64_t *) v;
+            printf("\t\t pointer %p key %lu value %lu\n", v, p_key, sbsbsb[0]);
         }
 
         // todo remove
         if (p_key == 7386080) {
-            uint64_t * sbsbsb = (uint64_t*)v;
-            printf("\t\t pointer %p key %lu value %lu\n", v,p_key,sbsbsb[0]);
+            uint64_t *sbsbsb = (uint64_t *) v;
+            printf("\t\t pointer %p key %lu value %lu\n", v, p_key, sbsbsb[0]);
         }
 
     } else {
@@ -723,25 +723,13 @@ void *section_ycsb_load(void *arg) {
 //        u_int64_t a;
     u_int64_t b;
 
-    //todo: remove
-    int check_cc=0;
-
     for (uint64_t i = start; i < end; i++) {
 //            rdtscll(a)
 
         masstree_branched_insert(tree, t, ycsb_init_keys[i], ycsb_init_keys[i], tplate);
 
-        if (check_cc){
-            uint64_t * vvv = (uint64_t*)tree->get(8671920,t);
-            printf("CCC check point VVV is %lu key %lu\n",vvv[0],ycsb_init_keys[i]);
-            check_cc=0;
-        }
-
-        //todo: remove
-        if (ycsb_init_keys[i]==8671920){
-            uint64_t * vvv = (uint64_t*)tree->get(8671920,t);
-            printf("CCC check point VVV is %lu\n",vvv[0]);
-            check_cc=1;
+        if (ycsb_init_keys[i] == 8671920 || ycsb_init_keys[i] == 7386080) {
+            printf("keys found iter %lu key %lu\n", i, ycsb_init_keys[i]);
         }
 
         if (start == 0) {
@@ -753,9 +741,9 @@ void *section_ycsb_load(void *arg) {
     }
 
     //todo: remove
-    if (start==0){
-        uint64_t * vvv = (uint64_t*)tree->get(8671920,t);
-        printf("CCCC value is %lu\n",vvv[0]);
+    if (start == 0) {
+        uint64_t *vvv = (uint64_t *) tree->get(8671920, t);
+        printf("CCCC value is %lu\n", vvv[0]);
     }
 
     return NULL;
@@ -791,9 +779,9 @@ void *section_ycsb_run(void *arg) {
     u_int64_t b;
 
     //todo: remove
-    if (start==0){
-        uint64_t * vvv = (uint64_t*)tree->get(8671920,t);
-        printf("CCCC value is %lu\n",vvv[0]);
+    if (start == 0) {
+        uint64_t *vvv = (uint64_t *) tree->get(8671920, t);
+        printf("CCCC value is %lu\n", vvv[0]);
     }
 
     for (uint64_t i = start; i < end; i++) {
