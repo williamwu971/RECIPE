@@ -96,6 +96,7 @@ ycsbs=("N")
 #ycsbs=("e" "d" "c" "b" "a")
 
 workload=16000000
+workload=32000000
 #workload=8000000
 #workload=100000000
 
