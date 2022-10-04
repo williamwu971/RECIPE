@@ -415,13 +415,17 @@ static inline int masstree_checksum(void *value, int check, uint64_t v) {
 
     for (uint64_t i = 0; i < iter; i++) {
         sum += numbers[0];
-        if (i == value_offset)check_result &= (numbers[0] == v);
+        if (i == value_offset && numbers[0] != v) {
+            check_result = 0;
+            die("value incorrect, expecting %lu got %lu", v, numbers[0]);
+        }
 
         numbers++;
     }
 
-    if (check) {
-        check_result &= (numbers[0] == sum);
+    if (check && numbers[0] != sum) {
+        check_result = 0;
+        die("sum incorrect, expecting %lu got %lu", sum, numbers[0]);
     } else {
         numbers[0] = sum;
     }
