@@ -482,7 +482,7 @@ static inline void masstree_branched_insert(
 
     } else if (use_ralloc) {
 
-        *((volatile uint64_t *) tplate) = p_value;
+        *((uint64_t *) tplate) = p_value;
         if (!masstree_checksum(tplate, 0, p_value)) throw;
 
         void *v = RP_malloc(total_size);
@@ -491,6 +491,11 @@ static inline void masstree_branched_insert(
 
         // todo: remove
         if (p_key == 8671920) {
+            uint64_t * sbsbsb = (uint64_t*)v;
+            printf("\t\t pointer %p value %lu\n", v,sbsbsb[0]);
+        }
+
+        if (p_key == 7386080) {
             uint64_t * sbsbsb = (uint64_t*)v;
             printf("\t\t pointer %p value %lu\n", v,sbsbsb[0]);
         }
