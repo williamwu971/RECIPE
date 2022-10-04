@@ -490,7 +490,7 @@ static inline void masstree_branched_insert(
         tree->put_and_return(p_key, v, 1, 0, t);
 
         //todo: remove this
-        uint64_t * balala = (uint64_t*)v;
+        uint64_t * balala = (uint64_t*)tree->get(p_key, t);
         if (balala[value_offset]!=p_key){
             printf("unequal stuff %lu %lu\n",p_key,p_value);
         }
@@ -775,7 +775,7 @@ void *section_ycsb_run(void *arg) {
 //            rdtscll(a)
 
             if (ycsb_ops[i] == OP_INSERT) {
-                puts("error");
+                puts("error"); // todo: remove
                 masstree_branched_insert(tree, t, ycsb_keys[i], ycsb_keys[i], tplate);
             } else if (ycsb_ops[i] == OP_UPDATE) {
                 puts("error");
