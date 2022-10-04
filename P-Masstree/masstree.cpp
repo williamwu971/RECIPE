@@ -672,7 +672,7 @@ namespace masstree {
                 return put_and_return(key, value, create, check_version, threadEpocheInfo);
             }
 
-            return value;
+            return NULL;
 
         } else {
 
