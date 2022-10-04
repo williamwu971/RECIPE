@@ -482,12 +482,21 @@ static inline void masstree_branched_insert(
 
     } else if (use_ralloc) {
 
+        //todo: remove
+        static void* prev_address=NULL;
+
         *((uint64_t *) tplate) = p_value;
         if (!masstree_checksum(tplate, 0, p_value)) throw;
 
         void *v = RP_malloc(total_size);
         pmem_memcpy_persist(v, tplate, total_size);
         tree->put_and_return(p_key, v, 1, 0, t);
+
+
+        if (prev_address==v){
+            printf("*********Ralloc currupted******\n");
+        }
+        prev_address=v;
 
         // todo: remove
         if (p_key == 8671920) {
@@ -728,6 +737,7 @@ void *section_ycsb_load(void *arg) {
 
         masstree_branched_insert(tree, t, ycsb_init_keys[i], ycsb_init_keys[i], tplate);
 
+        //todo: remove
         if (ycsb_init_keys[i] == 8671920 || ycsb_init_keys[i] == 7386080) {
             printf("keys found iter %lu key %lu\n", i, ycsb_init_keys[i]);
         }
