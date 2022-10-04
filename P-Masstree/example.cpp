@@ -949,6 +949,10 @@ int main(int argc, char **argv) {
             memset_size = atoi(strcasestr(argv[ac], "=") + 1);
             printf("memset_size=%d ", memset_size);
 
+        } else if (strcasestr(argv[ac], "total_size=")) {
+            total_size = atoi(strcasestr(argv[ac], "=") + 1);
+            printf("total_size=%d ", total_size);
+
         } else if (strcasestr(argv[ac], "ycsb=")) {
             wl = strcasestr(argv[ac], "=") + 1;
 
@@ -969,7 +973,13 @@ int main(int argc, char **argv) {
         }
     }
 
-    total_size = memset_size + base_size;
+    if (total_size == 0) {
+        total_size = memset_size + base_size;
+    } else {
+        memset_size = total_size - base_size;
+    }
+
+
     iter = total_size / sizeof(uint64_t) - 1;
     printf("total_size=%d ", total_size);
 
