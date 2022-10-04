@@ -729,6 +729,11 @@ void *section_ycsb_load(void *arg) {
         }
     }
 
+    //todo: remove
+    if (start==0){
+        uint64_t * vvv = (uint64_t*)tree->get(8671920,t);
+        printf("CCCC value is %lu\n",vvv[0]);
+    }
 
     return NULL;
 }
@@ -761,6 +766,12 @@ void *section_ycsb_run(void *arg) {
 
 //        u_int64_t a;
     u_int64_t b;
+
+    //todo: remove
+    if (start==0){
+        uint64_t * vvv = (uint64_t*)tree->get(8671920,t);
+        printf("CCCC value is %lu\n",vvv[0]);
+    }
 
     for (uint64_t i = start; i < end; i++) {
 
