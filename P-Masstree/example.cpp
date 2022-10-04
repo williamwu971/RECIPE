@@ -957,6 +957,7 @@ int main(int argc, char **argv) {
             wl = strcasestr(argv[ac], "=") + 1;
 
             if (wl[0] != 'a' && wl[0] != 'b' && wl[0] != 'c' && wl[0] != 'd' && wl[0] != 'e') {
+                wl = NULL;
                 continue;
             }
 
