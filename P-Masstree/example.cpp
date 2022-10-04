@@ -1149,7 +1149,9 @@ int main(int argc, char **argv) {
             if (YCSB_SIZE > 64000000) YCSB_SIZE = 64000000;
             if (n > 64000000) n = 64000000;
 
-            ycsb_load();
+//            ycsb_load();
+            bap_ycsb_load();
+
         } else if (strcasestr(argv[ac], "prefix=")) {
             char *prefix_ptr = strcasestr(argv[ac], "=") + 1;
             prefix = (char *) malloc(sizeof(char) * (strlen(prefix_ptr) + 1));
