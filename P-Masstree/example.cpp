@@ -509,6 +509,7 @@ static inline void masstree_branched_update(
         void *tplate
 
 ) {
+    puts("error");
     if (use_obj) {
 
         struct masstree_obj *mo = NULL;
