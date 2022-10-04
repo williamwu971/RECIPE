@@ -417,7 +417,7 @@ static inline int masstree_checksum(void *value, int check, uint64_t v) {
         sum += numbers[0];
         if (i == value_offset && numbers[0] != v) {
             check_result = 0;
-            printf("value incorrect, expecting %lu got %lu\n", v, numbers[0]);
+            printf("value incorrect, offset %lu expecting %lu got %lu\n", value_offset, v, numbers[0]);
         }
 
         numbers++;
@@ -488,6 +488,12 @@ static inline void masstree_branched_insert(
         void *v = RP_malloc(total_size);
         pmem_memcpy_persist(v, tplate, total_size);
         tree->put_and_return(p_key, v, 1, 0, t);
+
+        //todo: remove this
+        uint64_t * balala = (uint64_t*)v;
+        if (balala[value_offset]!=p_key){
+            printf("unequal stuff %lu %lu\n",p_key,p_value);
+        }
 
     } else {
 
@@ -620,8 +626,9 @@ static inline void masstree_branched_lookup(
     if (raw != NULL || check_value) {
         if (!masstree_checksum(raw, 1, g_value)) {
 
-            for (uint64_t i=0;i<YCSB_SIZE;i++){
-                if (ycsb_init_keys[i]==g_key){
+            // todo: remove this
+            for (uint64_t i = 0; i < YCSB_SIZE; i++) {
+                if (ycsb_init_keys[i] == g_key) {
                     printf("=== key is inside init\n");
                 }
             }
