@@ -773,7 +773,9 @@ void *section_ycsb_run(void *arg) {
     } else {
 
         for (uint64_t i = start; i < end; i++) {
-            if (ycsb_ops[i] == OP_INSERT || ycsb_ops[i] == OP_UPDATE) {
+            if (ycsb_ops[i] == OP_INSERT) {
+                masstree_branched_insert(tree, t, ycsb_keys[i], ycsb_keys[i], tplate);
+            } else if (ycsb_ops[i] == OP_UPDATE) {
                 masstree_branched_update(tree, t, ycsb_keys[i], ycsb_keys[i], 0, tplate);
             } else if (ycsb_ops[i] == OP_READ) {
                 masstree_branched_lookup(tree, t, ycsb_keys[i], ycsb_keys[i], check_value);
