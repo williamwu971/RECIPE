@@ -623,7 +623,6 @@ static inline void masstree_branched_lookup(
             for (uint64_t i=0;i<YCSB_SIZE;i++){
                 if (ycsb_init_keys[i]==g_key){
                     printf("=== key is inside init\n");
-                    break;
                 }
             }
 
