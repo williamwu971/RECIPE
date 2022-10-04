@@ -501,13 +501,13 @@ static inline void masstree_branched_insert(
         // todo: remove
         if (p_key == 8671920) {
             uint64_t *sbsbsb = (uint64_t *) v;
-            printf("\t\t pointer %p key %lu value %lu id %lu\n", v, p_key, sbsbsb[0], pthread_self());
+            printf("\t pointer %p key %lu value %lu id %lu\n", v, p_key, sbsbsb[0], pthread_self());
         }
 
         // todo remove
         if (p_key == 7386080) {
             uint64_t *sbsbsb = (uint64_t *) v;
-            printf("\t\t pointer %p key %lu value %lu id %lu\n", v, p_key, sbsbsb[0], pthread_self());
+            printf("\t pointer %p key %lu value %lu id %lu\n", v, p_key, sbsbsb[0], pthread_self());
         }
 
     } else {
@@ -737,10 +737,6 @@ void *section_ycsb_load(void *arg) {
 
         masstree_branched_insert(tree, t, ycsb_init_keys[i], ycsb_init_keys[i], tplate);
 
-        //todo: remove
-        if (ycsb_init_keys[i] == 8671920 || ycsb_init_keys[i] == 7386080) {
-            printf("keys found iter %lu key %lu\n", i, ycsb_init_keys[i]);
-        }
 
         if (start == 0) {
             rdtscll(b)
@@ -750,11 +746,6 @@ void *section_ycsb_load(void *arg) {
         }
     }
 
-    //todo: remove
-    if (start == 0) {
-        uint64_t *vvv = (uint64_t *) tree->get(8671920, t);
-        printf("CCCC value is %lu\n", vvv[0]);
-    }
 
     return NULL;
 }
@@ -787,12 +778,6 @@ void *section_ycsb_run(void *arg) {
 
 //        u_int64_t a;
     u_int64_t b;
-
-    //todo: remove
-    if (start == 0) {
-        uint64_t *vvv = (uint64_t *) tree->get(8671920, t);
-        printf("CCCC value is %lu\n", vvv[0]);
-    }
 
     for (uint64_t i = start; i < end; i++) {
 
