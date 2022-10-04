@@ -93,8 +93,9 @@ total_sizes=(0)
 total_sizes=(256)
 
 ycsbs=("N")
-#ycsbs=("a" "b" "c" "d" "e")
-#ycsbs=("e" "d" "c" "b" "a")
+#ycsbs=("a" "b" "c" "e")
+ycsbs=("e" "c" "b" "a")
+ycsbs=("eu" "cu" "bu" "au" "ez" "cz" "bz" "az")
 
 workload=16000000
 workload=32000000

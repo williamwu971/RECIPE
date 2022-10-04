@@ -117,6 +117,188 @@ enum {
     OP_DELETE,
 };
 
+
+static long items; //initialized in init_zipf_generator function
+static long base; //initialized in init_zipf_generator function
+static double zipfianconstant; //initialized in init_zipf_generator function
+static double alpha; //initialized in init_zipf_generator function
+static double zetan; //initialized in init_zipf_generator function
+static double eta; //initialized in init_zipf_generator function
+static double theta; //initialized in init_zipf_generator function
+static double zeta2theta; //initialized in init_zipf_generator function
+static long countforzeta; //initialized in init_zipf_generator function
+static unsigned int __thread seed;
+
+double zetastatic(long st, long zn, double initialsum) {
+    double sum = initialsum;
+    for (long i = st; i < zn; i++) {
+        sum += 1 / (pow(i + 1, theta));
+    }
+    return sum;
+}
+
+double zeta(long st, long zn, double initialsum) {
+    countforzeta = zn;
+    return zetastatic(st, zn, initialsum);
+}
+
+long next_long(long itemcount) {
+    //from "Quickly Generating Billion-Record Synthetic Databases", Jim Gray et al, SIGMOD 1994
+    if (itemcount != countforzeta) {
+        if (itemcount > countforzeta) {
+            printf("WARNING: Incrementally recomputing Zipfian distribtion. (itemcount= %ld; countforzeta= %ld)",
+                   itemcount, countforzeta);
+            //we have added more items. can compute zetan incrementally, which is cheaper
+            zetan = zeta(countforzeta, itemcount, zetan);
+            eta = (1 - pow(2.0 / items, 1 - theta)) / (1 - zeta2theta / zetan);
+        }
+    }
+
+    double u = (double) (rand_r(&seed) % RAND_MAX) / ((double) RAND_MAX);
+    double uz = u * zetan;
+    if (uz < 1.0) {
+        return base;
+    }
+
+    if (uz < 1.0 + pow(0.5, theta)) {
+        return base + 1;
+    }
+    long ret = base + (long) ((itemcount) * pow(eta * u - eta + 1, alpha));
+    return ret;
+}
+
+long zipf_next() {
+    return next_long(items);
+}
+
+/* Uniform */
+long uniform_next() {
+    return rand_r(&seed) % items;
+}
+
+void init_zipf_generator(long min, long max) {
+    items = max - min + 1;
+    base = min;
+    zipfianconstant = 0.99;
+    theta = zipfianconstant;
+    zeta2theta = zeta(0, 2, 0);
+    alpha = 1.0 / (1.0 - theta);
+    zetan = zetastatic(0, max - min + 1, 0);
+    countforzeta = items;
+    eta = (1 - pow(2.0 / items, 1 - theta)) / (1 - zeta2theta / zetan);
+
+    zipf_next();
+}
+
+static int random_get_put(int test) {
+    long random = uniform_next() % 100;
+    switch (test) {
+        case 0: // A
+            return random >= 50;
+        case 1: // B
+            return random >= 95;
+        case 2: // C
+            return 0;
+        case 3: // E
+            return random >= 95;
+    }
+    die("Not a valid test\n");
+}
+
+void bap_ycsb_load() {
+
+
+    int test = 0;
+    int zipfian = 0;
+
+    if (wl[0] == 'a') {
+        test = 0;
+    } else if (wl[0] == 'b') {
+        test = 1;
+    } else if (wl[0] == 'c') {
+        test = 2;
+    } else if (wl[0] == 'e') {
+        test = 3;
+    }
+
+
+    if (wl[1] == 'z') {
+        zipfian = 1;
+    }
+
+    init_zipf_generator(0, YCSB_SIZE - 1);
+    long (*rand_next)(void) = zipfian ? zipf_next : uniform_next;
+
+
+    std::string insert("INSERT");
+    std::string update("UPDATE");
+    std::string read("READ");
+    std::string scan("SCAN");
+
+    ycsb_init_keys.reserve(YCSB_SIZE);
+    ycsb_keys.reserve(YCSB_SIZE);
+    ycsb_ranges.reserve(YCSB_SIZE);
+    ycsb_ops.reserve(YCSB_SIZE);
+
+    memset(&ycsb_init_keys[0], 0x00, YCSB_SIZE * sizeof(uint64_t));
+    memset(&ycsb_keys[0], 0x00, YCSB_SIZE * sizeof(uint64_t));
+    memset(&ycsb_ranges[0], 0x00, YCSB_SIZE * sizeof(int));
+    memset(&ycsb_ops[0], 0x00, YCSB_SIZE * sizeof(int));
+
+    uint64_t count = 0;
+    while ((count < YCSB_SIZE)) {
+
+        uint64_t key = rand_next();
+        ycsb_init_keys.push_back(key);
+        count++;
+    }
+
+    fprintf(stderr, "Loaded %lu keys\n", count);
+
+
+    uint64_t count_OP_INSERT = 0;
+    uint64_t count_OP_UPDATE = 0;
+    uint64_t count_OP_READ = 0;
+    uint64_t count_OP_SCAN = 0;
+
+    count = 0;
+    while ((count < YCSB_SIZE)) {
+
+        long key = rand_next();
+        int op_type = random_get_put(test);
+
+        if (op_type) {
+            ycsb_ops.push_back(OP_UPDATE);
+            ycsb_keys.push_back(key);
+            ycsb_ranges.push_back(1);
+            count_OP_UPDATE++;
+        } else {
+
+            if (test != 3) {
+                ycsb_ops.push_back(OP_READ);
+                ycsb_keys.push_back(key);
+                ycsb_ranges.push_back(1);
+                count_OP_READ++;
+            } else {
+                int range = uniform_next() % 99 + 1;
+                ycsb_ops.push_back(OP_SCAN);
+                ycsb_keys.push_back(key);
+                ycsb_ranges.push_back(range);
+                count_OP_SCAN++;
+            }
+
+
+        }
+        count++;
+    }
+
+    printf("\nINSERT: %lu %5.2f \n", count_OP_INSERT, (double) count_OP_INSERT / (double) count * 100.0f);
+    printf("UPDATE: %lu %5.2f \n", count_OP_UPDATE, (double) count_OP_UPDATE / (double) count * 100.0f);
+    printf("READ  : %lu %5.2f \n", count_OP_READ, (double) count_OP_READ / (double) count * 100.0f);
+    printf("SCAN  : %lu %5.2f \n", count_OP_SCAN, (double) count_OP_SCAN / (double) count * 100.0f);
+
+}
+
 void ycsb_load() {
 
 
@@ -346,7 +528,8 @@ static inline void masstree_branched_update(
                     }
         TX_END
 
-        struct masstree_obj *old_obj = (struct masstree_obj *) tree->put_and_return(u_key, mo, 0, 0, t);
+        struct masstree_obj *old_obj = (struct masstree_obj *)
+                tree->put_and_return(u_key, mo, !no_allow_prev_null, 0, t);
 
         if (no_allow_prev_null || old_obj != NULL) {
             TX_BEGIN(pop) {
@@ -374,7 +557,7 @@ static inline void masstree_branched_update(
         char *raw = (char *) log_malloc(total_size);
         pmem_memcpy_persist(raw, tplate, total_size);
 
-        void *returned = tree->put_and_return(u_key, raw, 0, 0, t);
+        void *returned = tree->put_and_return(u_key, raw, !no_allow_prev_null, 0, t);
 
         if (no_allow_prev_null || returned != NULL) {
             log_free(returned);
@@ -389,7 +572,7 @@ static inline void masstree_branched_update(
         void *value = RP_malloc(total_size);
         pmem_memcpy_persist(value, tplate, total_size);
 
-        uint64_t *returned = (uint64_t *) tree->put_and_return(u_key, value, 0, 0, t);
+        uint64_t *returned = (uint64_t *) tree->put_and_return(u_key, value, !no_allow_prev_null, 0, t);
 
         if (no_allow_prev_null || returned != NULL) {
             uint64_t *footer_loc = (uint64_t *) (((char *) (returned + 1)) + memset_size);
@@ -408,7 +591,7 @@ static inline void masstree_branched_update(
         void *value = malloc(total_size);
         memcpy(value, tplate, total_size);
 
-        uint64_t *returned = (uint64_t *) tree->put_and_return(u_key, value, 0, 0, t);
+        uint64_t *returned = (uint64_t *) tree->put_and_return(u_key, value, !no_allow_prev_null, 0, t);
 
         if (no_allow_prev_null || returned != NULL) {
             uint64_t *footer_loc = (uint64_t *) (((char *) (returned + 1)) + memset_size);
