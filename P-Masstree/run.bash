@@ -91,7 +91,7 @@ extra_sizes=(256)
 total_sizes=(0)
 total_sizes=(256)
 
-ycsbs=("#")
+ycsbs=("N")
 #ycsbs=("a" "b" "c" "d" "e")
 #ycsbs=("e" "d" "c" "b" "a")
 
