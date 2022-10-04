@@ -977,6 +977,9 @@ int main(int argc, char **argv) {
     if (total_size == 0) {
         total_size = memset_size + base_size;
     } else {
+
+        if (total_size < base_size) total_size = base_size;
+
         memset_size = total_size - base_size;
     }
 
