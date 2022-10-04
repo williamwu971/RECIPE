@@ -62,17 +62,21 @@ rm -f ./*.rdtsc ./*.png ./*.csv ./max_latencies.txt
 
 pmdk_no_flush=("0" "1")
 pmdk_no_flush=("0")
+
 index_location=("dram" "ralloc" "obj")
+index_location=("dram")
+
 value_location=("ralloc" "log" "obj")
 value_location=("obj" "log" "ralloc")
-index_location=("dram")
 #value_location=("ralloc")
 #value_location=("log")
 #value_location=("obj")
 #value_location=("log" "obj")
+
 #num_threads=(1 3 5 7 9 11 13 15)
 num_threads=(24)
 #num_threads=(1)
+
 use_perf="yes"
 record_latency="yes"
 
@@ -88,12 +92,13 @@ total_sizes=(0)
 total_sizes=(256)
 
 ycsbs=("#")
-ycsbs=("a" "b" "c" "d" "e")
-ycsbs=("e" "d" "c" "b" "a")
+#ycsbs=("a" "b" "c" "d" "e")
+#ycsbs=("e" "d" "c" "b" "a")
 
 workload=16000000
-workload=8000000
-workload=100000000
+#workload=8000000
+#workload=100000000
+
 key_order="random"
 #key_order="seq"
 
