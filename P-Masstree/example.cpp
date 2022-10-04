@@ -509,7 +509,8 @@ static inline void masstree_branched_update(
         void *tplate
 
 ) {
-    puts("error");
+//    puts("error");
+
     if (use_obj) {
 
         struct masstree_obj *mo = NULL;
@@ -618,6 +619,15 @@ static inline void masstree_branched_lookup(
     void *raw = tree->get(g_key, t);
     if (raw != NULL || check_value) {
         if (!masstree_checksum(raw, 1, g_value)) {
+
+            for (uint64_t i=0;i<YCSB_SIZE;i++){
+                if (ycsb_init_keys[i]==g_key){
+                    printf("=== key is inside init\n");
+                    break;
+                }
+            }
+
+
             printf("error key %lu value %lu\n", g_key, g_value);
             throw;
         }
