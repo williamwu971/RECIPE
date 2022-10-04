@@ -717,15 +717,25 @@ void *section_ycsb_load(void *arg) {
 //        u_int64_t a;
     u_int64_t b;
 
+    //todo: remove
+    int check_cc=0;
+
     for (uint64_t i = start; i < end; i++) {
 //            rdtscll(a)
 
         masstree_branched_insert(tree, t, ycsb_init_keys[i], ycsb_init_keys[i], tplate);
 
+        if (check_cc){
+            uint64_t * vvv = (uint64_t*)tree->get(8671920,t);
+            printf("CCC check point VVV is %lu\n",vvv[0]);
+            check_cc=0;
+        }
+
         //todo: remove
         if (ycsb_init_keys[i]==8671920){
             uint64_t * vvv = (uint64_t*)tree->get(8671920,t);
             printf("CCC check point VVV is %lu\n",vvv[0]);
+            check_cc=1;
         }
 
         if (start == 0) {
