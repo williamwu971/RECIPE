@@ -727,7 +727,7 @@ void *section_ycsb_load(void *arg) {
 
         if (check_cc){
             uint64_t * vvv = (uint64_t*)tree->get(8671920,t);
-            printf("CCC check point VVV is %lu\n",vvv[0]);
+            printf("CCC check point VVV is %lu key %lu\n",vvv[0],ycsb_init_keys[i]);
             check_cc=0;
         }
 
