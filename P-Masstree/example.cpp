@@ -721,6 +721,11 @@ void *section_ycsb_load(void *arg) {
 
         masstree_branched_insert(tree, t, ycsb_init_keys[i], ycsb_init_keys[i], tplate);
 
+        //todo: remove
+        if (ycsb_init_keys[i]==8671920){
+            puts("CCC check point\n");
+        }
+
         if (start == 0) {
             rdtscll(b)
 
