@@ -433,10 +433,6 @@ static inline int masstree_checksum(void *value, int check, uint64_t v) {
     return check_result;
 }
 
-
-//todo remove
-__thread void *prev_ptr = NULL;
-
 static inline void masstree_branched_insert(
         masstree::masstree *tree,
         MASS::ThreadInfo t,
@@ -492,24 +488,6 @@ static inline void masstree_branched_insert(
         void *v = RP_malloc(total_size);
         pmem_memcpy_persist(v, tplate, total_size);
         tree->put_and_return(p_key, v, 1, 0, t);
-
-
-        if (prev_ptr == v) {
-            printf("*********Ralloc currupted******\n");
-        }
-        prev_ptr = v;
-
-        // todo: remove
-        if (p_key == 8671920) {
-            uint64_t *sbsbsb = (uint64_t *) v;
-            printf("\t pointer %p key %lu value %lu id %lu\n", v, p_key, sbsbsb[0], pthread_self());
-        }
-
-        // todo remove
-        if (p_key == 7386080) {
-            uint64_t *sbsbsb = (uint64_t *) v;
-            printf("\t pointer %p key %lu value %lu id %lu\n", v, p_key, sbsbsb[0], pthread_self());
-        }
 
     } else {
 
@@ -640,15 +618,6 @@ static inline void masstree_branched_lookup(
     void *raw = tree->get(g_key, t);
     if (raw != NULL || check_value) {
         if (!masstree_checksum(raw, 1, g_value)) {
-
-            // todo: remove this
-            for (uint64_t i = 0; i < YCSB_SIZE; i++) {
-                if (ycsb_init_keys[i] == g_key) {
-                    printf("=== key is inside init\n");
-                }
-            }
-
-
             printf("error key %lu value %lu pointer %p\n", g_key, g_value, raw);
             throw;
         }
