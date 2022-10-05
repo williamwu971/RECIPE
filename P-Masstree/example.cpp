@@ -436,90 +436,6 @@ static inline int masstree_checksum(void *value, int check, uint64_t v) {
 //todo remove
 __thread void *prev_ptr = NULL;
 
-static inline void masstree_branched_insert(
-        masstree::masstree *tree,
-        MASS::ThreadInfo t,
-        uint64_t p_key,
-        uint64_t p_value,
-        void *tplate
-) {
-
-
-    if (use_obj) {
-
-        void *v = NULL;
-        TX_BEGIN(pop) {
-
-
-                        PMEMoid ht_oid = pmemobj_tx_alloc(total_size, TOID_TYPE_NUM(struct masstree_obj));
-
-                        struct masstree_obj *mo = (struct masstree_obj *) tplate;
-                        mo->data = p_value;
-                        mo->ht_oid = ht_oid;
-                        if (!masstree_checksum(tplate, 0, p_value))throw;
-
-                        pmemobj_tx_add_range(ht_oid, 0, total_size);
-                        v = (struct masstree_obj *) pmemobj_direct(ht_oid);
-                        memcpy(v, tplate, total_size);
-
-                    }
-                        TX_ONABORT {
-                        throw;
-                    }
-        TX_END
-
-        tree->put_and_return(p_key, v, 1, 0, t);
-
-    } else if (use_log) {
-
-
-        struct log_cell *lc = (struct log_cell *) tplate;
-        lc->key = p_key;
-        rdtscll(lc->version)
-        *((uint64_t *) (lc + 1)) = p_value;
-        if (!masstree_checksum(tplate, 0, p_value)) throw;
-
-        void *v = log_malloc(total_size);
-        pmem_memcpy_persist(v, tplate, total_size);
-        tree->put_and_return(p_key, v, 1, 0, t);
-
-    } else if (use_ralloc) {
-
-        *((uint64_t *) tplate) = p_value;
-        if (!masstree_checksum(tplate, 0, p_value)) throw;
-
-        void *v = RP_malloc(total_size);
-        pmem_memcpy_persist(v, tplate, total_size);
-        tree->put_and_return(p_key, v, 1, 0, t);
-
-        if (v == prev_ptr) {
-            printf("******* ralloc currputed\n");
-        }
-        prev_ptr = v;
-
-        //todo: remove
-        if (p_key == 21062673) {
-            uint64_t *suck = (uint64_t *) v;
-            printf("******** pointer %p key %lu value %lu\n", v, p_key, *suck);
-        }
-
-        //todo: remove
-        if (p_key == 3602281) {
-            uint64_t *suck = (uint64_t *) v;
-            printf("******** pointer %p key %lu value %lu\n", v, p_key, *suck);
-        }
-
-    } else {
-
-        *((uint64_t *) tplate) = p_value;
-        if (!masstree_checksum(tplate, 0, p_value)) throw;
-
-        void *v = malloc(total_size);
-        memcpy(v, tplate, total_size);
-        tree->put_and_return(p_key, v, 1, 0, t);
-    }
-}
-
 static inline void masstree_branched_update(
         masstree::masstree *tree,
         MASS::ThreadInfo t,
@@ -742,7 +658,7 @@ void *section_ycsb_load(void *arg) {
     for (uint64_t i = start; i < end; i++) {
 //            rdtscll(a)
 
-        masstree_branched_insert(tree, t, ycsb_init_keys[i], ycsb_init_keys[i], tplate);
+        masstree_branched_update(tree, t, ycsb_init_keys[i], ycsb_init_keys[i], 0, tplate);
 
 
         if (start == 0) {
@@ -790,9 +706,7 @@ void *section_ycsb_run(void *arg) {
 
 //            rdtscll(a)
 
-        if (ycsb_ops[i] == OP_INSERT) {
-            masstree_branched_insert(tree, t, ycsb_keys[i], ycsb_keys[i], tplate);
-        } else if (ycsb_ops[i] == OP_UPDATE) {
+        if (ycsb_ops[i] == OP_INSERT || ycsb_ops[i] == OP_UPDATE) {
             masstree_branched_update(tree, t, ycsb_keys[i], ycsb_keys[i], 0, tplate);
         } else if (ycsb_ops[i] == OP_READ) {
             masstree_branched_lookup(tree, t, ycsb_keys[i], ycsb_keys[i], check_value);
@@ -851,7 +765,7 @@ void *section_insert(void *arg) {
 
 //            rdtscll(a)
 
-        masstree_branched_insert(tree, t, keys[i], rands[i], tplate);
+        masstree_branched_update(tree, t, keys[i], rands[i], 0, tplate);
 
         if (start == 0) {
             rdtscll(b)
