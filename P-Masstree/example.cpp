@@ -560,13 +560,20 @@ static inline void masstree_branched_lookup(
         int check_value
 ) {
 
-    void *raw = tree->get(g_key, t);
-    if (raw != NULL || check_value) {
-        if (!masstree_checksum(raw, 1, g_value)) {
-            printf("error key %lu value %lu pointer %p\n", g_key, g_value, raw);
-            throw;
+    // todo: remove
+
+    for (int lookup_i = 0; lookup_i < 3; lookup_i++) {
+        void *raw = tree->get(g_key, t);
+        if (raw != NULL || check_value) {
+            if (!masstree_checksum(raw, 1, g_value) && lookup_i == 2) {
+                printf("error key %lu value %lu pointer %p\n", g_key, g_value, raw);
+                throw;
+            } else {
+                break;
+            }
         }
     }
+
 }
 
 static inline void masstree_branched_delete(
