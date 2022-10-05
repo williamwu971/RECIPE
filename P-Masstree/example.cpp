@@ -576,6 +576,11 @@ static inline void masstree_branched_update(
             log_free(returned);
         }
 
+        if (raw==prev_ptr){
+            printf("******* ralloc currputed\n");
+        }
+        prev_ptr=raw;
+
     } else if (use_ralloc) {
 
         *((uint64_t *) tplate) = u_value;
