@@ -438,7 +438,7 @@ static inline uint64_t *masstree_checksum(void *value, int check, uint64_t v) {
         numbers++;
     }
 
-    if (check && numbers[0] != sum && numbers[0] != TAILER) {
+    if (check && numbers[0] != sum) {
         check_result = 0;
         printf("sum incorrect, expecting (%lu or %u) got %lu\n", sum, TAILER, numbers[0]);
     } else {
@@ -1230,7 +1230,7 @@ int main(int argc, char **argv) {
          * section YCSB
          */
         if (wl != NULL) {
-//            run("ycsb_load", throughput_file, attrs, section_args, latencies, section_ycsb_load);
+            run("ycsb_load", throughput_file, attrs, section_args, latencies, section_ycsb_load);
             run("ycsb_run", throughput_file, attrs, section_args, latencies, section_ycsb_run);
             goto end;
         }
