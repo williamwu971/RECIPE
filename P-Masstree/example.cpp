@@ -492,10 +492,22 @@ static inline void masstree_branched_insert(
         pmem_memcpy_persist(v, tplate, total_size);
         tree->put_and_return(p_key, v, 1, 0, t);
 
-        if (v==prev_ptr){
+        if (v == prev_ptr) {
             printf("******* ralloc currputed\n");
         }
-        prev_ptr=v;
+        prev_ptr = v;
+
+        //todo: remove
+        if (p_key == 21062673) {
+            uint64_t *suck = (uint64_t *) v;
+            printf("******** pointer %p key %lu value %lu\n", v, p_key, *suck);
+        }
+
+        //todo: remove
+        if (p_key == 3602281) {
+            uint64_t *suck = (uint64_t *) v;
+            printf("******** pointer %p key %lu value %lu\n", v, p_key, *suck);
+        }
 
     } else {
 
@@ -576,10 +588,10 @@ static inline void masstree_branched_update(
             log_free(returned);
         }
 
-        if (raw==prev_ptr){
+        if (raw == prev_ptr) {
             printf("******* ralloc currputed\n");
         }
-        prev_ptr=raw;
+        prev_ptr = raw;
 
     } else if (use_ralloc) {
 
