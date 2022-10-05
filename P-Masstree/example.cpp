@@ -433,6 +433,9 @@ static inline int masstree_checksum(void *value, int check, uint64_t v) {
     return check_result;
 }
 
+//todo remove
+__thread void *prev_ptr = NULL;
+
 static inline void masstree_branched_insert(
         masstree::masstree *tree,
         MASS::ThreadInfo t,
@@ -488,6 +491,11 @@ static inline void masstree_branched_insert(
         void *v = RP_malloc(total_size);
         pmem_memcpy_persist(v, tplate, total_size);
         tree->put_and_return(p_key, v, 1, 0, t);
+
+        if (v==prev_ptr){
+            printf("******* ralloc currputed\n");
+        }
+        prev_ptr=v;
 
     } else {
 
