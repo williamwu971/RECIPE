@@ -434,7 +434,7 @@ static inline int masstree_checksum(void *value, int check, uint64_t v) {
 }
 
 //todo remove
-__thread void *prev_ptr = NULL;
+//__thread void *prev_ptr = NULL;
 
 static inline void masstree_branched_update(
         masstree::masstree *tree,
@@ -523,10 +523,10 @@ static inline void masstree_branched_update(
             RP_free(returned);
         }
 
-        if (value == prev_ptr) {
-            printf("******* ralloc currputed\n");
-        }
-        prev_ptr = value;
+//        if (value == prev_ptr) {
+//            printf("******* ralloc currputed\n");
+//        }
+//        prev_ptr = value;
 
         //todo: remove
         if (u_key == 857265) {
