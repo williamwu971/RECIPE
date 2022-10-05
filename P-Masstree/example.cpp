@@ -430,7 +430,7 @@ static inline uint64_t *masstree_checksum(void *value, int check, uint64_t v) {
 
     for (uint64_t i = 0; i < iter; i++) {
         sum += numbers[0];
-        if (i == value_offset && numbers[0] != v) {
+        if (i == value_offset && numbers[0] != v && wl == NULL) {
             check_result = 0;
             printf("value incorrect, offset %lu expecting %lu got %lu\n", value_offset, v, numbers[0]);
         }
