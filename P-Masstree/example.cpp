@@ -643,20 +643,17 @@ void *section_ycsb_load(void *arg) {
     auto t = tree->getThreadInfo();
 
 
-//        u_int64_t a;
-    u_int64_t b;
+    u_int64_t rdt;
+
 
     for (uint64_t i = start; i < end; i++) {
-//            rdtscll(a)
+
 
         masstree_branched_update(tree, t, ycsb_init_keys[i], ycsb_init_keys[i], 0, tplate);
-
+        rdtscll(rdt)
 
         if (start == 0) {
-            rdtscll(b)
-
-//            latencies[i] = b - a;
-            latencies[i] = b;
+            latencies[i] = rdt;
         }
     }
 
@@ -689,13 +686,9 @@ void *section_ycsb_run(void *arg) {
 
     auto t = tree->getThreadInfo();
 
-
-//        u_int64_t a;
-    u_int64_t b;
+    u_int64_t rdt;
 
     for (uint64_t i = start; i < end; i++) {
-
-//            rdtscll(a)
 
         if (ycsb_ops[i] == OP_INSERT || ycsb_ops[i] == OP_UPDATE) {
             masstree_branched_update(tree, t, ycsb_keys[i], ycsb_keys[i], 0, tplate);
@@ -709,10 +702,10 @@ void *section_ycsb_run(void *arg) {
             masstree_branched_delete(tree, t, ycsb_keys[i]);
         }
 
+        rdtscll(rdt)
+
         if (start == 0) {
-            rdtscll(b)
-//            latencies[i] = b - a;
-            latencies[i] = b;
+            latencies[i] = rdt;
         }
     }
 
@@ -748,20 +741,15 @@ void *section_insert(void *arg) {
 
     auto t = tree->getThreadInfo();
 
-
-//        u_int64_t a;
-    u_int64_t b;
+    u_int64_t rdt;
 
     for (uint64_t i = start; i < end; i++) {
 
-//            rdtscll(a)
-
         masstree_branched_update(tree, t, keys[i], rands[i], 0, tplate);
+        rdtscll(rdt)
 
         if (start == 0) {
-            rdtscll(b)
-//            latencies[i] = b - a;
-            latencies[i] = b;
+            latencies[i] = rdt;
         }
     }
 
@@ -793,22 +781,15 @@ void *section_update(void *arg) {
 
     auto t = tree->getThreadInfo();
 
-
-
-//        u_int64_t a;
-    u_int64_t b;
+    u_int64_t rdt;
 
     for (uint64_t i = start; i < end; i++) {
 
-//            rdtscll(a)
-
         masstree_branched_update(tree, t, keys[i], keys[i], 1, tplate);
-
+        rdtscll(rdt)
 
         if (start == 0) {
-            rdtscll(b)
-//            latencies[i] = b - a;
-            latencies[i] = b;
+            latencies[i] = rdt;
         }
     }
 
@@ -830,21 +811,15 @@ void *section_lookup(void *arg) {
 
     auto t = tree->getThreadInfo();
 
-
-//        u_int64_t a;
-    u_int64_t b;
+    u_int64_t rdt;
 
     for (uint64_t i = start; i < end; i++) {
 
-//            rdtscll(a)
-
         masstree_branched_lookup(tree, t, keys[i], keys[i], 1);
+        rdtscll(rdt)
 
         if (start == 0) {
-            rdtscll(b)
-//            latencies[i] = b - a;
-            latencies[i] = b;
-
+            latencies[i] = rdt;
         }
     }
 
@@ -865,21 +840,15 @@ void *section_delete(void *arg) {
 
     auto t = tree->getThreadInfo();
 
-
-//        u_int64_t a;
-    u_int64_t b;
+    u_int64_t rdt;
 
     for (uint64_t i = start; i < end; i++) {
 
-//            rdtscll(a)
-
         masstree_branched_delete(tree, t, keys[i]);
+        rdtscll(rdt)
 
         if (start == 0) {
-            rdtscll(b)
-//            latencies[i] = b - a;
-            latencies[i] = b;
-
+            latencies[i] = rdt;
         }
     }
 
