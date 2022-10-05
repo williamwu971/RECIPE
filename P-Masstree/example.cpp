@@ -407,6 +407,8 @@ void ycsb_load() {
     range_incomplete.store(0);
 }
 
+#define TAILER (0xdeadbeef)
+
 static inline uint64_t *masstree_checksum(void *value, int check, uint64_t v) {
 
     uint64_t *numbers = (uint64_t *) value;
@@ -419,7 +421,7 @@ static inline uint64_t *masstree_checksum(void *value, int check, uint64_t v) {
             return 0;
         }
 
-        numbers[0] = 0xdeadbeef;
+        numbers[0] = TAILER;
         return numbers;
     }
 
@@ -436,9 +438,9 @@ static inline uint64_t *masstree_checksum(void *value, int check, uint64_t v) {
         numbers++;
     }
 
-    if (check && numbers[0] != sum) {
+    if (check && numbers[0] != sum && numbers[0] != TAILER) {
         check_result = 0;
-        printf("sum incorrect, expecting %lu got %lu\n", sum, numbers[0]);
+        printf("sum incorrect, expecting (%lu or %u) got %lu\n", sum, TAILER, numbers[0]);
     } else {
         numbers[0] = sum;
     }
