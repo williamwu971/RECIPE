@@ -593,6 +593,18 @@ static inline void masstree_branched_update(
         }
         prev_ptr = raw;
 
+        //todo: remove
+        if (u_key == 21062673) {
+            uint64_t *suck = (uint64_t *) raw;
+            printf("******** pointer %p key %lu value %lu\n", raw, u_key, *suck);
+        }
+
+        //todo: remove
+        if (u_key == 3602281) {
+            uint64_t *suck = (uint64_t *) raw;
+            printf("******** pointer %p key %lu value %lu\n", raw, u_key, *suck);
+        }
+
     } else if (use_ralloc) {
 
         *((uint64_t *) tplate) = u_value;
