@@ -433,9 +433,6 @@ static inline int masstree_checksum(void *value, int check, uint64_t v) {
     return check_result;
 }
 
-//todo remove
-//__thread void *prev_ptr = NULL;
-
 static inline void masstree_branched_update(
         masstree::masstree *tree,
         MASS::ThreadInfo t,
@@ -521,23 +518,6 @@ static inline void masstree_branched_update(
             pmem_persist(footer_loc, sizeof(uint64_t));
 
             RP_free(returned);
-        }
-
-//        if (value == prev_ptr) {
-//            printf("******* ralloc currputed\n");
-//        }
-//        prev_ptr = value;
-
-        //todo: remove
-        if (u_key == 857265) {
-            uint64_t *suck = (uint64_t *) value;
-            printf("******** pointer %p key %lu value %lu\n", value, u_key, *suck);
-        }
-
-        //todo: remove
-        if (u_key == 12377286) {
-            uint64_t *suck = (uint64_t *) value;
-            printf("******** pointer %p key %lu value %lu\n", value, u_key, *suck);
         }
 
 
