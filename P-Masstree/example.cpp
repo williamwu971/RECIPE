@@ -407,6 +407,7 @@ void ycsb_load() {
     range_incomplete.store(0);
 }
 
+#define TAILER (0xdeadbeef)
 
 static inline uint64_t *masstree_checksum(void *value, int check, uint64_t v) {
 
@@ -414,13 +415,13 @@ static inline uint64_t *masstree_checksum(void *value, int check, uint64_t v) {
     uint64_t *check_result = (uint64_t *) 1;
 
     if (check == -1) {
-        numbers += (iter + 1);
+        numbers += iter;
         if (numbers[0] == 0) {
             printf("sum incorrect, expecting 0 got %lu\n", numbers[0]);
             return 0;
         }
 
-        numbers[0] = 0;
+        numbers[0] = TAILER;
         return numbers;
     }
 
@@ -437,9 +438,9 @@ static inline uint64_t *masstree_checksum(void *value, int check, uint64_t v) {
         numbers++;
     }
 
-    if (check && numbers[0] != sum) {
+    if (check && numbers[0] != sum && numbers[0] != TAILER) {
         check_result = 0;
-        printf("sum incorrect, expecting %lu got %lu\n", sum, numbers[0]);
+        printf("sum incorrect, expecting (%lu or %u) got %lu\n", sum, TAILER, numbers[0]);
     } else {
         numbers[0] = sum;
     }
@@ -957,7 +958,7 @@ int main(int argc, char **argv) {
             if (strcasestr(argv[ac], "ralloc")) {
                 require_RP_init = 1;
                 use_ralloc = 1;
-                base_size = sizeof(uint64_t) * 3;
+                base_size = sizeof(uint64_t) * 2;
                 printf("value=ralloc ");
 
             } else if (strcasestr(argv[ac], "log")) {
@@ -1059,7 +1060,7 @@ int main(int argc, char **argv) {
     }
 
 
-    iter = total_size / sizeof(uint64_t) - 2;
+    iter = total_size / sizeof(uint64_t) - 1;
     printf("total_size=%d ", total_size);
 
     puts("");
@@ -1229,7 +1230,7 @@ int main(int argc, char **argv) {
          * section YCSB
          */
         if (wl != NULL) {
-            run("ycsb_load", throughput_file, attrs, section_args, latencies, section_ycsb_load);
+//            run("ycsb_load", throughput_file, attrs, section_args, latencies, section_ycsb_load);
             run("ycsb_run", throughput_file, attrs, section_args, latencies, section_ycsb_run);
             goto end;
         }
