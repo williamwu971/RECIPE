@@ -439,6 +439,7 @@ static inline uint64_t *masstree_checksum(void *value, int check, uint64_t v) {
     }
 
     if (check && numbers[0] != sum) {
+        if (wl) return (uint64_t *) sum;
         check_result = 0;
         printf("sum incorrect, expecting (%lu or %u) got %lu\n", sum, TAILER, numbers[0]);
     } else {
