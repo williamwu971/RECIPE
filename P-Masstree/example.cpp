@@ -407,11 +407,24 @@ void ycsb_load() {
     range_incomplete.store(0);
 }
 
-static inline int masstree_checksum(void *value, int check, uint64_t v) {
+static inline uint64_t *masstree_checksum(void *value, int check, uint64_t v) {
 
     uint64_t *numbers = (uint64_t *) value;
+    uint64_t *check_result = (uint64_t *) 1;
+
+    if (check == -1) {
+        numbers += iter;
+        if (numbers[0] == 0) {
+            printf("sum incorrect, expecting 0 got %lu\n", numbers[0]);
+            return 0;
+        }
+
+        numbers[0] = 0;
+        return numbers;
+    }
+
     uint64_t sum = 0;
-    int check_result = 1;
+
 
     for (uint64_t i = 0; i < iter; i++) {
         sum += numbers[0];
@@ -474,7 +487,7 @@ static inline void masstree_branched_update(
 
                             pmemobj_tx_add_range(old_obj->ht_oid, sizeof(struct masstree_obj) + memset_size,
                                                  sizeof(uint64_t));
-                            ((uint64_t *) (((char *) (old_obj + 1)) + memset_size))[0] = 0;
+                            if (!masstree_checksum(old_obj, -1, u_value)) throw;
                             pmemobj_tx_free(old_obj->ht_oid);
                         }
                             TX_ONABORT {
@@ -513,8 +526,8 @@ static inline void masstree_branched_update(
         uint64_t *returned = (uint64_t *) tree->put_and_return(u_key, value, !no_allow_prev_null, 0, t);
 
         if (no_allow_prev_null || returned != NULL) {
-            uint64_t *footer_loc = (uint64_t *) (((char *) (returned + 1)) + memset_size);
-            footer_loc[0] = 0;
+            uint64_t *footer_loc = masstree_checksum(returned, -1, u_value);
+            if (!footer_loc) throw;
             pmem_persist(footer_loc, sizeof(uint64_t));
 
             RP_free(returned);
@@ -532,8 +545,7 @@ static inline void masstree_branched_update(
         uint64_t *returned = (uint64_t *) tree->put_and_return(u_key, value, !no_allow_prev_null, 0, t);
 
         if (no_allow_prev_null || returned != NULL) {
-            uint64_t *footer_loc = (uint64_t *) (((char *) (returned + 1)) + memset_size);
-            footer_loc[0] = 0;
+            masstree_checksum(returned, -1, u_value);
             free(returned);
         }
 
@@ -573,7 +585,7 @@ static inline void masstree_branched_delete(
 
                         pmemobj_tx_add_range(old_obj->ht_oid, sizeof(struct masstree_obj) + memset_size,
                                              sizeof(uint64_t));
-                        ((uint64_t *) (((char *) (old_obj + 1)) + memset_size))[0] = 0;
+                        if (!masstree_checksum(old_obj, -1, d_key))throw;
                         pmemobj_tx_free(old_obj->ht_oid);
                     }
                         TX_ONABORT {
@@ -590,8 +602,8 @@ static inline void masstree_branched_delete(
         uint64_t *returned = (uint64_t *) tree->del_and_return(d_key, 0, 0,
                                                                NULL, t);
 
-        uint64_t *footer_loc = (uint64_t *) (((char *) (returned + 1)) + memset_size);
-        footer_loc[0] = 0;
+        uint64_t *footer_loc = masstree_checksum(returned, -1, d_key);
+        if (!footer_loc) throw;
         pmem_persist(footer_loc, sizeof(uint64_t));
 
         RP_free(returned);
@@ -601,8 +613,7 @@ static inline void masstree_branched_delete(
         uint64_t *returned = (uint64_t *) tree->del_and_return(d_key, 0, 0,
                                                                NULL, t);
 
-        uint64_t *footer_loc = (uint64_t *) (((char *) (returned + 1)) + memset_size);
-        footer_loc[0] = 0;
+        masstree_checksum(returned, -1, d_key);
 
         free(returned);
     }
