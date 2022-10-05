@@ -407,7 +407,6 @@ void ycsb_load() {
     range_incomplete.store(0);
 }
 
-#define TAILER (0xdeadbeef)
 
 static inline uint64_t *masstree_checksum(void *value, int check, uint64_t v) {
 
@@ -415,13 +414,13 @@ static inline uint64_t *masstree_checksum(void *value, int check, uint64_t v) {
     uint64_t *check_result = (uint64_t *) 1;
 
     if (check == -1) {
-        numbers += iter;
+        numbers += (iter + 1);
         if (numbers[0] == 0) {
             printf("sum incorrect, expecting 0 got %lu\n", numbers[0]);
             return 0;
         }
 
-        numbers[0] = TAILER;
+        numbers[0] = 0;
         return numbers;
     }
 
@@ -438,9 +437,9 @@ static inline uint64_t *masstree_checksum(void *value, int check, uint64_t v) {
         numbers++;
     }
 
-    if (check && numbers[0] != sum && numbers[0] != TAILER) {
+    if (check && numbers[0] != sum) {
         check_result = 0;
-        printf("sum incorrect, expecting (%lu or %u) got %lu\n", sum, TAILER, numbers[0]);
+        printf("sum incorrect, expecting %lu got %lu\n", sum, numbers[0]);
     } else {
         numbers[0] = sum;
     }
@@ -958,7 +957,7 @@ int main(int argc, char **argv) {
             if (strcasestr(argv[ac], "ralloc")) {
                 require_RP_init = 1;
                 use_ralloc = 1;
-                base_size = sizeof(uint64_t) * 2;
+                base_size = sizeof(uint64_t) * 3;
                 printf("value=ralloc ");
 
             } else if (strcasestr(argv[ac], "log")) {
@@ -1060,7 +1059,7 @@ int main(int argc, char **argv) {
     }
 
 
-    iter = total_size / sizeof(uint64_t) - 1;
+    iter = total_size / sizeof(uint64_t) - 2;
     printf("total_size=%d ", total_size);
 
     puts("");
