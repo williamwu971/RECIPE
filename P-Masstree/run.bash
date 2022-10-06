@@ -63,7 +63,7 @@ cd build || exit
 #rm -f ./*.rdtsc ./*.png ./*.csv ./max_latencies.txt
 
 pmdk_no_flush=("0" "1")
-#pmdk_no_flush=("0")
+pmdk_no_flush=("0")
 #pmdk_no_flush=("1")
 
 index_location=("dram" "ralloc" "obj")
@@ -71,8 +71,8 @@ index_location=("dram")
 #index_location=("dram" "ralloc")
 
 value_location=("ralloc" "log" "obj")
-#value_location=("obj" "log" "ralloc")
-value_location=("ralloc")
+value_location=("obj" "log" "ralloc")
+#value_location=("ralloc")
 #value_location=("log")
 #value_location=("obj")
 #value_location=("log" "obj")
@@ -89,7 +89,7 @@ num_of_gc=(8)
 
 extra_sizes=(0)
 extra_sizes=(256)
-extra_sizes=($(seq 0 8 240)) # the size of the value impact performance a lot
+#extra_sizes=($(seq 0 8 240)) # the size of the value impact performance a lot
 #extra_sizes=($(seq 0 32 240))
 
 total_sizes=(0)
