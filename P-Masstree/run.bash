@@ -50,7 +50,7 @@ for var in "$@"; do
   if [ "$var" = "graph" ]; then
     cd build || exit
     for filename in *.rdtsc; do
-      python3 ../simple_graph.py --r "$filename" --fn graph-"$filename" --y "ops/ms" --x "time(ms)" --xlim 1000 --ylim 1600 || exit
+      python3 ../simple_graph.py --r "$filename" --fn graph-"$filename" --y "ops/ms" --x "time(ms)" --xlim 300 --ylim 1900 || exit
     done
     exit
   fi
@@ -62,6 +62,7 @@ cd build || exit
 
 pmdk_no_flush=("0" "1")
 pmdk_no_flush=("0")
+pmdk_no_flush=("1")
 
 index_location=("dram" "ralloc" "obj")
 index_location=("dram")
@@ -95,7 +96,7 @@ total_sizes=(256)
 ycsbs=("N")
 #ycsbs=("a" "b" "c" "e")
 #ycsbs=("e" "c" "b" "a")
-#ycsbs=("au" "bu" "cu" "eu" "az" "bz" "cz" "ez")
+ycsbs=("au" "bu" "cu" "eu" "az" "bz" "cz" "ez")
 
 workload=16000000
 workload=32000000
@@ -184,7 +185,7 @@ echo 1 >/proc/sys/kernel/nmi_watchdog
 if [ "$record_latency" = "yes" ]; then
   for filename in *.rdtsc; do
     #              python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$filename" --ylim 100000000 --xlim "$workload" || exit
-    python3 ../simple_graph.py --r "$filename" --fn graph-"$filename" --y "ops/ms" --x "time(ms)" --xlim 1000 --ylim 1600 || exit
+    python3 ../simple_graph.py --r "$filename" --fn graph-"$filename" --y "ops/ms" --x "time(ms)" --xlim 300 --ylim 1900 || exit
     #              python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$filename"|| exit
   done
 fi
