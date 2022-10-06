@@ -93,7 +93,7 @@ extra_sizes=(256)
 #extra_sizes=($(seq 0 32 240))
 
 total_sizes=(0)
-#total_sizes=(256)
+total_sizes=(256)
 
 ycsbs=("N")
 #ycsbs=("a" "b" "c" "e")
