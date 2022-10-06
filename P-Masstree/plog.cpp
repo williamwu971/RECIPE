@@ -808,6 +808,7 @@ void log_wait_all_gc() {
             break;
         }
         pthread_mutex_unlock(&gq.lock);
+        pthread_cond_broadcast(&gq.cond);
         usleep(4);
     }
 }
