@@ -409,6 +409,18 @@ void ycsb_load() {
 
 #define TAILER (0xdeadbeef)
 
+static inline uint64_t masstree_getsum(void *value) {
+
+    uint64_t *numbers = (uint64_t *) value;
+    uint64_t sum = 0;
+
+    for (uint64_t i = 0; i < iter + 1; i++) {
+        sum += numbers[i];
+    }
+
+    return sum;
+}
+
 static inline uint64_t *masstree_checksum(void *value, int check, uint64_t v) {
 
     uint64_t *numbers = (uint64_t *) value;
@@ -430,16 +442,14 @@ static inline uint64_t *masstree_checksum(void *value, int check, uint64_t v) {
 
     for (uint64_t i = 0; i < iter; i++) {
         sum += numbers[0];
-        if (i == value_offset && numbers[0] != v && wl == NULL) {
+        if (i == value_offset && numbers[0] != v) {
             check_result = 0;
             printf("value incorrect, offset %lu expecting %lu got %lu\n", value_offset, v, numbers[0]);
         }
-
         numbers++;
     }
 
     if (check && numbers[0] != sum) {
-        if (wl) return (uint64_t *) sum;
         check_result = 0;
         printf("sum incorrect, expecting (%lu or %u) got %lu\n", sum, TAILER, numbers[0]);
     } else {
@@ -570,8 +580,20 @@ static inline void masstree_branched_lookup(
             throw;
         }
     }
+}
 
-
+static inline void masstree_ycsb_lookup(
+        masstree::masstree *tree,
+        MASS::ThreadInfo t,
+        uint64_t g_key
+) {
+    void *raw = tree->get(g_key, t);
+    if (raw != NULL) {
+        if (masstree_getsum(raw) == 0) {
+            printf("ycsb sum 0\n");
+            throw;
+        }
+    }
 }
 
 static inline void masstree_branched_delete(
@@ -698,7 +720,8 @@ void *section_ycsb_run(void *arg) {
         if (ycsb_ops[i] == OP_INSERT || ycsb_ops[i] == OP_UPDATE) {
             masstree_branched_update(tree, t, ycsb_keys[i], ycsb_keys[i], 0, tplate);
         } else if (ycsb_ops[i] == OP_READ) {
-            masstree_branched_lookup(tree, t, ycsb_keys[i], ycsb_keys[i], check_value);
+//            masstree_branched_lookup(tree, t, ycsb_keys[i], ycsb_keys[i], check_value);
+            masstree_ycsb_lookup(tree, t, ycsb_keys[i]);
         } else if (ycsb_ops[i] == OP_SCAN) {
             uint64_t buf[200];
             int ret = tree->scan(ycsb_keys[i], ycsb_ranges[i], buf, t);
