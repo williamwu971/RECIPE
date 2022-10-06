@@ -58,7 +58,7 @@ for var in "$@"; do
 done
 
 cd build || exit
-rm -f ./*.rdtsc ./*.png ./*.csv ./max_latencies.txt
+#rm -f ./*.rdtsc ./*.png ./*.csv ./max_latencies.txt
 
 pmdk_no_flush=("0" "1")
 pmdk_no_flush=("0")
@@ -108,7 +108,7 @@ key_order="random"
 file_prefixes=("perf")
 
 for fp in "${file_prefixes[@]}"; do
-  echo "$fp,workload=$workload,key_order=$key_order" >"$fp".csv
+  echo "$fp,workload=$workload,key_order=$key_order" >>"$fp".csv
 
   # the header of csv file
 
