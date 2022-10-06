@@ -11,7 +11,7 @@ for var in "$@"; do
     cd /mnt/sdb/xiaoxiang/RECIPE/P-Masstree/ || exit
     git pull || exit
     #    rm -rf build && mkdir build
-    rm -rf build/*
+    rm -rf build/example
     cd build || exit
     cmake .. && make -j
     if [ ! -f example ]; then
