@@ -697,8 +697,8 @@ void *section_ycsb_run(void *arg) {
     uint64_t start = sa->start;
     uint64_t end = sa->end;
     u_int64_t *latencies = sa->latencies;
-    int check_value = (YCSB_SIZE == 64000000);
-    check_value = 0;
+//    int check_value = (YCSB_SIZE == 64000000);
+//    check_value = 0;
 
     void *tplate = malloc(total_size);
     memset(tplate, 7, total_size);
