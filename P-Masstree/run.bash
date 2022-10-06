@@ -50,7 +50,9 @@ for var in "$@"; do
   if [ "$var" = "graph" ]; then
     cd build || exit
     for filename in *.rdtsc; do
-      python3 ../simple_graph.py --r "$filename" --fn graph-"$filename" --y "ops/ms" --x "time(ms)" --xlim 300 --ylim 1900 || exit
+      if [ ! -f graph-"$filename".png ]; then
+        python3 ../simple_graph.py --r "$filename" --fn graph-"$filename" --y "ops/ms" --x "time(ms)" --xlim 300 --ylim 1900 || exit
+      fi
     done
     exit
   fi
@@ -185,7 +187,9 @@ echo 1 >/proc/sys/kernel/nmi_watchdog
 if [ "$record_latency" = "yes" ]; then
   for filename in *.rdtsc; do
     #              python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$filename" --ylim 100000000 --xlim "$workload" || exit
-    python3 ../simple_graph.py --r "$filename" --fn graph-"$filename" --y "ops/ms" --x "time(ms)" --xlim 300 --ylim 1900 || exit
+    if [ ! -f graph-"$filename".png ]; then
+      python3 ../simple_graph.py --r "$filename" --fn graph-"$filename" --y "ops/ms" --x "time(ms)" --xlim 300 --ylim 1900 || exit
+    fi
     #              python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$filename"|| exit
   done
 fi
