@@ -230,11 +230,6 @@ void bap_ycsb_load() {
     long (*rand_next)(void) = zipfian ? zipf_next : uniform_next;
 
 
-    std::string insert("INSERT");
-    std::string update("UPDATE");
-    std::string read("READ");
-    std::string scan("SCAN");
-
     ycsb_init_keys.reserve(YCSB_SIZE);
     ycsb_keys.reserve(YCSB_SIZE);
     ycsb_ranges.reserve(YCSB_SIZE);
