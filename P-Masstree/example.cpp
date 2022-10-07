@@ -1163,6 +1163,10 @@ int main(int argc, char **argv) {
     srand(time(NULL));
     masstree::masstree *tree = new masstree::masstree();
 
+    if (require_RP_init) {
+        RP_set_root(tree->root(), 0);
+    }
+
     FILE *throughput_file = fopen("perf.csv", "a");
     u_int64_t *latencies = NULL;
 
