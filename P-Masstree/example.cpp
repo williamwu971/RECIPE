@@ -1136,9 +1136,9 @@ int main(int argc, char **argv) {
 
     if (require_RP_init) {
 
-        if (access("masstree_basemd", F_OK) == 0 &&
-            access("masstree_desc", F_OK) == 0 &&
-            access("masstree_sb", F_OK) == 0) {
+        if (access("/pmem0/masstree_basemd", F_OK) == 0 &&
+            access("/pmem0/masstree_desc", F_OK) == 0 &&
+            access("/pmem0/masstree_sb", F_OK) == 0) {
             puts("\tbegin recovering Ralloc");
 
             if (which_memalign == RP_memalign) {
