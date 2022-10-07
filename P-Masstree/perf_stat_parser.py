@@ -1,4 +1,4 @@
-print("\t\t\tNF=0\t\t\t\t\t\t\t\t\t\t\t\tNF=1")
+print("size\t\t\tNF=0\t\t\t\t\t\t\t\t\t\t\tNF=1")
 
 for j in range(0, 241, 8):
     print(j + 16, end="\t")
