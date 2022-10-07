@@ -1135,14 +1135,15 @@ int main(int argc, char **argv) {
 
     if (require_RP_init) {
 
-        which_memalign = RP_memalign;
-
         if (access("masstree_basemd", F_OK) == 0 &&
             access("masstree_desc", F_OK) == 0 &&
             access("masstree_sb", F_OK) == 0) {
             puts("\tbegin recovering Ralloc");
 
-            tree->setNewRoot(RP_get_root<masstree::leafnode>(0));
+            if (which_memalign == RP_memalign) {
+                tree->setNewRoot(RP_get_root<masstree::leafnode>(0));
+            }
+
             RP_recover();
             goto_lookup = 1;
 
