@@ -1131,7 +1131,8 @@ int main(int argc, char **argv) {
     }
     PMEM_POOL_SIZE = size_round;
 
-    masstree::masstree *tree = new masstree::masstree();
+
+    void *root = NULL;
 
     if (require_RP_init) {
 
@@ -1141,7 +1142,7 @@ int main(int argc, char **argv) {
             puts("\tbegin recovering Ralloc");
 
             if (which_memalign == RP_memalign) {
-                tree->setNewRoot(RP_get_root<masstree::leafnode>(0));
+                root = RP_get_root<masstree::leafnode>(0);
             }
 
             RP_recover();
@@ -1151,9 +1152,19 @@ int main(int argc, char **argv) {
             puts("\tbegin preparing Ralloc");
             int preset = 0;
             RP_init("masstree", PMEM_POOL_SIZE, &preset);
-            RP_set_root(tree->root(), 0);
         }
 
+    }
+
+
+    masstree::masstree *tree;
+    if (root != NULL) {
+        tree = new masstree::masstree(root);
+    } else {
+        tree = new masstree::masstree();
+        if (which_memalign == RP_memalign) {
+            RP_set_root(tree->root(), 0);
+        }
     }
 
 
