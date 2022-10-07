@@ -64,7 +64,7 @@ cd build || exit
 
 pmdk_no_flush=("0" "1")
 #pmdk_no_flush=("0")
-pmdk_no_flush=("1")
+#pmdk_no_flush=("1")
 
 index_location=("dram" "ralloc" "obj")
 index_location=("dram")
@@ -93,7 +93,7 @@ extra_sizes=(256)
 #extra_sizes=($(seq 0 32 240))
 
 total_sizes=(0)
-total_sizes=(256)
+total_sizes=(64)
 
 ycsbs=("N")
 #ycsbs=("a" "b" "c" "e")
