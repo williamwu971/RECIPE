@@ -1136,9 +1136,10 @@ int main(int argc, char **argv) {
 
     if (require_RP_init) {
 
-        if (access("/pmem0/masstree_basemd", F_OK) == 0 &&
-            access("/pmem0/masstree_desc", F_OK) == 0 &&
-            access("/pmem0/masstree_sb", F_OK) == 0) {
+        int preset = 0;
+        int should_recover = RP_init("masstree", PMEM_POOL_SIZE, &preset);
+
+        if (should_recover) {
             puts("\tbegin recovering Ralloc");
 
             if (which_memalign == RP_memalign) {
@@ -1150,8 +1151,6 @@ int main(int argc, char **argv) {
 
         } else {
             puts("\tbegin preparing Ralloc");
-            int preset = 0;
-            RP_init("masstree", PMEM_POOL_SIZE, &preset);
         }
 
     }
