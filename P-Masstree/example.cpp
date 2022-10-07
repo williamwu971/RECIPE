@@ -29,6 +29,7 @@ int use_log = 0;
 int total_size = 0;
 int memset_size = 0;
 int base_size = 0;
+int goto_lookup = 0;
 char *prefix = NULL;
 uint64_t iter;
 uint64_t PMEM_POOL_SIZE = 0;
@@ -1130,10 +1131,28 @@ int main(int argc, char **argv) {
     }
     PMEM_POOL_SIZE = size_round;
 
+    masstree::masstree *tree = new masstree::masstree();
+
     if (require_RP_init) {
-        puts("\tbegin preparing Ralloc");
-        int preset = 0;
-        RP_init("masstree", PMEM_POOL_SIZE, &preset);
+
+        which_memalign = RP_memalign;
+
+        if (access("masstree_basemd", F_OK) == 0 &&
+            access("masstree_desc", F_OK) == 0 &&
+            access("masstree_sb", F_OK) == 0) {
+            puts("\tbegin recovering Ralloc");
+
+            tree->setNewRoot(RP_get_root<masstree::leafnode>(0));
+            RP_recover();
+            goto_lookup = 1;
+
+        } else {
+            puts("\tbegin preparing Ralloc");
+            int preset = 0;
+            RP_init("masstree", PMEM_POOL_SIZE, &preset);
+            RP_set_root(tree->root(), 0);
+        }
+
     }
 
 
@@ -1161,11 +1180,6 @@ int main(int argc, char **argv) {
 
 //    tbb::task_scheduler_init init(num_thread);
     srand(time(NULL));
-    masstree::masstree *tree = new masstree::masstree();
-
-    if (require_RP_init) {
-        RP_set_root(tree->root(), 0);
-    }
 
     FILE *throughput_file = fopen("perf.csv", "a");
     u_int64_t *latencies = NULL;
@@ -1226,7 +1240,7 @@ int main(int argc, char **argv) {
                 access(META_FN, F_OK) == 0
                 ) {
             log_recover(tree, 20);
-            goto lookup;
+            goto_lookup = 1;
         } else {
             log_init(PMEM_POOL_SIZE, num_thread);
         }
@@ -1243,6 +1257,7 @@ int main(int argc, char **argv) {
     std::cout << "Simple Example of P-Masstree-New" << std::endl;
     printf("operation,n,ops/s\n");
 
+    if (goto_lookup) goto lookup;
 
     {
         /**

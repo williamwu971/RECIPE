@@ -71,7 +71,7 @@ index_location=("dram")
 #index_location=("dram" "ralloc")
 
 value_location=("ralloc" "log" "obj")
-value_location=("obj" "log" "ralloc")
+#value_location=("obj" "log" "ralloc")
 #value_location=("ralloc")
 #value_location=("log")
 #value_location=("obj")
