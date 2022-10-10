@@ -1166,6 +1166,8 @@ int main(int argc, char **argv) {
         }
     }
 
+    printf("root: %p\n", tree->root());
+
 
     if (require_obj_init) {
 
