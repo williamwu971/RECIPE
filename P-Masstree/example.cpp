@@ -566,6 +566,13 @@ static inline void masstree_branched_lookup(
 ) {
     void *raw = tree->get(g_key, t);
     if (raw != NULL || check_value) {
+
+        if (raw == NULL) {
+            printf("key %lu returned NULL\n", g_key);
+            throw;
+        }
+
+
         if (!masstree_checksum(raw, 1, g_value)) {
 
             printf("error key %lu value %lu pointer %p\n", g_key, g_value, raw);
