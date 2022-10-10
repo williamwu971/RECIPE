@@ -1312,13 +1312,13 @@ int main(int argc, char **argv) {
         if (use_log) log_debug_print(0, show_log_usage);
     }
 
-    {
-        /**
-         * section DELETE
-         */
-        run("delete", throughput_file, attrs, section_args, latencies, section_delete);
-        if (use_log) log_debug_print(0, show_log_usage);
-    }
+//    {
+//        /**
+//         * section DELETE
+//         */
+//        run("delete", throughput_file, attrs, section_args, latencies, section_delete);
+//        if (use_log) log_debug_print(0, show_log_usage);
+//    }
 
 
     end:
