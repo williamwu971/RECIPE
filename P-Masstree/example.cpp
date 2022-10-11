@@ -86,6 +86,7 @@ static inline void clflush(char *data, int len, bool front, bool back) {
 void *memcpy_then_persist(void *pmemdest, const void *src, size_t len) {
     memcpy(pmemdest, src, len);
     pmem_persist(pmemdest, len);
+    return pmemdest;
 }
 
 void dump_latencies(const char *fn, u_int64_t *numbers, uint64_t length) {
