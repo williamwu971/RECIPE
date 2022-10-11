@@ -197,7 +197,7 @@ void init_zipf_generator(long min, long max) {
     zipf_next();
 }
 
-static int random_get_put(int test) {
+int random_get_put(int test) {
     long random = uniform_next() % 100;
     switch (test) {
         case 0: // A
