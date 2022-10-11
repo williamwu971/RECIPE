@@ -74,7 +74,7 @@ index_location=("dram")
 value_location=("ralloc" "log" "obj")
 #value_location=("obj" "log" "ralloc")
 #value_location=("ralloc")
-#value_location=("log")
+value_location=("log")
 #value_location=("obj")
 #value_location=("log" "obj")
 
@@ -94,9 +94,11 @@ extra_sizes=(256)
 #extra_sizes=($(seq 0 32 240))
 
 total_sizes=(0)
-total_sizes=(64)
+#total_sizes=(64)
+total_sizes=($(seq 48 8 256))
 
 persist=("flush" "non-temporal")
+persist=("flush")
 
 ycsbs=("N")
 #ycsbs=("a" "b" "c" "e")
