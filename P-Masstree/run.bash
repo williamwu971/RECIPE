@@ -96,6 +96,8 @@ extra_sizes=(256)
 total_sizes=(0)
 total_sizes=(64)
 
+persist=("flush" "non-temporal")
+
 ycsbs=("N")
 #ycsbs=("a" "b" "c" "e")
 #ycsbs=("e" "c" "b" "a")
@@ -118,7 +120,7 @@ for fp in "${file_prefixes[@]}"; do
 
   if [ "${#ycsbs[@]}" -eq "1" ]; then
     {
-      printf "index,value,threads,gc,pmdk_no_flush,extra_sizes,total_sizes,ycsb,"
+      printf "index,value,threads,gc,pmdk_no_flush,extra_sizes,total_sizes,ycsb,persist,"
       printf "insert_r(gb),insert_rb(gb/s),insert_w(gb),insert_wb(gb/s),insert_TP(ops/us),insert_gc_TP(ops/us),"
       printf "update_r(gb),update_rb(gb/s),update_w(gb),update_wb(gb/s),update_TP(ops/us),update_gc_TP(ops/us),"
       printf "lookup_r(gb),lookup_rb(gb/s),lookup_w(gb),lookup_wb(gb/s),lookup_TP(ops/us),lookup_gc_TP(ops/us),"
@@ -126,7 +128,7 @@ for fp in "${file_prefixes[@]}"; do
     } >>"$fp".csv
   else
     {
-      printf "index,value,threads,gc,pmdk_no_flush,extra_sizes,total_sizes,ycsb,"
+      printf "index,value,threads,gc,pmdk_no_flush,extra_sizes,total_sizes,ycsb,persist,"
       printf "load_r(gb),load_rb(gb/s),load_w(gb),load_wb(gb/s),load_TP(ops/us),load_gc_TP(ops/us),"
       printf "run_r(gb),run_rb(gb/s),run_w(gb),run_wb(gb/s),run_TP(ops/us),run_gc_TP(ops/us),"
     } >>"$fp".csv
@@ -145,34 +147,39 @@ for i in "${index_location[@]}"; do
           for s in "${extra_sizes[@]}"; do
             for t in "${total_sizes[@]}"; do
               for y in "${ycsbs[@]}"; do
+                for p in "${persist[@]}"; do
 
-                # backup perf files
-                #        cd .. || exit
-                #          for pfn in *.perf; do
-                #            [ -f "$pfn" ] || break
-                #            echo "backing up $pfn"
-                #            mv "$pfn" "$pfn".old
-                #          done
-                #        cd - || exit
+                  # backup perf files
+                  #        cd .. || exit
+                  #          for pfn in *.perf; do
+                  #            [ -f "$pfn" ] || break
+                  #            echo "backing up $pfn"
+                  #            mv "$pfn" "$pfn".old
+                  #          done
+                  #        cd - || exit
 
-                # the first three columns
-                printf '%s,%s,%s,%s,%s,%s,%s,%s,' "$i" "$v" "$n" "$g" "$f" "$s" "$t" "$y" >>perf.csv
+                  # the first three columns
+                  printf '%s,%s,%s,%s,%s,%s,%s,%s,%s,' "$i" "$v" "$n" "$g" "$f" "$s" "$t" "$y" "$p" >>perf.csv
 
-                # drop system cache and clear pmem device
-                echo 1 >/proc/sys/vm/drop_caches
-                rm -rf /pmem0/masstree*
-                killall -w perf >/dev/null 2>&1
-                pkill -f pcm-memory >/dev/null 2>&1
-                #      /home/blepers/linux/tools/perf/perf record -g ./example "$workload" "$n" index="$i" value="$v" key="$key_order"
-                PMEM_NO_FLUSH="$f" ./example "$workload" "$n" extra_size="$s" total_size="$t" index="$i" value="$v" key="$key_order" perf="$use_perf" gc="$g" ycsb="$y" latency="$record_latency" prefix="$i"-"$v"-"$n"-"$g"-NF"$f"-"$s"b-"$t"B-"$y" || exit
+                  # drop system cache and clear pmem device
+                  echo 1 >/proc/sys/vm/drop_caches
+                  rm -rf /pmem0/masstree*
+                  killall -w perf >/dev/null 2>&1
+                  pkill -f pcm-memory >/dev/null 2>&1
+                  #      /home/blepers/linux/tools/perf/perf record -g ./example "$workload" "$n" index="$i" value="$v" key="$key_order"
+                  PMEM_NO_FLUSH="$f" ./example "$workload" "$n" extra_size="$s" total_size="$t" \
+                    index="$i" value="$v" key="$key_order" perf="$use_perf" \
+                    gc="$g" ycsb="$y" latency="$record_latency" persist="$p" \
+                    prefix="$i"-"$v"-"$n"-"$g"-NF"$f"-"$s"b-"$t"B-"$y"-"$p" || exit
 
-                #      mv out.png out_"$i"_"$v".png
-                #      ./example 100 "$n" index="$i" value="$v"
+                  #      mv out.png out_"$i"_"$v".png
+                  #      ./example 100 "$n" index="$i" value="$v"
 
-                # this should result in two csv files insert.csv and lookup.csv
-                # just append a new line to it
-                for fp in "${file_prefixes[@]}"; do
-                  echo "" >>"$fp".csv
+                  # this should result in two csv files insert.csv and lookup.csv
+                  # just append a new line to it
+                  for fp in "${file_prefixes[@]}"; do
+                    echo "" >>"$fp".csv
+                  done
                 done
               done
             done

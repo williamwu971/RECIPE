@@ -35,6 +35,8 @@ uint64_t iter;
 uint64_t PMEM_POOL_SIZE = 0;
 uint64_t value_offset = 0;
 
+void *(*cpy_persist)(void *, const void *, size_t) =pmem_memcpy_persist;
+
 uint64_t n;
 int num_thread;
 PMEMobjpool *pop = NULL;
@@ -81,6 +83,10 @@ static inline void clflush(char *data, int len, bool front, bool back) {
         asm volatile("sfence":: :"memory");
 }
 
+void *memcpy_then_persist(void *pmemdest, const void *src, size_t len) {
+    memcpy(pmemdest, src, len);
+    pmem_persist(pmemdest, len);
+}
 
 void dump_latencies(const char *fn, u_int64_t *numbers, uint64_t length) {
     FILE *latency_file = fopen(fn, "w");
@@ -511,7 +517,7 @@ static inline void masstree_branched_update(
         if (!masstree_checksum(tplate, 0, u_value)) throw;
 
         char *raw = (char *) log_malloc(total_size);
-        pmem_memcpy_persist(raw, tplate, total_size);
+        cpy_persist(raw, tplate, total_size);
 
         void *returned = tree->put_and_return(u_key, raw, !no_allow_prev_null, 0, t);
 
@@ -526,7 +532,7 @@ static inline void masstree_branched_update(
 
 
         void *value = RP_malloc(total_size);
-        pmem_memcpy_persist(value, tplate, total_size);
+        cpy_persist(value, tplate, total_size);
 
         uint64_t *returned = (uint64_t *) tree->put_and_return(u_key, value, !no_allow_prev_null, 0, t);
 
@@ -1070,6 +1076,13 @@ int main(int argc, char **argv) {
             char *prefix_ptr = strcasestr(argv[ac], "=") + 1;
             prefix = (char *) malloc(sizeof(char) * (strlen(prefix_ptr) + 1));
             strcpy(prefix, prefix_ptr);
+        } else if (strcasestr(argv[ac], "persist=")) {
+            if (strcasestr(argv[ac], "flush")) {
+                cpy_persist = memcpy_then_persist;
+                printf("persist=flush ");
+            } else {
+                printf("persist=non-temporal ");
+            }
         }
     }
 
