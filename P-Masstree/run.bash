@@ -99,6 +99,7 @@ total_sizes=($(seq 48 8 256))
 
 persist=("flush" "non-temporal")
 persist=("flush")
+persist=("non-temporal")
 
 ycsbs=("N")
 #ycsbs=("a" "b" "c" "e")

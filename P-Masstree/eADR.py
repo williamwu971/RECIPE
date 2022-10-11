@@ -14,12 +14,14 @@ with open("perf.csv", "r") as data_file:
 
     offset = int(len(data_read) / 2)
     for idx in range(offset):
-        xs.append(float(data_read[idx][5]) + 16)
+        xs.append(float(data_read[idx][6]))
         line_0.append(float(data_read[idx][int(sys.argv[2])]))
         line_1.append(float(data_read[idx + offset][int(sys.argv[2])]))
 
     plt.plot(xs, line_0, label="flush")
     plt.plot(xs, line_1, label="eADR")
+
+    # print(line_0)
 
 plt.title("Flush vs eADR (Ralloc-{})".format(sys.argv[1]), fontsize=40)
 
