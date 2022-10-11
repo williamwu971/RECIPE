@@ -1294,6 +1294,7 @@ int main(int argc, char **argv) {
          * section YCSB
          */
         if (wl != NULL) {
+            puts("\t\t\t *** YCSB workload ***");
             run("ycsb_load", throughput_file, attrs, section_args, latencies, section_ycsb_load);
             run("ycsb_run", throughput_file, attrs, section_args, latencies, section_ycsb_run);
             goto end;
