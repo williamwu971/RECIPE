@@ -1090,6 +1090,8 @@ int main(int argc, char **argv) {
         } else if (strcasestr(argv[ac], "interfere=")) {
             char *interfere_ptr = strcasestr(argv[ac], "=") + 1;
             interfere = (interfere_ptr[0] == '1');
+
+            printf("interfere=%d ", interfere);
         }
     }
 
