@@ -272,8 +272,8 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
         log_print_pmem_bandwidth("fault.perf", duration.count() / 1000000.0, NULL);
 
 
-        printf("\n\t\t\tpre-faulted %-30s %7.2f gb/s %7.2f s sum:%lu \n",
-               fn, (mapped_len * 2.0 / 1024.0 / 1024.0 / 1024.0) / (duration.count() / 1000000.0),
+        printf("\n\tpre-faulted %p %-30s %7.2f gb/s %7.2f s sum:%lu \n",
+               map, fn, (mapped_len * 2.0 / 1024.0 / 1024.0 / 1024.0) / (duration.count() / 1000000.0),
                duration.count() / 1000000.0, sum.load());
 
     }
