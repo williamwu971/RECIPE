@@ -80,6 +80,7 @@ value_location=("log")
 
 #num_threads=(1 3 5 7 9 11 13 15)
 num_threads=(24)
+num_threads=(19)
 #num_threads=(1)
 
 use_perf="yes"

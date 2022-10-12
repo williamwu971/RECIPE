@@ -31,6 +31,7 @@ int memset_size = 0;
 int base_size = 0;
 int goto_lookup = 0;
 char *prefix = NULL;
+int interfere = 1;
 uint64_t iter;
 uint64_t PMEM_POOL_SIZE = 0;
 uint64_t value_offset = 0;
@@ -1086,6 +1087,9 @@ int main(int argc, char **argv) {
             } else {
                 printf("persist=non-temporal ");
             }
+        } else if (strcasestr(argv[ac], "interfere=")) {
+            char *interfere_ptr = strcasestr(argv[ac], "=") + 1;
+            interfere = (interfere_ptr[0] == '1');
         }
     }
 
@@ -1281,12 +1285,18 @@ int main(int argc, char **argv) {
         if (num_of_gc > 0) {
             puts("\tbegin creating Gc");
 
-//            int use_me = numberOfProcessors / 2 + 1;
-            int use_me = 1;
+
+            int use_me = numberOfProcessors / 2 - 1;
+            if (interfere) use_me = 1;
 
             for (int gcc = 0; gcc < num_of_gc; gcc++) {
                 log_start_gc(tree, use_me);
-                use_me++;
+
+                if (interfere) {
+                    use_me++;
+                } else {
+                    use_me--;
+                }
             }
         }
     }
