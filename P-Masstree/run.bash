@@ -116,6 +116,8 @@ workload=32000000
 key_order="random"
 #key_order="seq"
 
+interfere="0"
+
 file_prefixes=("perf")
 
 for fp in "${file_prefixes[@]}"; do
@@ -174,7 +176,7 @@ for i in "${index_location[@]}"; do
                   #      /home/blepers/linux/tools/perf/perf record -g ./example "$workload" "$n" index="$i" value="$v" key="$key_order"
                   PMEM_NO_FLUSH="$f" ./example "$workload" "$n" extra_size="$s" total_size="$t" \
                     index="$i" value="$v" key="$key_order" perf="$use_perf" \
-                    gc="$g" ycsb="$y" latency="$record_latency" persist="$p" \
+                    gc="$g" ycsb="$y" latency="$record_latency" persist="$p" interfere="$interfere" \
                     prefix="$i"-"$v"-"$n"-"$g"-NF"$f"-"$s"b-"$t"B-"$y"-"$p" || exit
 
                   #      mv out.png out_"$i"_"$v".png
