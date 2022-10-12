@@ -18,7 +18,7 @@ with open("perf.csv", "r") as data_file:
         line_0.append(float(data_read[idx][int(sys.argv[2])]))
         line_1.append(float(data_read[idx + offset][int(sys.argv[2])]))
 
-    plt.plot(xs, line_0, label="flush")
+    plt.plot(xs, line_0, label="non-temporal")
     plt.plot(xs, line_1, label="eADR")
 
     # print(line_0)

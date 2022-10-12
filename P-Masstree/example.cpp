@@ -1278,8 +1278,12 @@ int main(int argc, char **argv) {
 
         if (num_of_gc > 0) {
             puts("\tbegin creating Gc");
+
+            int use_me = numberOfProcessors / 2 + 1;
+
             for (int gcc = 0; gcc < num_of_gc; gcc++) {
-                log_start_gc(tree);
+                log_start_gc(tree, use_me);
+                use_me++;
             }
         }
     }
