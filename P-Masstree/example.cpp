@@ -448,9 +448,11 @@ static inline uint64_t *masstree_checksum(void *value, int check, uint64_t v) {
         numbers++;
     }
 
-    if (check && numbers[0] != sum) {
-        check_result = 0;
-        printf("sum incorrect, expecting %lu got %lu\n", sum, numbers[0]);
+    if (check) {
+        if (numbers[0] != sum) {
+            check_result = 0;
+            printf("sum incorrect, expecting %lu got %lu\n", sum, numbers[0]);
+        }
     } else {
         numbers[0] = sum;
     }
