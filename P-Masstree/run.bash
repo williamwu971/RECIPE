@@ -76,7 +76,7 @@ value_location=("ralloc" "log" "obj")
 #value_location=("ralloc")
 #value_location=("log")
 #value_location=("obj")
-#value_location=("log" "obj")
+value_location=("log" "ralloc")
 
 #num_threads=(1 3 5 7 9 11 13 15)
 num_threads=(24)
@@ -110,7 +110,7 @@ ycsbs=("au" "bu" "cu" "eu" "az" "bz" "cz" "ez")
 ycsbs=("eu" "ez")
 
 workload=16000000
-workload=32000000
+workload=32000000 # todo: do not change this
 #workload=8000000
 #workload=100000000
 
@@ -118,7 +118,7 @@ key_order="random"
 #key_order="seq"
 
 interfere="0"
-interfere="1"
+#interfere="1"
 
 file_prefixes=("perf")
 
