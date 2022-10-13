@@ -106,8 +106,8 @@ persist=("non-temporal")
 ycsbs=("N")
 #ycsbs=("a" "b" "c" "e")
 #ycsbs=("e" "c" "b" "a")
-ycsbs=("au" "bu" "cu" "eu" "az" "bz" "cz" "ez")
-ycsbs=("eu" "ez")
+#ycsbs=("au" "bu" "cu" "eu" "az" "bz" "cz" "ez")
+#ycsbs=("eu" "ez")
 
 workload=16000000
 workload=32000000 # todo: do not change this
