@@ -117,6 +117,7 @@ key_order="random"
 #key_order="seq"
 
 interfere="0"
+interfere="1"
 
 file_prefixes=("perf")
 
