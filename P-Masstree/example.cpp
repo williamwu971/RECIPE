@@ -599,8 +599,32 @@ static inline void masstree_ycsb_lookup(
     void *raw = tree->get(g_key, t);
     if (raw != NULL) {
         if (masstree_getsum(raw) == 0) {
-            printf("ycsb sum 0\n");
+            printf("ycsb lookup sum 0\n");
             throw;
+        }
+    }
+}
+
+static inline void masstree_ycsb_scan(
+        masstree::masstree *tree,
+        MASS::ThreadInfo t,
+        uint64_t s_min,
+        int s_num
+) {
+
+    uint64_t buf[200];
+    memset(buf, 0, sizeof(uint64_t) * 200);
+
+    int ret = tree->scan(s_min, s_num, buf, t);
+    for (int ret_idx = 0; ret_idx < ret; ret_idx++) {
+
+        void *raw = (void *) buf[ret_idx];
+
+        if (raw != NULL) {
+            if (masstree_getsum(raw) == 0) {
+                printf("ycsb scan sum 0\n");
+                throw;
+            }
         }
     }
 }
@@ -732,9 +756,7 @@ void *section_ycsb_run(void *arg) {
 //            masstree_branched_lookup(tree, t, ycsb_keys[i], ycsb_keys[i], check_value);
             masstree_ycsb_lookup(tree, t, ycsb_keys[i]);
         } else if (ycsb_ops[i] == OP_SCAN) {
-            uint64_t buf[200];
-            int ret = tree->scan(ycsb_keys[i], ycsb_ranges[i], buf, t);
-            (void) ret;
+            masstree_ycsb_scan(tree, t, ycsb_keys[i], ycsb_ranges[i]);
         } else if (ycsb_ops[i] == OP_DELETE) {
             masstree_branched_delete(tree, t, ycsb_keys[i]);
         }
