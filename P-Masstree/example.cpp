@@ -655,47 +655,47 @@ static inline void masstree_branched_delete(
     }
 }
 
-void *section_ycsb_load(void *arg) {
-
-    struct section_arg *sa = (struct section_arg *) arg;
-
-    masstree::masstree *tree = sa->tree;
-    uint64_t start = sa->start;
-    uint64_t end = sa->end;
-    u_int64_t *latencies = sa->latencies;
-
-
-    void *tplate = malloc(total_size);
-    memset(tplate, 7, total_size);
-
-    if (use_log) {
-
-        struct log_cell *lc = (struct log_cell *) tplate;
-        lc->value_size = total_size - sizeof(struct log_cell);
-        lc->is_delete = 0;
-
-    }
-
-    auto t = tree->getThreadInfo();
-
-
-    u_int64_t rdt;
-
-
-    for (uint64_t i = start; i < end; i++) {
-
-
-        masstree_branched_update(tree, t, ycsb_init_keys[i], ycsb_init_keys[i], 0, tplate);
-        rdtscll(rdt)
-
-        if (start == 0) {
-            latencies[i] = rdt;
-        }
-    }
-
-
-    return NULL;
-}
+//void *section_ycsb_load(void *arg) {
+//
+//    struct section_arg *sa = (struct section_arg *) arg;
+//
+//    masstree::masstree *tree = sa->tree;
+//    uint64_t start = sa->start;
+//    uint64_t end = sa->end;
+//    u_int64_t *latencies = sa->latencies;
+//
+//
+//    void *tplate = malloc(total_size);
+//    memset(tplate, 7, total_size);
+//
+//    if (use_log) {
+//
+//        struct log_cell *lc = (struct log_cell *) tplate;
+//        lc->value_size = total_size - sizeof(struct log_cell);
+//        lc->is_delete = 0;
+//
+//    }
+//
+//    auto t = tree->getThreadInfo();
+//
+//
+//    u_int64_t rdt;
+//
+//
+//    for (uint64_t i = start; i < end; i++) {
+//
+//
+//        masstree_branched_update(tree, t, ycsb_init_keys[i], ycsb_init_keys[i], 0, tplate);
+//        rdtscll(rdt)
+//
+//        if (start == 0) {
+//            latencies[i] = rdt;
+//        }
+//    }
+//
+//
+//    return NULL;
+//}
 
 void *section_ycsb_run(void *arg) {
 
@@ -1259,6 +1259,7 @@ int main(int argc, char **argv) {
         section_args[i].tree = tree;
         section_args[i].keys = keys;
         section_args[i].rands = rands;
+        if (wl != NULL) section_args[i].rands = keys;
 
         if (i == 0) {
             latencies = (u_int64_t *) malloc(sizeof(u_int64_t) * section_args[i].end);
@@ -1315,7 +1316,8 @@ int main(int argc, char **argv) {
          */
         if (wl != NULL) {
             puts("\t\t\t *** YCSB workload ***");
-            run("ycsb_load", throughput_file, attrs, section_args, latencies, section_ycsb_load);
+//            run("ycsb_load", throughput_file, attrs, section_args, latencies, section_ycsb_load);
+            run("ycsb_load", throughput_file, attrs, section_args, latencies, section_insert);
             run("ycsb_run", throughput_file, attrs, section_args, latencies, section_ycsb_run);
             goto end;
         }
