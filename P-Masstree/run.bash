@@ -55,6 +55,7 @@ for var in "$@"; do
       fi
     done
 
+    sleep 1
     wait "$(pgrep -f simple_graph)"
 
     exit
@@ -213,6 +214,7 @@ if [ "$record_latency" = "yes" ]; then
     #              python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$filename"|| exit
   done
 
+  sleep 1
   wait "$(pgrep -f simple_graph)"
 fi
 
