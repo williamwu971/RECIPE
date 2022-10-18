@@ -1190,10 +1190,10 @@ int main(int argc, char **argv) {
         int preset = 0;
 
         puts("\tbegin preparing Ralloc");
-//        int should_recover = RP_init("masstree", PMEM_POOL_SIZE, &preset);
+        int should_recover = RP_init("masstree", PMEM_POOL_SIZE, &preset);
 
-        int should_recover=(access("/pmem0/masstree_sb", F_OK) != -1);
-        RP_init("masstree", PMEM_POOL_SIZE, &preset);
+//        int should_recover=(access("/pmem0/masstree_sb", F_OK) != -1);
+//        RP_init("masstree", PMEM_POOL_SIZE, &preset);
 
         if (should_recover && which_memalign == RP_memalign) {
             puts("\tbegin recovering Ralloc");
@@ -1205,11 +1205,11 @@ int main(int argc, char **argv) {
             // read in all the pointers
             uint64_t *all_values = (uint64_t*) malloc(sizeof(uint64_t) * n * 2);
             auto info = tree->getThreadInfo();
-//            uint64_t min =0;
-//            assert(tree->scan(min, n, all_values, info) == n);
+            uint64_t min =0;
+            assert(tree->scan(min, n, all_values, info) == n);
 
             for (uint64_t xx = 0;xx<n;xx++){
-                all_values[xx] = (uint64_t)tree->get(xx,info);
+//                all_values[xx] = (uint64_t)tree->get(xx,info);
                 printf("ptr %p\n",(void*)(all_values[xx]));
                 if ((void*)(all_values[xx])==NULL){
                     break;
