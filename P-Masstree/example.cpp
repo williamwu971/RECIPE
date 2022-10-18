@@ -1197,6 +1197,7 @@ int main(int argc, char **argv) {
 
 
             tree = new masstree::masstree(RP_get_root<masstree::leafnode>(0));
+            printf("tree root: %p\n", tree->root());
 
             // read in all the pointers
             void **all_values = (void **) malloc(sizeof(void *) * n * 2);
@@ -1217,7 +1218,6 @@ int main(int argc, char **argv) {
         tree = new masstree::masstree();
     }
 
-    printf("tree root: %p\n", tree->root());
 
 
     if (require_obj_init) {
