@@ -2747,9 +2747,9 @@ namespace masstree {
                 if (l->key(perm[i]) >= min) {
 //                    buf[count++] = (uint64_t) snapshot_v;
 
-                    if ((uint64_t)l!=(uint64_t)buf[count]){
+//                    if ((uint64_t)l!=(uint64_t)buf[count]){
                         buf[count++] = (uint64_t) l;
-                    }
+//                    }
 
                 }
             }
