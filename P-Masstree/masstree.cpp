@@ -2674,4 +2674,99 @@ namespace masstree {
         return count;
     }
 
+    int masstree::scan_leaf(uint64_t min, int num, uint64_t *buf, ThreadInfo &threadEpocheInfo) {
+        EpocheGuard epocheGuard(threadEpocheInfo);
+        void *root = NULL;
+        key_indexed_position kx_;
+        leafnode *next = NULL;
+        void *snapshot_v = NULL;
+        leafnode *snapshot_n = NULL;
+        permuter perm;
+        int count, backup;
+
+        int needRestart;
+        uint64_t v;
+
+        restart:
+        count = 0;
+        root = this->root_.load(std::memory_order_acquire);
+        leafnode *p = reinterpret_cast<leafnode *> (root);
+        while (p->level() != 0) {
+            inter_retry:
+            next = p->advance_to_key(min);
+            if (next != p) {
+                p = next;
+                goto inter_retry;
+            }
+
+            v = p->readLockOrRestart(needRestart);
+            if (needRestart) {
+                if (needRestart == LOCKED)
+                    goto inter_retry;
+                else
+                    goto restart;
+            }
+
+            p->prefetch();
+            fence();
+
+            kx_ = p->key_lower_bound(min);
+
+            if (kx_.i >= 0)
+                snapshot_v = p->value(kx_.p);
+            else
+                snapshot_v = p->leftmost();
+
+            p->checkOrRestart(v, needRestart);
+            if (needRestart)
+                goto inter_retry;
+            else
+                p = reinterpret_cast<leafnode *> (snapshot_v);
+        }
+
+        leafnode *l = reinterpret_cast<leafnode *> (p);
+        while (count < num) {
+            leaf_retry:
+            backup = count;
+            snapshot_n = l->next_();
+            perm = l->permute();
+
+            v = l->readLockOrRestart(needRestart);
+            if (needRestart) {
+                if (needRestart == LOCKED)
+                    goto leaf_retry;
+                else
+                    goto restart;
+            }
+
+            l->prefetch();
+            fence();
+
+            for (int i = 0; i < perm.size() && count < num; i++) {
+                snapshot_v = l->value(perm[i]);
+                if (l->key(perm[i]) >= min) {
+//                    buf[count++] = (uint64_t) snapshot_v;
+
+                    if ((uint64_t)l!=(uint64_t)buf[count]){
+                        buf[count++] = (uint64_t) l;
+                    }
+
+                }
+            }
+
+            l->checkOrRestart(v, needRestart);
+            if (needRestart) {
+                count = backup;
+                continue;
+            } else {
+                if (snapshot_n == NULL)
+                    break;
+                else
+                    l = snapshot_n;
+            }
+        }
+
+        return count;
+    }
+
 }

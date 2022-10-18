@@ -139,6 +139,8 @@ namespace masstree {
 
         int scan(uint64_t min, int num, uint64_t *buf, MASS::ThreadInfo &threadEpocheInfo);
 
+        int scan_leaf(uint64_t min, int num, uint64_t *buf, MASS::ThreadInfo &threadEpocheInfo);
+
         int scan(char *min, int num, uint64_t *buf, MASS::ThreadInfo &threadEpocheInfo);
     };
 
