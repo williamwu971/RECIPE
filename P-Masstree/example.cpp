@@ -1372,6 +1372,10 @@ int main(int argc, char **argv) {
         if (use_log) log_debug_print(0, show_log_usage);
     }
 
+    if (which_memalign == RP_memalign) {
+        RP_set_root(tree->root(), 0);
+    }
+
     {
         /**
          * section DELETE
@@ -1392,9 +1396,7 @@ int main(int argc, char **argv) {
         log_join_all_gc();
         log_debug_print(2, show_log_usage);
     }
-    if (which_memalign == RP_memalign) {
-        RP_set_root(tree->root(), 0);
-    }
+
 
     delete[] keys;
 
