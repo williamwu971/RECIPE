@@ -1184,6 +1184,7 @@ int main(int argc, char **argv) {
 
 
     void *root = NULL;
+    masstree::masstree *tree = new masstree::masstree();
 
     if (require_RP_init) {
 
@@ -1193,11 +1194,18 @@ int main(int argc, char **argv) {
         if (should_recover) {
             puts("\tbegin recovering Ralloc");
 
+
             if (which_memalign == RP_memalign) {
-                root = RP_get_root<masstree::leafnode>(0);
+                tree->setNewRoot(RP_get_root<masstree::leafnode>(0));
             }
 
-            RP_recover();
+            // read in all the pointers
+            void **all_values = (void **) malloc(sizeof(void *) * n);
+            auto info = tree->getThreadInfo();
+            assert(tree->scan((uint64_t) 0, n, (uint64_t *) all_values, info) == n);
+
+
+            RP_recover_xiaoxiang(all_values, n);
             goto_lookup = 1;
 
         } else {
@@ -1206,13 +1214,6 @@ int main(int argc, char **argv) {
 
     }
 
-
-    masstree::masstree *tree;
-    if (root != NULL) {
-        tree = new masstree::masstree(root);
-    } else {
-        tree = new masstree::masstree();
-    }
 
     printf("root: %p\n", tree->root());
 
@@ -1370,13 +1371,13 @@ int main(int argc, char **argv) {
         if (use_log) log_debug_print(0, show_log_usage);
     }
 
-    {
-        /**
-         * section DELETE
-         */
-        run("delete", throughput_file, attrs, section_args, latencies, section_delete);
-        if (use_log) log_debug_print(0, show_log_usage);
-    }
+//    {
+//        /**
+//         * section DELETE
+//         */
+//        run("delete", throughput_file, attrs, section_args, latencies, section_delete);
+//        if (use_log) log_debug_print(0, show_log_usage);
+//    }
 
 
     end:
