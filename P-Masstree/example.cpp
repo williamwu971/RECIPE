@@ -1206,6 +1206,9 @@ int main(int argc, char **argv) {
             void **all_values = (void **) malloc(sizeof(void *) * n * 2);
             auto info = tree->getThreadInfo();
             assert(tree->scan((uint64_t) 0, n, (uint64_t *) all_values, info) == n);
+            for (int xx = 0;xx<n;xx++){
+                printf("ptr %p\n",(void*)(all_values[xx]));
+            }
 
             int num_leaf = tree->scan_leaf((uint64_t) 0, n, (uint64_t *) (all_values + n), info);
             printf("num_leaf: %d", num_leaf);
