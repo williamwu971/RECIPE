@@ -1192,13 +1192,11 @@ int main(int argc, char **argv) {
         puts("\tbegin preparing Ralloc");
         int should_recover = RP_init("masstree", PMEM_POOL_SIZE, &preset);
 
-        if (should_recover) {
+        if (should_recover && which_memalign == RP_memalign) {
             puts("\tbegin recovering Ralloc");
 
 
-            if (which_memalign == RP_memalign) {
-                tree = new masstree::masstree(RP_get_root<masstree::leafnode>(0));
-            }
+            tree = new masstree::masstree(RP_get_root<masstree::leafnode>(0));
 
             // read in all the pointers
             void **all_values = (void **) malloc(sizeof(void *) * n);
