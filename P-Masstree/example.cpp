@@ -1208,6 +1208,9 @@ int main(int argc, char **argv) {
             assert(tree->scan((uint64_t) 0, n, (uint64_t *) all_values, info) == n);
             for (int xx = 0;xx<n;xx++){
                 printf("ptr %p\n",(void*)(all_values[xx]));
+                if ((void*)(all_values[xx])==NULL){
+                    break;
+                }
             }
 
             int num_leaf = tree->scan_leaf((uint64_t) 0, n, (uint64_t *) (all_values + n), info);
