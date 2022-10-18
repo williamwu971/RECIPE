@@ -1190,9 +1190,10 @@ int main(int argc, char **argv) {
         int preset = 0;
 
         puts("\tbegin preparing Ralloc");
-        int should_recover = RP_init("masstree", PMEM_POOL_SIZE, &preset);
+//        int should_recover = RP_init("masstree", PMEM_POOL_SIZE, &preset);
 
-        should_recover=(access("/pmem0/masstree_sb", F_OK) != -1);
+        int should_recover=(access("/pmem0/masstree_sb", F_OK) != -1);
+        RP_init("masstree", PMEM_POOL_SIZE, &preset);
 
         if (should_recover && which_memalign == RP_memalign) {
             puts("\tbegin recovering Ralloc");
