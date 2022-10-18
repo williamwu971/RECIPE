@@ -1215,6 +1215,8 @@ int main(int argc, char **argv) {
         tree = new masstree::masstree();
     }
 
+    printf("tree root: %p\n", tree->root());
+
 
     if (require_obj_init) {
 
