@@ -1216,9 +1216,6 @@ int main(int argc, char **argv) {
     }
 
 
-    printf("root: %p\n", tree->root());
-
-
     if (require_obj_init) {
 
         puts("\tbegin preparing Obj");
@@ -1374,6 +1371,7 @@ int main(int argc, char **argv) {
 
     if (which_memalign == RP_memalign) {
         RP_set_root(tree->root(), 0);
+        printf("RP set root: %p\n", tree->root());
     }
 
     {
