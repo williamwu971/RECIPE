@@ -115,7 +115,7 @@ ycsbs=("N")
 
 workload=16000000
 workload=32000000 # todo: do not change this
-#workload=8000000
+workload=1000
 #workload=100000000
 
 key_order="random"
