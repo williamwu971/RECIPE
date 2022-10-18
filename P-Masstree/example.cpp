@@ -1203,9 +1203,11 @@ int main(int argc, char **argv) {
             printf("tree root: %p\n", tree->root());
 
             // read in all the pointers
-            void **all_values = (void **) malloc(sizeof(void *) * n * 2);
+            uint64_t *all_values = (uint64_t*) malloc(sizeof(uint64_t) * n * 2);
             auto info = tree->getThreadInfo();
-            assert(tree->scan((uint64_t) 0, n, (uint64_t *) all_values, info) == n);
+            uint64_t min =0;
+            assert(tree->scan(min, n, all_values, info) == n);
+
             for (int xx = 0;xx<n;xx++){
                 printf("ptr %p\n",(void*)(all_values[xx]));
                 if ((void*)(all_values[xx])==NULL){
@@ -1213,10 +1215,10 @@ int main(int argc, char **argv) {
                 }
             }
 
-            int num_leaf = tree->scan_leaf((uint64_t) 0, n, (uint64_t *) (all_values + n), info);
+            int num_leaf = tree->scan_leaf((uint64_t) 0, n,  (all_values + n), info);
             printf("num_leaf: %d", num_leaf);
 
-            RP_recover_xiaoxiang(all_values, n);
+            RP_recover_xiaoxiang((void**)all_values, n);
             goto_lookup = 1;
 
         }
