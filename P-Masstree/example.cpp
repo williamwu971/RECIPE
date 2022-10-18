@@ -1199,13 +1199,12 @@ int main(int argc, char **argv) {
             tree = new masstree::masstree(RP_get_root<masstree::leafnode>(0));
 
             // read in all the pointers
-            void **all_values = (void **) malloc(sizeof(void *) * n);
+            void **all_values = (void **) malloc(sizeof(void *) * n * 2);
             auto info = tree->getThreadInfo();
             assert(tree->scan((uint64_t) 0, n, (uint64_t *) all_values, info) == n);
 
-            void** all_leafs = (void **) malloc(sizeof(void *) * n);
-            int num_leaf = tree->scan_leaf((uint64_t) 0, n, (uint64_t *) all_values, info);
-            printf("num_leaf: %d",num_leaf);
+            int num_leaf = tree->scan_leaf((uint64_t) 0, n, (uint64_t *) (all_values + n), info);
+            printf("num_leaf: %d", num_leaf);
 
             RP_recover_xiaoxiang(all_values, n);
             goto_lookup = 1;
