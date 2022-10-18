@@ -2240,6 +2240,109 @@ namespace masstree {
         }
     }
 
+    void *masstree::get_leaf(uint64_t key, ThreadInfo &threadEpocheInfo) {
+        EpocheGuard epocheGuard(threadEpocheInfo);
+        void *root = NULL;
+        key_indexed_position kx_;
+        leafnode *next = NULL;
+        void *snapshot_v = NULL;
+
+        int needRestart;
+        uint64_t v;
+
+        restart:
+        root = this->root_.load(std::memory_order_acquire);
+        leafnode *p = reinterpret_cast<leafnode *> (root);
+        while (p->level() != 0) {
+            inter_retry:
+            next = p->advance_to_key(key);
+            if (next != p) {
+                p = next;
+                goto inter_retry;
+            }
+
+            v = p->readLockOrRestart(needRestart);
+            if (needRestart) {
+                if (needRestart == LOCKED)
+                    goto inter_retry;
+                else
+                    goto restart;
+            }
+
+            p->prefetch();
+            fence();
+
+            kx_ = p->key_lower_bound(key);
+
+            if (kx_.i >= 0)
+                snapshot_v = p->value(kx_.p);
+            else
+                snapshot_v = p->leftmost();
+
+            p->checkOrRestart(v, needRestart);
+            if (needRestart)
+                goto inter_retry;
+            else
+                p = reinterpret_cast<leafnode *> (snapshot_v);
+        }
+
+        leafnode *l = reinterpret_cast<leafnode *> (p);
+        leaf_retry:
+        next = l->advance_to_key(key);
+        if (next != l) {
+            l = next;
+            goto leaf_retry;
+        }
+
+        v = l->readLockOrRestart(needRestart);
+        if (needRestart) {
+            if (needRestart == LOCKED)
+                goto leaf_retry;
+            else
+                goto restart;
+        }
+
+        l->prefetch();
+        fence();
+
+        kx_ = l->key_lower_bound_by(key);
+
+        if (kx_.p >= 0)
+            snapshot_v = l->value(kx_.p);
+        else
+            snapshot_v = NULL;
+
+        l->checkOrRestart(v, needRestart);
+        if (needRestart)
+            goto leaf_retry;
+        else {
+            if (!snapshot_v) {
+                next = l->advance_to_key(key);
+                if (next != l) {
+                    l = next;
+                    goto leaf_retry;
+                }
+#if 0
+                printf("should not enter here\n");
+                printf("key = %lu, searched key = %lu, key index = %d\n", key, l->key(kx_.p), kx_.p);
+                permuter cp = l->permute();
+                for (int i = 0; i < cp.size(); i++) {
+                    printf("key = %lu\n", l->key(cp[i]));
+                }
+
+                if (l->next_()) {
+                    cp = l->next_()->permute();
+                    printf("next high key = %lu\n", l->next_()->highest_());
+                    for (int i = 0; i < cp.size(); i++) {
+                        printf("next key = %lu\n", l->next_()->key(cp[i]));
+                    }
+                }
+#endif
+            }
+            return l;
+        }
+    }
+
     void *masstree::get(char *key, ThreadInfo &threadEpocheInfo) {
         EpocheGuard epocheGuard(threadEpocheInfo);
         void *root = NULL;

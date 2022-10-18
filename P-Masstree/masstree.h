@@ -127,6 +127,8 @@ namespace masstree {
 
         void *get(uint64_t key, MASS::ThreadInfo &threadEpocheInfo);
 
+        void *get_leaf(uint64_t key, MASS::ThreadInfo &threadEpocheInfo);
+
         void *get(char *key, MASS::ThreadInfo &threadEpocheInfo);
 
         void split(void *left, void *root, uint32_t depth, leafvalue *lv, uint64_t key, void *right, uint32_t level,

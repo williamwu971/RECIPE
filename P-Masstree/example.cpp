@@ -1218,8 +1218,16 @@ int main(int argc, char **argv) {
 //                }
             }
 
-            int num_leaf = tree->scan_leaf((uint64_t) 0, n,  (all_values + n), info);
-            printf("num_leaf: %d", num_leaf);
+//            int num_leaf = tree->scan_leaf((uint64_t) 0, n,  (all_values + n), info);
+//            printf("num_leaf: %d", num_leaf);
+
+            for (uint64_t xx = 0;xx<n;xx++){
+                all_values[xx+n] = (uint64_t)tree->get_leaf(xx,info);
+//                printf("ptr %p\n",(void*)(all_values[xx]));
+//                if ((void*)(all_values[xx])==NULL){
+//                    break;
+//                }
+            }
 
             RP_recover_xiaoxiang((void**)all_values, n);
             goto_lookup = 1;
