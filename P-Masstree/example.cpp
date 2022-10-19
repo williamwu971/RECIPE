@@ -1262,6 +1262,13 @@ int main(int argc, char **argv) {
                 int got_leafs = tree->get_leaf(xx + 1, buffer, info);
 
                 for (int i = 0; i < got_leafs; i++) {
+
+                    for (int x = i + 1; x < got_leafs; x++) {
+                        if (buffer[i] == buffer[x]) {
+                            buffer_in[x] = 0;
+                        }
+                    }
+
                     for (uint64_t j = 0; j < leaf_index; j++) {
                         if (buffer[i] == leaf_values[j]) {
                             buffer_in[i] = 0;
@@ -1295,7 +1302,7 @@ int main(int argc, char **argv) {
 
             printf("recovered %lu leafs\n", leaf_index);
 
-//            RP_recover_xiaoxiang((void **) all_values, n);
+            RP_recover_xiaoxiang((void **) all_values, n);
             goto_lookup = 1;
 
         }
