@@ -59,7 +59,22 @@ using namespace std;
 #include "ralloc.hpp"
 #include "pfence_util.h"
 
+// todo: remove lock
+pthread_mutex_t RP_lock = PTHREAD_MUTEX_INITIALIZER;
+uint64_t RP_lock_count = 0;
+
+void* RP_counted_malloc(size_t size){
+    pthread_mutex_lock(&RP_lock);
+    RP_lock_count++;
+    pthread_mutex_unlock(&RP_lock);
+
+    return RP_malloc(size);
+}
+
+#define RP_malloc RP_counted_malloc
+
 inline int RP_memalign(void **memptr, size_t alignment, size_t size) {
+
     *memptr = RP_malloc(size + (alignment - size % alignment));
     return 0;
 }
@@ -1396,6 +1411,7 @@ int main(int argc, char **argv) {
     }
 
     if (which_memalign == RP_memalign) {
+        printf("count RP_MALLOC %lu\n",RP_lock_count);
         RP_set_root(tree->root(), 0);
         printf("RP set root: %p\n", tree->root());
     }
