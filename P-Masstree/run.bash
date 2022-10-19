@@ -118,8 +118,8 @@ workload=32000000 # todo: do not change this
 workload=1900
 #workload=100000000
 
-key_order="random"
-#key_order="seq"
+#key_order="random"
+key_order="seq"
 
 #interfere="0"
 interfere="1"
