@@ -1254,10 +1254,11 @@ int main(int argc, char **argv) {
 
             void **buffer = (void **) malloc(sizeof(void *) * n);
             int *buffer_in = (int *) malloc(sizeof(int) * n);
-            memset(buffer_in, 1, sizeof(int) * n);
 
 
             for (uint64_t xx = 0; xx < n; xx++) {
+                memset(buffer_in, 1, sizeof(int) * n);
+
                 int got_leafs = tree->get_leaf(xx + 1, buffer, info);
 
                 for (int i = 0; i < got_leafs; i++) {
