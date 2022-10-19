@@ -63,7 +63,7 @@ using namespace std;
 pthread_mutex_t RP_lock = PTHREAD_MUTEX_INITIALIZER;
 uint64_t RP_lock_count = 0;
 
-void* RP_counted_malloc(size_t size){
+void *RP_counted_malloc(size_t size) {
     pthread_mutex_lock(&RP_lock);
     RP_lock_count++;
     pthread_mutex_unlock(&RP_lock);
@@ -1219,33 +1219,63 @@ int main(int argc, char **argv) {
             printf("tree root: %p\n", tree->root());
 
             // read in all the pointers
-            uint64_t *all_values = (uint64_t*) malloc(sizeof(uint64_t) * n * 2);
+            void **all_values = (void **) calloc(n * 2, sizeof(void *));
             auto info = tree->getThreadInfo();
 
             // todo: not sure why, but scan does not work
 //            uint64_t min =0;
 //            assert(tree->scan(min, n, all_values, info) == n);
 
-            for (uint64_t xx = 0;xx<n;xx++){
-                all_values[xx] = (uint64_t)tree->get(xx,info);
+            puts("getting values");
+            for (uint64_t xx = 0; xx < n; xx++) {
+                all_values[xx] = tree->get(xx + 1, info);
 //                printf("ptr %p\n",(void*)(all_values[xx]));
 //                if ((void*)(all_values[xx])==NULL){
 //                    break;
 //                }
             }
+
+            // duplication check
+            puts("duplication check 0");
+            for (uint64_t xx = 0; xx < n; xx++) {
+                for (uint64_t xxx = xx + 1; xxx < n; xxx++) {
+                    assert (all_values[xx] != all_values[xxx]);
+                }
+            }
+
+
 
 //            int num_leaf = tree->scan_leaf((uint64_t) 0, n,  (all_values + n), info);
 //            printf("num_leaf: %d", num_leaf);
 
-            for (uint64_t xx = 0;xx<n;xx++){
-                all_values[xx+n] = (uint64_t)tree->get_leaf(xx,info);
+            puts("getting leafs");
+            void **leaf_values = all_values + n;
+            uint64_t leaf_index = 0;
+
+            for (uint64_t xx = 0; xx < n; xx++) {
+                void *leaf_pointer = tree->get_leaf(xx + 1, info);
+                int valid = 1;
+
+                for (uint64_t xxx = 0; xxx < leaf_index + 1; xxx++) {
+                    if (leaf_values[xxx] == leaf_pointer) {
+                        valid = 0;
+                        break;
+                    }
+                }
+
+                if (valid) {
+                    leaf_values[leaf_index++] = leaf_pointer;
+                }
+
 //                printf("ptr %p\n",(void*)(all_values[xx]));
 //                if ((void*)(all_values[xx])==NULL){
 //                    break;
 //                }
             }
 
-            RP_recover_xiaoxiang((void**)all_values, n);
+            printf("recovered %lu leafs\n", leaf_index);
+
+            RP_recover_xiaoxiang((void **) all_values, n);
             goto_lookup = 1;
 
         }
@@ -1255,7 +1285,6 @@ int main(int argc, char **argv) {
         puts("\t creating new tree");
         tree = new masstree::masstree();
     }
-
 
 
     if (require_obj_init) {
@@ -1394,7 +1423,7 @@ int main(int argc, char **argv) {
         if (use_log) log_debug_print(1, show_log_usage);
     }
 
-    printf("count RP_MALLOC %lu\n",RP_lock_count);
+    printf("count RP_MALLOC %lu\n", RP_lock_count);
 
     {
         /**
@@ -1404,7 +1433,7 @@ int main(int argc, char **argv) {
         if (use_log) log_debug_print(0, show_log_usage);
     }
 
-    printf("count RP_MALLOC %lu\n",RP_lock_count);
+    printf("count RP_MALLOC %lu\n", RP_lock_count);
 
     lookup:
     {
@@ -1415,7 +1444,7 @@ int main(int argc, char **argv) {
         if (use_log) log_debug_print(0, show_log_usage);
     }
 
-    printf("count RP_MALLOC %lu\n",RP_lock_count);
+    printf("count RP_MALLOC %lu\n", RP_lock_count);
 
     if (which_memalign == RP_memalign) {
         RP_set_root(tree->root(), 0);
