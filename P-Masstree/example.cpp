@@ -1255,6 +1255,7 @@ int main(int argc, char **argv) {
             for (uint64_t xx = 0; xx < n; xx++) {
                 void *leaf_pointer = tree->get_leaf(xx + 1, info);
                 int valid = 1;
+                printf("debug %lu\n",xx);
 
                 for (uint64_t xxx = 0; xxx < leaf_index + 1; xxx++) {
                     if (leaf_values[xxx] == leaf_pointer) {
