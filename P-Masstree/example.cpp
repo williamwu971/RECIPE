@@ -1263,6 +1263,7 @@ int main(int argc, char **argv) {
 
             uint64_t leaf_index = 0;
 
+            puts("duplication check 1");
             for (uint64_t xx = 0; xx < n; xx++) {
                 if (leaf_values[xx] == NULL) continue;
                 for (uint64_t xxx = xx + 1; xxx < n; xxx++) {
