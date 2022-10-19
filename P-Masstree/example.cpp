@@ -1250,28 +1250,27 @@ int main(int argc, char **argv) {
 
             puts("getting leafs");
             void **leaf_values = all_values + n;
-            uint64_t leaf_index = 0;
+
 
             for (uint64_t xx = 0; xx < n; xx++) {
-                void *leaf_pointer = tree->get_leaf(xx + 1, info);
-                int valid = 1;
-                printf("debug %lu\n",xx);
-
-                for (uint64_t xxx = 0; xxx < leaf_index + 1; xxx++) {
-                    if (leaf_values[xxx] == leaf_pointer) {
-                        valid = 0;
-                        break;
-                    }
-                }
-
-                if (valid) {
-                    leaf_values[leaf_index++] = leaf_pointer;
-                }
+                leaf_values[xx] = tree->get_leaf(xx + 1, info);
 
 //                printf("ptr %p\n",(void*)(all_values[xx]));
 //                if ((void*)(all_values[xx])==NULL){
 //                    break;
 //                }
+            }
+
+            uint64_t leaf_index = 0;
+
+            for (uint64_t xx = 0; xx < n; xx++) {
+                if (leaf_values[xx] == NULL) continue;
+                for (uint64_t xxx = xx + 1; xxx < n; xxx++) {
+                    if (leaf_values[xxx] == leaf_values[xx]) {
+                        leaf_values[xxx] = NULL;
+                    }
+                }
+                leaf_index++;
             }
 
             printf("recovered %lu leafs\n", leaf_index);
