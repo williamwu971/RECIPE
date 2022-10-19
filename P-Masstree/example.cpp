@@ -1394,6 +1394,8 @@ int main(int argc, char **argv) {
         if (use_log) log_debug_print(1, show_log_usage);
     }
 
+    printf("count RP_MALLOC %lu\n",RP_lock_count);
+
     {
         /**
          * section UPDATE
@@ -1401,6 +1403,8 @@ int main(int argc, char **argv) {
         run("update", throughput_file, attrs, section_args, latencies, section_update);
         if (use_log) log_debug_print(0, show_log_usage);
     }
+
+    printf("count RP_MALLOC %lu\n",RP_lock_count);
 
     lookup:
     {
@@ -1411,8 +1415,9 @@ int main(int argc, char **argv) {
         if (use_log) log_debug_print(0, show_log_usage);
     }
 
+    printf("count RP_MALLOC %lu\n",RP_lock_count);
+
     if (which_memalign == RP_memalign) {
-        printf("count RP_MALLOC %lu\n",RP_lock_count);
         RP_set_root(tree->root(), 0);
         printf("RP set root: %p\n", tree->root());
     }
