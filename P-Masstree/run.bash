@@ -85,7 +85,7 @@ value_location=("ralloc")
 #num_threads=(1 3 5 7 9 11 13 15)
 num_threads=(24)
 num_threads=(19) # todo: do not change this
-#num_threads=(1)
+num_threads=(1)
 
 use_perf="yes"
 record_latency="yes"
