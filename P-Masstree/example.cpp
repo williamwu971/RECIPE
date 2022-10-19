@@ -1295,7 +1295,7 @@ int main(int argc, char **argv) {
 
             printf("recovered %lu leafs\n", leaf_index);
 
-            RP_recover_xiaoxiang((void **) all_values, n);
+//            RP_recover_xiaoxiang((void **) all_values, n);
             goto_lookup = 1;
 
         }
