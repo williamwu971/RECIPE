@@ -2240,24 +2240,33 @@ namespace masstree {
         }
     }
 
-    void *masstree::get_leaf(uint64_t key, ThreadInfo &threadEpocheInfo) {
+    int masstree::get_leaf(uint64_t key, void **buffer, ThreadInfo &threadEpocheInfo) {
         EpocheGuard epocheGuard(threadEpocheInfo);
         void *root = NULL;
         key_indexed_position kx_;
         leafnode *next = NULL;
         void *snapshot_v = NULL;
 
+        int counter = 0;
+
         int needRestart;
         uint64_t v;
 
         restart:
+        counter = 0;
+
         root = this->root_.load(std::memory_order_acquire);
         leafnode *p = reinterpret_cast<leafnode *> (root);
+        buffer[counter++] = p;
+
         while (p->level() != 0) {
+
             inter_retry:
             next = p->advance_to_key(key);
             if (next != p) {
                 p = next;
+                buffer[counter++] = p;
+
                 goto inter_retry;
             }
 
@@ -2282,15 +2291,22 @@ namespace masstree {
             p->checkOrRestart(v, needRestart);
             if (needRestart)
                 goto inter_retry;
-            else
+            else{
                 p = reinterpret_cast<leafnode *> (snapshot_v);
+                buffer[counter++] = p;
+            }
+
         }
 
         leafnode *l = reinterpret_cast<leafnode *> (p);
+        buffer[counter++] = l;
+
         leaf_retry:
         next = l->advance_to_key(key);
         if (next != l) {
             l = next;
+            buffer[counter++] = l;
+
             goto leaf_retry;
         }
 
@@ -2320,6 +2336,8 @@ namespace masstree {
                 next = l->advance_to_key(key);
                 if (next != l) {
                     l = next;
+                    buffer[counter++] = l;
+
                     goto leaf_retry;
                 }
 #if 0
@@ -2339,7 +2357,7 @@ namespace masstree {
                 }
 #endif
             }
-            return l;
+            return counter;
         }
     }
 
@@ -2851,7 +2869,7 @@ namespace masstree {
 //                    buf[count++] = (uint64_t) snapshot_v;
 
 //                    if ((uint64_t)l!=(uint64_t)buf[count]){
-                        buf[count++] = (uint64_t) l;
+                    buf[count++] = (uint64_t) l;
 //                    }
 
                 }
