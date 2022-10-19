@@ -1250,10 +1250,29 @@ int main(int argc, char **argv) {
 
             puts("getting leafs");
             void **leaf_values = all_values + n;
+            uint64_t leaf_index = 0;
+
+            void **buffer = (void **) malloc(sizeof(void *) * n);
+            int *buffer_in = (int *) malloc(sizeof(int) * n);
+            memset(buffer_in, 1, sizeof(int) * n);
 
 
             for (uint64_t xx = 0; xx < n; xx++) {
-                leaf_values[xx] = tree->get_leaf(xx + 1, info);
+                int got_leafs = tree->get_leaf(xx + 1, buffer, info);
+
+                for (int i = 0; i < got_leafs; i++) {
+                    for (uint64_t j = 0; j < leaf_index; j++) {
+                        if (buffer[i] == leaf_values[j]) {
+                            buffer_in[i] = 0;
+                        }
+                    }
+                }
+
+                for (int i = 0; i < got_leafs; i++) {
+                    if (buffer_in[i]) {
+                        leaf_values[leaf_index++] = buffer[i];
+                    }
+                }
 
 //                printf("ptr %p\n",(void*)(all_values[xx]));
 //                if ((void*)(all_values[xx])==NULL){
@@ -1261,18 +1280,17 @@ int main(int argc, char **argv) {
 //                }
             }
 
-            uint64_t leaf_index = 0;
 
-            puts("duplication check 1");
-            for (uint64_t xx = 0; xx < n; xx++) {
-                if (leaf_values[xx] == NULL) continue;
-                for (uint64_t xxx = xx + 1; xxx < n; xxx++) {
-                    if (leaf_values[xxx] == leaf_values[xx]) {
-                        leaf_values[xxx] = NULL;
-                    }
-                }
-                leaf_index++;
-            }
+//            puts("duplication check 1");
+//            for (uint64_t xx = 0; xx < n; xx++) {
+//                if (leaf_values[xx] == NULL) continue;
+//                for (uint64_t xxx = xx + 1; xxx < n; xxx++) {
+//                    if (leaf_values[xxx] == leaf_values[xx]) {
+//                        leaf_values[xxx] = NULL;
+//                    }
+//                }
+//                leaf_index++;
+//            }
 
             printf("recovered %lu leafs\n", leaf_index);
 
