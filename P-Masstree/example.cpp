@@ -71,11 +71,12 @@ void* RP_counted_malloc(size_t size){
     return RP_malloc(size);
 }
 
-#define RP_malloc RP_counted_malloc
+//#define RP_malloc RP_counted_malloc
 
 inline int RP_memalign(void **memptr, size_t alignment, size_t size) {
 
-    *memptr = RP_malloc(size + (alignment - size % alignment));
+    *memptr = RP_counted_malloc(size + (alignment - size % alignment));
+//    *memptr = RP_malloc(size + (alignment - size % alignment));
     return 0;
 }
 
