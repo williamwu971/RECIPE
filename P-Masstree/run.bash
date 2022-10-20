@@ -71,8 +71,8 @@ pmdk_no_flush=("0")
 #pmdk_no_flush=("1")
 
 #index_location=("dram" "ralloc" "obj")
-#index_location=("dram")
-index_location=("ralloc")
+index_location=("dram")
+#index_location=("ralloc")
 #index_location=("dram" "ralloc")
 
 value_location=("ralloc" "log" "obj")
@@ -85,7 +85,7 @@ value_location=("ralloc")
 #num_threads=(1 3 5 7 9 11 13 15)
 num_threads=(24)
 num_threads=(19) # todo: do not change this
-num_threads=(1)
+#num_threads=(1)
 
 use_perf="yes"
 record_latency="yes"
@@ -99,9 +99,10 @@ extra_sizes=(256)
 #extra_sizes=($(seq 0 32 240))
 
 #total_sizes=(0)
-total_sizes=(64)
+#total_sizes=(64)
 #total_sizes=(256)
 #total_sizes=($(seq 48 8 256))
+total_size=(1024)
 
 persist=("flush" "non-temporal")
 persist=("flush")
@@ -113,13 +114,13 @@ ycsbs=("N")
 #ycsbs=("au" "bu" "cu" "eu" "az" "bz" "cz" "ez")
 #ycsbs=("eu" "ez")
 
-workload=16000000
-workload=32000000 # todo: do not change this
-workload=1900
+#workload=16000000
+workload=140000000 # todo: do not change this
+#workload=1900
 #workload=100000000
 
-#key_order="random"
-key_order="seq"
+key_order="random"
+#key_order="seq"
 
 #interfere="0"
 interfere="1"
