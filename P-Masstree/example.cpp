@@ -1437,7 +1437,7 @@ int main(int argc, char **argv) {
         if (use_log) log_debug_print(1, show_log_usage);
     }
 
-    printf("count RP_MALLOC %lu\n", RP_lock_count);
+//    printf("count RP_MALLOC %lu\n", RP_lock_count);
 
     {
         /**
@@ -1447,7 +1447,7 @@ int main(int argc, char **argv) {
         if (use_log) log_debug_print(0, show_log_usage);
     }
 
-    printf("count RP_MALLOC %lu\n", RP_lock_count);
+//    printf("count RP_MALLOC %lu\n", RP_lock_count);
 
     lookup:
     {
@@ -1458,7 +1458,7 @@ int main(int argc, char **argv) {
         if (use_log) log_debug_print(0, show_log_usage);
     }
 
-    printf("count RP_MALLOC %lu\n", RP_lock_count);
+//    printf("count RP_MALLOC %lu\n", RP_lock_count);
 
     if (which_memalign == RP_memalign) {
         RP_set_root(tree->root(), 0);
