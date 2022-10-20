@@ -859,6 +859,7 @@ void log_debug_print(FILE *f, int using_log) {
 
     if (!using_log) {
         fprintf(f, "0,");
+        return;
     }
 
     pthread_mutex_lock(&lm_lock);
