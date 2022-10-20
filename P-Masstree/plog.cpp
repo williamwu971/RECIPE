@@ -60,7 +60,7 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) 
 
         int old_num_threads = omp_get_num_threads();
         omp_set_num_threads(num_threads);
-        std::atomic<uint64_t> recovered;
+        std::atomic <uint64_t> recovered;
         recovered.store(0);
 
         auto starttime = std::chrono::system_clock::now();
@@ -96,7 +96,7 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) 
                     if (res != NULL) {
 
                         if (res != lc) {
-                            uint64_t idx = (uint64_t) ((char *) res - big_map) / LOG_SIZE;
+                            uint64_t idx = (uint64_t)((char *) res - big_map) / LOG_SIZE;
                             struct log *target_log = log_meta + idx;
                             target_log->freed.fetch_add(sizeof(struct log_cell) + res->value_size);
                         } else {
@@ -247,7 +247,7 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
 //
 //        if (mapped_len > 2 * 1024 * 1024ULL)step_size = (2 * 1024 * 1024ULL); // to remove
 
-        std::atomic<uint64_t> sum;
+        std::atomic <uint64_t> sum;
         sum.store(0);
 
 //        log_start_perf("pre_fault.perf");
@@ -534,7 +534,7 @@ void log_free(void *ptr) {
 
 
     // locate the log and its metadata
-    uint64_t idx = (uint64_t) (char_ptr - big_map) / LOG_SIZE;
+    uint64_t idx = (uint64_t)(char_ptr - big_map) / LOG_SIZE;
     struct log *target_log = log_meta + idx;
 
     // update metadata and add the log to GC queue if suitable
@@ -1073,6 +1073,8 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed, FILE *f) {
 
     uint64_t read = 0;
     uint64_t write = 0;
+    uint64_t dram_read = 0;
+    uint64_t dram_write = 0;
 //    uint64_t read_b_cycle;
 //    uint64_t write_b_cycle;
 //    int repeat = 0;
@@ -1142,7 +1144,10 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed, FILE *f) {
 
     int scanned_channel = 0;
 
-    while (scanned_channel < 12) {
+    while (scanned_channel < 16) {
+
+        scanned_channel = 0;
+
         FILE *file = fopen("/mnt/sdb/xiaoxiang/pcm.txt", "r");
         read = 0;
         write = 0;
@@ -1154,11 +1159,15 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed, FILE *f) {
                 is_first_line = 0;
                 continue;
             }
-            uint64_t skt, channel, pmmReads, pmmWrites, elapsedTime;
-            sscanf(buffer, "%lu %lu %lu %lu %lu", &skt, &channel, &pmmReads, &pmmWrites, &elapsedTime);
+            uint64_t skt, channel, pmmReads, pmmWrites, elapsedTime, dramReads, dramWrites;
+            sscanf(buffer, "%lu %lu %lu %lu %lu %lu %lu",
+                   &skt, &channel, &pmmReads, &pmmWrites, &elapsedTime, &dramReads, &dramWrites
+            );
             scanned_channel++;
             read += pmmReads;
             write += pmmWrites;
+            dram_read += dramReads;
+            dram_write += dramWrites;
         }
     }
 
@@ -1173,6 +1182,12 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed, FILE *f) {
     double read_bw = read_gb / elapsed;
     double write_bw = write_gb / elapsed;
 
+    double dram_read_gb = (double) dram_read / 1024.0f / 1024.0f / 1024.0f;
+    double dram_write_gb = (double) dram_write / 1024.0f / 1024.0f / 1024.0f;
+
+    double dram_read_bw = dram_read_gb / elapsed;
+    double dram_write_bw = dram_write_gb / elapsed;
+
 
     printf("\n");
 
@@ -1183,17 +1198,27 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed, FILE *f) {
 //        return;
 //    }
 
-    printf("read: ");
+    printf("PR: ");
 //    printf("%.2f%% ", read_b_percent);
     printf("%.2fgb ", read_gb);
     printf("%.2fgb/s ", read_bw);
 
-    printf("write: ");
+    printf("PW: ");
 //    printf("%.2f%% ", write_b_percent);
     printf("%.2fgb ", write_gb);
     printf("%.2fgb/s ", write_bw);
 
     printf("elapsed: %.2f ", elapsed);
+
+    printf("DR: ");
+//    printf("%.2f%% ", read_b_percent);
+    printf("%.2fgb ", dram_read_gb);
+    printf("%.2fgb/s ", dram_read_bw);
+
+    printf("DW: ");
+//    printf("%.2f%% ", write_b_percent);
+    printf("%.2fgb ", dram_write_gb);
+    printf("%.2fgb/s ", dram_write_bw);
 
     printf("\n");
 
@@ -1201,6 +1226,7 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed, FILE *f) {
 
     if (f != NULL) {
         fprintf(f, "%.2f,%.2f,%.2f,%.2f,", read_gb, read_bw, write_gb, write_bw);
+        fprintf(f, "%.2f,%.2f,%.2f,%.2f,", dram_read_gb, dram_read_bw, dram_write_gb, dram_write_bw);
     }
 
 }

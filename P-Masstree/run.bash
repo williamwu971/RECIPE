@@ -135,16 +135,35 @@ for fp in "${file_prefixes[@]}"; do
   if [ "${#ycsbs[@]}" -eq "1" ]; then
     {
       printf "index,value,threads,gc,pmdk_no_flush,extra_sizes,total_sizes,ycsb,persist,"
-      printf "insert_r(gb),insert_rb(gb/s),insert_w(gb),insert_wb(gb/s),insert_TP(ops/us),insert_gc_TP(ops/us),"
-      printf "update_r(gb),update_rb(gb/s),update_w(gb),update_wb(gb/s),update_TP(ops/us),update_gc_TP(ops/us),"
-      printf "lookup_r(gb),lookup_rb(gb/s),lookup_w(gb),lookup_wb(gb/s),lookup_TP(ops/us),lookup_gc_TP(ops/us),"
-      printf "delete_r(gb),delete_rb(gb/s),delete_w(gb),delete_wb(gb/s),delete_TP(ops/us),delete_gc_TP(ops/us),"
+
+      printf "insert_Pr(gb),insert_Prb(gb/s),insert_Pw(gb),insert_Pwb(gb/s),"
+      printf "insert_Dr(gb),insert_Drb(gb/s),insert_Dw(gb),insert_Dwb(gb/s),"
+      printf "insert_TP(ops/us),insert_gc_TP(ops/us),"
+
+      printf "update_Pr(gb),update_Prb(gb/s),update_Pw(gb),update_Pwb(gb/s),"
+      printf "update_Dr(gb),update_Drb(gb/s),update_Dw(gb),update_Dwb(gb/s),"
+      printf "update_TP(ops/us),update_gc_TP(ops/us),"
+
+      printf "lookup_Pr(gb),lookup_Prb(gb/s),lookup_Pw(gb),lookup_Pwb(gb/s),"
+      printf "lookup_Dr(gb),lookup_Drb(gb/s),lookup_Dw(gb),lookup_Dwb(gb/s),"
+      printf "lookup_TP(ops/us),lookup_gc_TP(ops/us),"
+
+      printf "delete_Pr(gb),delete_Prb(gb/s),delete_Pw(gb),delete_Pwb(gb/s),"
+      printf "delete_Dr(gb),delete_Drb(gb/s),delete_Dw(gb),delete_Dwb(gb/s),"
+      printf "delete_TP(ops/us),delete_gc_TP(ops/us),"
+
     } >>"$fp".csv
   else
     {
       printf "index,value,threads,gc,pmdk_no_flush,extra_sizes,total_sizes,ycsb,persist,"
-      printf "load_r(gb),load_rb(gb/s),load_w(gb),load_wb(gb/s),load_TP(ops/us),load_gc_TP(ops/us),"
-      printf "run_r(gb),run_rb(gb/s),run_w(gb),run_wb(gb/s),run_TP(ops/us),run_gc_TP(ops/us),"
+
+      printf "load_Pr(gb),load_Prb(gb/s),load_Pw(gb),load_Pwb(gb/s),"
+      printf "load_Dr(gb),load_Drb(gb/s),load_Dw(gb),load_Dwb(gb/s),"
+      printf "load_TP(ops/us),load_gc_TP(ops/us),"
+
+      printf "run_Pr(gb),run_Prb(gb/s),run_Pw(gb),run_Pwb(gb/s),"
+      printf "run_Dr(gb),run_Drb(gb/s),run_Dw(gb),run_Dwb(gb/s),"
+      printf "run_TP(ops/us),run_gc_TP(ops/us),"
     } >>"$fp".csv
   fi
 
@@ -211,12 +230,15 @@ if [ "$record_latency" = "yes" ]; then
     #              python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$filename" --ylim 100000000 --xlim "$workload" || exit
     if [ ! -f graph-"$filename".png ]; then
       python3 ../simple_graph.py --r "$filename" --fn graph-"$filename" --y "ops/ms" --x "time(ms)" --xlim 300 --ylim 1900 &
+      pids[${i}]=$!
     fi
     #              python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$filename"|| exit
   done
 
   sleep 1
-  wait "$(pgrep -f simple_graph)"
+  for pid in ${pids[*]}; do
+    wait $pid
+  done
 fi
 
 # move perf files
