@@ -1167,15 +1167,15 @@ int main(int argc, char **argv) {
         }
     }
 
-#ifdef CLFLUSH
-    puts("\tdetected CLFLUSH");
-#elif CLFLUSH_OPT
-    puts("\tdetected CLFLUSH_OPT");
-#elif CLWB
-    puts("\tdetected CLWB");
-#else
-    puts("\tno available cache line write back found")
-#endif
+//#ifdef CLFLUSH
+//    puts("\tdetected CLFLUSH");
+//#elif CLFLUSH_OPT
+//    puts("\tdetected CLFLUSH_OPT");
+//#elif CLWB
+//    puts("\tdetected CLWB");
+//#else
+//    puts("\tno available cache line write back found")
+//#endif
 
 
     PMEM_POOL_SIZE = total_size * n * 3;
