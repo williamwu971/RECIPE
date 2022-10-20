@@ -136,24 +136,24 @@ for fp in "${file_prefixes[@]}"; do
     {
       printf "index,value,threads,gc,pmdk_no_flush,extra_sizes,total_sizes,ycsb,persist,"
 
+      printf "insert_log(gb),insert_gc_log(gb),"
       printf "insert_Pr(gb),insert_Prb(gb/s),insert_Pw(gb),insert_Pwb(gb/s),"
       printf "insert_Dr(gb),insert_Drb(gb/s),insert_Dw(gb),insert_Dwb(gb/s),"
-      printf "insert_log(gb),insert_gc_log(gb),"
       printf "insert_TP(ops/us),insert_gc_TP(ops/us),"
 
+      printf "update_log(gb),update_gc_log(gb),"
       printf "update_Pr(gb),update_Prb(gb/s),update_Pw(gb),update_Pwb(gb/s),"
       printf "update_Dr(gb),update_Drb(gb/s),update_Dw(gb),update_Dwb(gb/s),"
-      printf "update_log(gb),update_gc_log(gb),"
       printf "update_TP(ops/us),update_gc_TP(ops/us),"
 
+      printf "lookup_log(gb),lookup_gc_log(gb),"
       printf "lookup_Pr(gb),lookup_Prb(gb/s),lookup_Pw(gb),lookup_Pwb(gb/s),"
       printf "lookup_Dr(gb),lookup_Drb(gb/s),lookup_Dw(gb),lookup_Dwb(gb/s),"
-      printf "lookup_log(gb),lookup_gc_log(gb),"
       printf "lookup_TP(ops/us),lookup_gc_TP(ops/us),"
 
+      printf "delete_log(gb),delete_gc_log(gb),"
       printf "delete_Pr(gb),delete_Prb(gb/s),delete_Pw(gb),delete_Pwb(gb/s),"
       printf "delete_Dr(gb),delete_Drb(gb/s),delete_Dw(gb),delete_Dwb(gb/s),"
-      printf "delete_log(gb),delete_gc_log(gb),"
       printf "delete_TP(ops/us),delete_gc_TP(ops/us),"
 
     } >>"$fp".csv
@@ -161,14 +161,14 @@ for fp in "${file_prefixes[@]}"; do
     {
       printf "index,value,threads,gc,pmdk_no_flush,extra_sizes,total_sizes,ycsb,persist,"
 
+      printf "load_log(gb),load_gc_log(gb),"
       printf "load_Pr(gb),load_Prb(gb/s),load_Pw(gb),load_Pwb(gb/s),"
       printf "load_Dr(gb),load_Drb(gb/s),load_Dw(gb),load_Dwb(gb/s),"
-      printf "load_log(gb),load_gc_log(gb),"
       printf "load_TP(ops/us),load_gc_TP(ops/us),"
 
+      printf "run_log(gb),run_gc_log(gb),"
       printf "run_Pr(gb),run_Prb(gb/s),run_Pw(gb),run_Pwb(gb/s),"
       printf "run_Dr(gb),run_Drb(gb/s),run_Dw(gb),run_Dwb(gb/s),"
-      printf "run_log(gb),run_gc_log(gb),"
       printf "run_TP(ops/us),run_gc_TP(ops/us),"
     } >>"$fp".csv
   fi
