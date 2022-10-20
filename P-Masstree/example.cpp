@@ -951,12 +951,12 @@ void run(
 
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now() - starttime);
-    log_debug_print(throughput_file, require_log_init);
+    if (throughput_file != NULL)log_debug_print(throughput_file, require_log_init);
 
     log_wait_all_gc();
     auto duration_with_gc = std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now() - starttime);
-    log_debug_print(throughput_file, require_log_init);
+    if (throughput_file != NULL)log_debug_print(throughput_file, require_log_init);
 
     if (use_perf) {
         log_stop_perf();
