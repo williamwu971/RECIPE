@@ -43,7 +43,8 @@ int num_thread;
 PMEMobjpool *pop = NULL;
 
 POBJ_LAYOUT_BEGIN(masstree);
-POBJ_LAYOUT_TOID(masstree, struct masstree_obj)
+POBJ_LAYOUT_TOID(masstree,
+struct masstree_obj)
 
 POBJ_LAYOUT_END(masstree)
 
@@ -59,24 +60,11 @@ using namespace std;
 #include "ralloc.hpp"
 #include "pfence_util.h"
 
-// todo: remove lock
-pthread_mutex_t RP_lock = PTHREAD_MUTEX_INITIALIZER;
-uint64_t RP_lock_count = 0;
-
-void *RP_counted_malloc(size_t size) {
-    pthread_mutex_lock(&RP_lock);
-    RP_lock_count++;
-    pthread_mutex_unlock(&RP_lock);
-
-    return RP_malloc(size);
-}
-
 //#define RP_malloc RP_counted_malloc
 
 inline int RP_memalign(void **memptr, size_t alignment, size_t size) {
 
-    *memptr = RP_counted_malloc(size + (alignment - size % alignment));
-//    *memptr = RP_malloc(size + (alignment - size % alignment));
+    *memptr = RP_malloc(size + (alignment - size % alignment));
     return 0;
 }
 
@@ -127,8 +115,8 @@ struct section_arg {
 static uint64_t YCSB_SIZE = 64000000;
 //static uint64_t YCSB_SIZE = 64000000;
 
-std::vector<uint64_t> ycsb_init_keys;
-std::vector<uint64_t> ycsb_keys;
+std::vector <uint64_t> ycsb_init_keys;
+std::vector <uint64_t> ycsb_keys;
 std::vector<int> ycsb_ranges;
 std::vector<int> ycsb_ops;
 
@@ -491,39 +479,43 @@ static inline void masstree_branched_update(
 
         struct masstree_obj *mo = NULL;
 
-        TX_BEGIN(pop) {
+        TX_BEGIN(pop)
+        {
 
-                        PMEMoid ht_oid = pmemobj_tx_alloc(total_size, TOID_TYPE_NUM(struct masstree_obj));
+            PMEMoid
+            ht_oid = pmemobj_tx_alloc(total_size, TOID_TYPE_NUM(
+            struct masstree_obj));
 
-                        struct masstree_obj *o = (struct masstree_obj *) tplate;
-                        o->data = u_value;
-                        o->ht_oid = ht_oid;
-                        if (!masstree_checksum(tplate, 0, u_value)) throw;
+            struct masstree_obj *o = (struct masstree_obj *) tplate;
+            o->data = u_value;
+            o->ht_oid = ht_oid;
+            if (!masstree_checksum(tplate, 0, u_value)) throw;
 
-                        pmemobj_tx_add_range(ht_oid, 0, total_size);
-                        mo = (struct masstree_obj *) pmemobj_direct(ht_oid);
-                        memcpy(mo, tplate, total_size);
+            pmemobj_tx_add_range(ht_oid, 0, total_size);
+            mo = (struct masstree_obj *) pmemobj_direct(ht_oid);
+            memcpy(mo, tplate, total_size);
 
-                    }
-                        TX_ONABORT {
-                        throw;
-                    }
+        }
+        TX_ONABORT{
+                throw;
+        }
         TX_END
 
         struct masstree_obj *old_obj = (struct masstree_obj *)
                 tree->put_and_return(u_key, mo, !no_allow_prev_null, 0, t);
 
         if (no_allow_prev_null || old_obj != NULL) {
-            TX_BEGIN(pop) {
+            TX_BEGIN(pop)
+            {
 
-                            pmemobj_tx_add_range(old_obj->ht_oid, sizeof(struct masstree_obj) + memset_size,
-                                                 sizeof(uint64_t));
-                            if (!masstree_checksum(old_obj, -1, u_value)) throw;
-                            pmemobj_tx_free(old_obj->ht_oid);
-                        }
-                            TX_ONABORT {
-                            throw;
-                        }
+                pmemobj_tx_add_range(old_obj->ht_oid, sizeof(struct masstree_obj) + memset_size,
+                                     sizeof(uint64_t));
+                if (!masstree_checksum(old_obj, -1, u_value)) throw;
+                pmemobj_tx_free(old_obj->ht_oid);
+            }
+            TX_ONABORT{
+                    throw;
+            }
             TX_END
         }
 
@@ -533,7 +525,7 @@ static inline void masstree_branched_update(
         struct log_cell *lc = (struct log_cell *) tplate;
         lc->key = u_key;
         rdtscll(lc->version)
-        *((uint64_t *) (lc + 1)) = u_value;
+        *((uint64_t * )(lc + 1)) = u_value;
         if (!masstree_checksum(tplate, 0, u_value)) throw;
 
         char *raw = (char *) log_malloc(total_size);
@@ -657,16 +649,17 @@ static inline void masstree_branched_delete(
                                      NULL, t);
 
 
-        TX_BEGIN(pop) {
+        TX_BEGIN(pop)
+        {
 
-                        pmemobj_tx_add_range(old_obj->ht_oid, sizeof(struct masstree_obj) + memset_size,
-                                             sizeof(uint64_t));
-                        if (!masstree_checksum(old_obj, -1, d_key))throw;
-                        pmemobj_tx_free(old_obj->ht_oid);
-                    }
-                        TX_ONABORT {
-                        throw;
-                    }
+            pmemobj_tx_add_range(old_obj->ht_oid, sizeof(struct masstree_obj) + memset_size,
+                                 sizeof(uint64_t));
+            if (!masstree_checksum(old_obj, -1, d_key))throw;
+            pmemobj_tx_free(old_obj->ht_oid);
+        }
+        TX_ONABORT{
+                throw;
+        }
         TX_END
 
 
@@ -1184,12 +1177,6 @@ int main(int argc, char **argv) {
     puts("\tno available cache line write back found")
 #endif
 
-#ifdef MASSTREE_FLUSH
-    puts("\tMASSTREE_FLUSH");
-#else
-    puts("\ttesting eADR");
-#endif
-
 
     PMEM_POOL_SIZE = total_size * n * 3;
     uint64_t size_round = 4ULL * 1024ULL * 1024ULL * 1024ULL;
@@ -1239,7 +1226,7 @@ int main(int argc, char **argv) {
             puts("duplication check 0");
             for (uint64_t xx = 0; xx < n; xx++) {
                 for (uint64_t xxx = xx + 1; xxx < n; xxx++) {
-                    assert (all_values[xx] != all_values[xxx]);
+                    assert(all_values[xx] != all_values[xxx]);
                 }
             }
 
@@ -1482,7 +1469,7 @@ int main(int argc, char **argv) {
         /**
          * section DELETE
          */
-        throw;
+//        throw;
         run("delete", throughput_file, attrs, section_args, latencies, section_delete);
         if (use_log) log_debug_print(0, show_log_usage);
     }
