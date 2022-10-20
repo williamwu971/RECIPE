@@ -893,7 +893,7 @@ void log_debug_print(FILE *f, int using_log) {
 
 
     printf("total logs used:%lu gq length:%lu\n", used, len);
-    fprintf(f, "%.2f,\n", ((double) (used * LOG_SIZE)) / 1024. / 1024. / 1024.);
+    fprintf(f, "%.2f,", ((double) (used * LOG_SIZE)) / 1024. / 1024. / 1024.);
 
 
 //    fflush(file);
