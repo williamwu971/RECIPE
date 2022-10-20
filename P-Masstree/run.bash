@@ -104,7 +104,7 @@ extra_sizes=(256)
 #total_sizes=($(seq 48 8 256))
 total_sizes=(1024)
 
-persist=("flush" "non-temporal")
+#persist=("flush" "non-temporal")
 persist=("flush")
 #persist=("non-temporal")
 
