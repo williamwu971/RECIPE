@@ -847,14 +847,18 @@ void log_join_all_gc() {
 }
 
 
-void log_debug_print(int to_file, int show) {
+void log_debug_print(FILE *f, int using_log) {
 
-    FILE *file = stdout;
+//    FILE *file = stdout;
+//
+//    if (to_file) {
+//        char fn_buf[128];
+//        sprintf(fn_buf, "log_debug_print_%d.txt", to_file);
+//        file = fopen(fn_buf, "w");
+//    }
 
-    if (to_file) {
-        char fn_buf[128];
-        sprintf(fn_buf, "log_debug_print_%d.txt", to_file);
-        file = fopen(fn_buf, "w");
+    if (!using_log) {
+        fprintf(f, "0,");
     }
 
     pthread_mutex_lock(&lm_lock);
@@ -866,12 +870,12 @@ void log_debug_print(int to_file, int show) {
         if (lm.entries[i][0] == OCCUPIED) {
 //            printf("%5lu ", i);
             used++;
-            if (to_file) {
-                struct log *target_log = log_meta + i;
-                fprintf(file, "log %lu available:%lu free:%lu\n",
-                        i, target_log->available, target_log->freed.load());
-
-            }
+//            if (to_file) {
+//                struct log *target_log = log_meta + i;
+//                fprintf(file, "log %lu available:%lu free:%lu\n",
+//                        i, target_log->available, target_log->freed.load());
+//
+//            }
         }
 
 //        if (used > 0 && used % 100 == 0) {
@@ -886,9 +890,12 @@ void log_debug_print(int to_file, int show) {
     uint64_t len = gq.num;
     pthread_mutex_unlock(&gq.lock);
 
-    if (show)printf("total logs used:%lu gq length:%lu\n", used, len);
 
-    fflush(file);
+    printf("total logs used:%lu gq length:%lu\n", used, len);
+    fprintf(f, "%.2f,\n", ((double) (used * LOG_SIZE)) / 1024. / 1024. / 1024.);
+
+
+//    fflush(file);
 }
 
 

@@ -84,10 +84,10 @@ struct log_map {
 // metadata for the current log, should be in DRAM
 struct log {
 //    std::atomic<size_t> free_space;
-    std::atomic<uint64_t> freed;
+    std::atomic <uint64_t> freed;
     uint64_t available;
     uint64_t index;
-    std::atomic<uint64_t> full;
+    std::atomic <uint64_t> full;
     char *base;
     char *curr;
     char padding[16];
@@ -128,7 +128,7 @@ void log_wait_all_gc();
 
 void log_join_all_gc();
 
-void log_debug_print(int to_file, int show);
+void log_debug_print(FILE *f, int using_log);
 
 int log_start_perf(const char *perf_fn);
 

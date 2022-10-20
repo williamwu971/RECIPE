@@ -951,10 +951,12 @@ void run(
 
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now() - starttime);
+    log_debug_print(throughput_file, require_log_init);
 
     log_wait_all_gc();
     auto duration_with_gc = std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now() - starttime);
+    log_debug_print(throughput_file, require_log_init);
 
     if (use_perf) {
         log_stop_perf();
@@ -1434,7 +1436,7 @@ int main(int argc, char **argv) {
          * section INSERT
          */
         run("insert", throughput_file, attrs, section_args, latencies, section_insert);
-        if (use_log) log_debug_print(1, show_log_usage);
+//        if (use_log) log_debug_print(1, show_log_usage);
     }
 
 //    printf("count RP_MALLOC %lu\n", RP_lock_count);
@@ -1444,7 +1446,7 @@ int main(int argc, char **argv) {
          * section UPDATE
          */
         run("update", throughput_file, attrs, section_args, latencies, section_update);
-        if (use_log) log_debug_print(0, show_log_usage);
+//        if (use_log) log_debug_print(0, show_log_usage);
     }
 
 //    printf("count RP_MALLOC %lu\n", RP_lock_count);
@@ -1455,7 +1457,7 @@ int main(int argc, char **argv) {
          * section LOOKUP
          */
         run("lookup", throughput_file, attrs, section_args, latencies, section_lookup);
-        if (use_log) log_debug_print(0, show_log_usage);
+//        if (use_log) log_debug_print(0, show_log_usage);
     }
 
 //    printf("count RP_MALLOC %lu\n", RP_lock_count);
@@ -1471,7 +1473,7 @@ int main(int argc, char **argv) {
          */
 //        throw;
         run("delete", throughput_file, attrs, section_args, latencies, section_delete);
-        if (use_log) log_debug_print(0, show_log_usage);
+//        if (use_log) log_debug_print(0, show_log_usage);
     }
 
 
@@ -1483,7 +1485,7 @@ int main(int argc, char **argv) {
 
     if (use_log) {
         log_join_all_gc();
-        log_debug_print(2, show_log_usage);
+//        log_debug_print(2, show_log_usage);
     }
 
 
