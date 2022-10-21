@@ -904,7 +904,7 @@ int log_start_perf(const char *perf_fn) {
 
     (void) perf_fn;
 
-    char command[2048];
+//    char command[2048];
 //
 //    int sticks[] = {0, 1, 2, 3, 4, 5, 6, 7};
 //    int num_of_sticks = 8;
