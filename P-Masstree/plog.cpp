@@ -1004,7 +1004,7 @@ int log_start_perf(const char *perf_fn) {
 //    printf("perf: %s\n", command);
 
     remove("/mnt/sdb/xiaoxiang/pcm.txt");
-    sprintf(real_command, "sudo taskset -c %d-%d /mnt/sdb/xiaoxiang/pcm/build/bin/pcm-memory -all >/dev/null 2>&1 &",
+    sprintf(real_command, "sudo taskset -c %d-%d /mnt/sdb/xiaoxiang/pcm/build/bin/pcm-memory -all >pcm-memory.log 2>&1 &",
             cores * 3 / 4, cores - 1);
 
     res &= system(real_command);
