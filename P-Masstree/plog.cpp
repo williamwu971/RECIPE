@@ -990,11 +990,12 @@ int log_start_perf(const char *perf_fn) {
 //            getpid(), perf_fn);
 
     int cores = sysconf(_SC_NPROCESSORS_ONLN);
+    int res = 1;
 
-    sprintf(command,
-            "sudo taskset -c %d-%d /home/blepers/linux-huge/tools/perf/perf record --call-graph dwarf -F 100 -p %d -o %s.record -g >> perf_record.out 2>&1 &",
-            cores * 3 / 4, cores - 1, getpid(), perf_fn);
-    int res = system(command);
+//    sprintf(command,
+//            "sudo taskset -c %d-%d /home/blepers/linux-huge/tools/perf/perf record --call-graph dwarf -F 100 -p %d -o %s.record -g >> perf_record.out 2>&1 &",
+//            cores * 3 / 4, cores - 1, getpid(), perf_fn);
+//    res &= system(command);
 //    perf_stat = 0;
 
     char real_command[4096];
@@ -1004,7 +1005,8 @@ int log_start_perf(const char *perf_fn) {
 //    printf("perf: %s\n", command);
 
     remove("/mnt/sdb/xiaoxiang/pcm.txt");
-    sprintf(real_command, "sudo taskset -c %d-%d /mnt/sdb/xiaoxiang/pcm/build/bin/pcm-memory -all >pcm-memory.log 2>&1 &",
+    sprintf(real_command,
+            "sudo taskset -c %d-%d /mnt/sdb/xiaoxiang/pcm/build/bin/pcm-memory -all >pcm-memory.log 2>&1 &",
             cores * 3 / 4, cores - 1);
 
     res &= system(real_command);
