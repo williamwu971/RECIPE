@@ -172,7 +172,6 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
                                 &mapped_len, &is_pmem);
             if (mapped_len != file_size) die("map error mapped_len:%zu", mapped_len);
         }
-        is_pmem = is_pmem && pmem_is_pmem(map, mapped_len);
 
     } else {
 
@@ -344,7 +343,6 @@ char *log_acquire(int write_thread_log) {
     log_address = NULL;
     uint64_t i;
 
-    //todo: this logic can be optimize to be similar to allocator
     pthread_mutex_lock(&lm_lock);
 
 
@@ -376,7 +374,6 @@ char *log_acquire(int write_thread_log) {
 
         thread_log = log_meta + i;
 
-//        pmem_persist(thread_log, CACHE_LINE_SIZE);
     }
     pthread_mutex_unlock(&lm_lock);
     return log_address;
@@ -520,19 +517,10 @@ void *log_garbage_collection(void *arg) {
 
         if (gq.head != NULL) pthread_cond_signal(&gq.cond);
 
-//        gq.head = NULL;
-//        gq.num = 0;
-
         pthread_mutex_unlock(&gq.lock);
 
 
         while (queue != NULL) {
-
-            // acquire a new log, it is poss
-//            if (counter == 0) {
-//                if (log_acquire(1) == NULL)die("cannot acquire new log");
-//            }
-
 
             struct log *target_log = log_meta + queue->index;
             char *current_ptr = target_log->base;
@@ -707,14 +695,6 @@ void log_join_all_gc() {
 
 void log_debug_print(FILE *f, int using_log) {
 
-//    FILE *file = stdout;
-//
-//    if (to_file) {
-//        char fn_buf[128];
-//        sprintf(fn_buf, "log_debug_print_%d.txt", to_file);
-//        file = fopen(fn_buf, "w");
-//    }
-
     if (!using_log) {
         fprintf(f, "0,");
         return;
@@ -731,8 +711,6 @@ void log_debug_print(FILE *f, int using_log) {
             used++;
 
         }
-
-
     }
 
     pthread_mutex_unlock(&lm_lock);
@@ -744,9 +722,6 @@ void log_debug_print(FILE *f, int using_log) {
 
     printf("total logs used:%lu gq length:%lu\n", used, len);
     fprintf(f, "%.2f,", ((double) (used * LOG_SIZE)) / 1024. / 1024. / 1024.);
-
-
-//    fflush(file);
 }
 
 
