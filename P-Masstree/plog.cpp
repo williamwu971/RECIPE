@@ -29,15 +29,11 @@ int perf_stat = 1;
 void log_structs_size_check() {
 
     // some structs are required to occupy a cache line
-    if (sizeof(char) != 1) die("char size error: %lu", sizeof(char));
-    if (sizeof(struct log) != CACHE_LINE_SIZE) die("struct log size %ld", sizeof(struct log));
+    assert(sizeof(char) == 1);
+    assert (sizeof(struct log) == CACHE_LINE_SIZE);
 //    if (sizeof(struct garbage_queue) != CACHE_LINE_SIZE)
 //        die("struct garbage_queue size %ld", sizeof(struct garbage_queue));
 //    if (sizeof(struct log_cell) == sizeof(uint64_t)) die("log cell size");
-
-#ifdef NO_PERSIST
-    puts("NO PERSIST");
-#endif
 
 }
 
@@ -433,7 +429,7 @@ void *log_get_tombstone(uint64_t key) {
     struct log_cell *lc = (struct log_cell *) log_malloc(sizeof(struct log_cell));
 //    struct log_cell *lc = (struct log_cell *) log_malloc(256);
 
-    rdtscll(lc->version);
+    rdtscll(lc->version)
     lc->value_size = 0;
     lc->key = key;
     lc->is_delete = 1;
@@ -726,9 +722,6 @@ void log_debug_print(FILE *f, int using_log) {
 
 
 int log_start_perf(const char *perf_fn) {
-
-    (void) perf_fn;
-
 
     int cores = sysconf(_SC_NPROCESSORS_ONLN);
     int res = 1;
