@@ -384,13 +384,10 @@ char *log_acquire(int write_thread_log) {
 }
 
 void log_release(uint64_t idx) {
+
+    // todo: how to reduce the number of logs need to be scanned
+
     pthread_mutex_lock(&lm_lock);
-
-    // todo: this persist is possibly unreliable (for recovery purpose)
-//    pmem_memset_persist(big_map + idx * LOG_SIZE, 0, LOG_SIZE);
-
-//    lm.entries[idx][0] = AVAILABLE;
-
 
     lm.entries[idx][0] = lm.next_available;
     lm.next_available = idx;
@@ -399,9 +396,6 @@ void log_release(uint64_t idx) {
     target_log->curr = target_log->base;
     target_log->available = LOG_SIZE;
     target_log->freed.store(0);
-
-//    pmem_persist(lm.entries[idx], sizeof(int));
-
 
     pthread_mutex_unlock(&lm_lock);
 }
