@@ -446,9 +446,9 @@ void *log_get_tombstone(uint64_t key) {
     lc->key = key;
     lc->is_delete = 1;
 
-#ifdef MASSTREE_FLUSH
+
     pmem_persist(lc, sizeof(struct log_cell));
-#endif
+
 
     return lc;
 }
@@ -560,15 +560,11 @@ void *log_garbage_collection(void *arg) {
                     if (log_acquire(1) == NULL)die("cannot acquire new log");
                 }
 
-
-
-
-
                 // persist this entry to the new log first
 
 
                 // this step might be buggy if went out of bound of the new log
-                // ignore a cell if it is delete
+                // ignore a cell if it is deleted
 
                 // lock the node
                 struct masstree_put_to_pack pack = tree->put_to_lock(old_lc->key, t);
@@ -628,11 +624,9 @@ void *log_garbage_collection(void *arg) {
                                                  old_lc->version, NULL, t);
 
                         } else {
-#ifdef MASSTREE_FLUSH
+
                             pmem_memcpy_persist(thread_log->curr, current_ptr, total_size);
-#else
-                            memcpy(thread_log->curr, current_ptr, total_size);
-#endif
+
 
                             l->assign_value(pack.p, thread_log->curr);
                             thread_log->available -= total_size;
