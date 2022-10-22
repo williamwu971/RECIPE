@@ -28,9 +28,11 @@
 #define CACHE_LINE_SIZE (64)
 #define GAR_QUEUE_LENGTH (2)
 #define OMP_NUM_THREAD (23)
-#define PAGE_SIZE (4096)
+//#define PAGE_SIZE (4096)
 #define NUM_LOG_PER_COLLECTION (10)
 #define MASSTREE_FLUSH
+
+size_t PAGE_SIZE = sysconf(_SC_PAGESIZE);
 
 #define likely(x)       __builtin_expect((x),1)
 #define unlikely(x)     __builtin_expect((x),0)
@@ -84,10 +86,10 @@ struct log_map {
 // metadata for the current log, should be in DRAM
 struct log {
 //    std::atomic<size_t> free_space;
-    std::atomic <uint64_t> freed;
+    std::atomic<uint64_t> freed;
     uint64_t available;
     uint64_t index;
-    std::atomic <uint64_t> full;
+    std::atomic<uint64_t> full;
     char *base;
     char *curr;
     char padding[16];

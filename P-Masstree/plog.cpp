@@ -60,7 +60,7 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) 
 
         int old_num_threads = omp_get_num_threads();
         omp_set_num_threads(num_threads);
-        std::atomic <uint64_t> recovered;
+        std::atomic<uint64_t> recovered;
         recovered.store(0);
 
         auto starttime = std::chrono::system_clock::now();
@@ -96,7 +96,7 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) 
                     if (res != NULL) {
 
                         if (res != lc) {
-                            uint64_t idx = (uint64_t)((char *) res - big_map) / LOG_SIZE;
+                            uint64_t idx = (uint64_t) ((char *) res - big_map) / LOG_SIZE;
                             struct log *target_log = log_meta + idx;
                             target_log->freed.fetch_add(sizeof(struct log_cell) + res->value_size);
                         } else {
@@ -151,47 +151,6 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) 
 
 }
 
-struct log_prefault_struct {
-    void *s;
-    int c;
-    size_t n;
-
-    void *(*memset_func)(void *s, int c, size_t n);
-};
-
-
-void *log_prefault_thread(void *arg) {
-
-    struct log_prefault_struct *lps =
-            (struct log_prefault_struct *) arg;
-
-    printf("thread: %p %d %lu\n",
-           lps->s, lps->c, lps->n);
-
-    return lps->memset_func(
-            lps->s, lps->c, lps->n
-    );
-}
-
-static inline void *log_prefault_custom_func(void *s, int c, size_t n) {
-
-    (void) c;
-
-//    uint64_t *sum = (uint64_t *) malloc(sizeof(uint64_t));
-//    *sum = 0;
-    uint64_t sum = 0;
-
-    n /= 8;
-    uint64_t *nums = (uint64_t *) s;
-
-    for (size_t i = 0; i < n; i++) {
-//        *sum += nums[i];
-        sum += nums[i];
-    }
-
-
-    return (void *) sum;
-}
 
 uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
                  void **result, int *pre_set, int alignment, int pre_fault_threads) {
@@ -225,7 +184,6 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
 
     }
 
-    //todo: testing pre-fault by reading
 //    memset_func = log_prefault_custom_func;
 
     if (map == NULL || map == MAP_FAILED || !is_pmem)
@@ -241,29 +199,20 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
             die("cannot memset size:%zu", mapped_len);
         }
 
-//        uint64_t step_size;
-//        if (mapped_len % PAGE_SIZE == 0) step_size = PAGE_SIZE;
-//        else step_size = CACHE_LINE_SIZE;
-//
-//        if (mapped_len > 2 * 1024 * 1024ULL)step_size = (2 * 1024 * 1024ULL); // to remove
-
-        std::atomic <uint64_t> sum;
+        std::atomic<uint64_t> sum;
         sum.store(0);
 
-//        log_start_perf("pre_fault.perf");
 
         log_start_perf("fault.perf");
 
-        auto starttime = std::chrono::system_clock::now();
-//        int *visit_log = (int *) calloc((mapped_len / step_size), sizeof(int));
 
-//        omp_set_num_threads(pre_fault_threads);
-//#pragma omp parallel for schedule(static, 1)
-//        for (uint64_t i = 0; i < mapped_len; i++) {
-//
-//            ((char *) map)[i] = value;
-//        }
-        memset(map, value, mapped_len);
+        auto starttime = std::chrono::system_clock::now();
+
+//        memset(map, value, mapped_len);
+
+        for (size_t i = 0; i < mapped_len; i += PAGE_SIZE) {
+            ((char *) map)[i] = value;
+        }
 
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
                 std::chrono::system_clock::now() - starttime);
@@ -462,8 +411,6 @@ void log_release(uint64_t idx) {
 
 void *log_malloc(size_t size) {
 
-//    uint64_t required_size = sizeof(struct log_cell) + size;
-//    if (unlikely(size < sizeof(struct log_cell))) die("size too small %zu", size);
 
     // the "freed" space should be strictly increasing
     if (unlikely(thread_log == NULL || thread_log->available < size)) {
@@ -473,19 +420,8 @@ void *log_malloc(size_t size) {
     // write and decrease size
     thread_log->available -= size;
 
-//    struct log_cell *lc = (struct log_cell *) thread_log->curr;
-//    lc->value_size = size - sizeof(struct log_cell);
-//    rdtscll(lc->version);
-
     char *to_return = thread_log->curr;
     thread_log->curr += size;
-//    pmem_persist(thread_log,sizeof(struct log));
-
-//    if ((thread_log->curr - size - big_map) % 256 != 0) {
-//        puts("ERROR");
-//    }
-
-//    return thread_log->curr - size;
     return to_return;
 }
 
@@ -494,7 +430,7 @@ int log_memalign(void **memptr, size_t alignment, size_t size) {
 
     size += ((size + sizeof(uint64_t)) / alignment + 1) * alignment - size - sizeof(uint64_t);
 
-//    printf("size %lu\n",size+sizeof(struct log_cell));
+
     // todo: how to make sure memory is aligned
     *memptr = log_malloc(size);
 
@@ -526,15 +462,10 @@ void log_free(void *ptr) {
 
     // commit a dummy log to represent that this entry has been freed
     struct log_cell *lc = (struct log_cell *) ptr;
-//    struct log_cell *tombstone = (struct log_cell *) log_malloc(sizeof(struct log_cell));
-//
-//    tombstone->is_delete = 1;
-//    tombstone->key = lc->key;
-//    pmem_persist(tombstone, sizeof(struct log_cell)); // PERSIST
 
 
     // locate the log and its metadata
-    uint64_t idx = (uint64_t)(char_ptr - big_map) / LOG_SIZE;
+    uint64_t idx = (uint64_t) (char_ptr - big_map) / LOG_SIZE;
     struct log *target_log = log_meta + idx;
 
     // update metadata and add the log to GC queue if suitable
@@ -555,8 +486,6 @@ void *log_garbage_collection(void *arg) {
 
     masstree::masstree *tree = (masstree::masstree *) arg;
     auto t = tree->getThreadInfo();
-
-//    uint64_t tombstones = 0; // todo: remove this
 
     while (1) {
 
@@ -624,9 +553,6 @@ void *log_garbage_collection(void *arg) {
             char *current_ptr = target_log->base;
             char *end_ptr = target_log->curr;
 
-#ifdef GC_DEBUG_OUTPUT
-            printf("%lu->%lu ", queue->index, thread_log->index);
-#endif
 
             while (current_ptr < end_ptr) {
 
@@ -642,20 +568,6 @@ void *log_garbage_collection(void *arg) {
 
 
                 // persist this entry to the new log first
-                // todo: two flushes are required here
-//                new_lc->key = old_lc->key;
-//                new_lc->is_delete = old_lc->is_delete;
-//                new_lc->value_size = old_lc->value_size;
-//                rdtscll(new_lc->version);
-//                new_lc->version = old_lc->version + 1; // todo: this is a heck
-//                pmem_persist(new_lc, sizeof(struct log_cell));
-
-//                pmem_memcpy_persist(thread_log->curr + sizeof(struct log_cell),
-//                                    current_ptr + sizeof(struct log_cell),
-//                                    new_lc->value_size);
-
-//                pmem_memcpy_persist(thread_log->curr, current_ptr,
-//                                    sizeof(struct log_cell) + old_lc->value_size);
 
 
                 // this step might be buggy if went out of bound of the new log
@@ -672,11 +584,9 @@ void *log_garbage_collection(void *arg) {
                     if (!old_lc->is_delete) {
 
                         if (current_value_in_tree->version <= old_lc->version) {
-#ifdef MASSTREE_FLUSH
+
                             pmem_memcpy_persist(thread_log->curr, current_ptr, total_size);
-#else
-                            memcpy(thread_log->curr, current_ptr, total_size);
-#endif
+
 
                             l->assign_value(pack.p, thread_log->curr);
                             thread_log->available -= total_size;
@@ -735,16 +645,6 @@ void *log_garbage_collection(void *arg) {
                         }
                     }
 
-
-
-                    // try to commit this entry
-//                    void *res = tree->put_and_return(new_lc->key, new_lc, 0, t);
-
-                    // the log acquired by gc thread shouldn't need atomic ops
-//                    if (res != NULL) {
-//                        thread_log->available -= total_size;
-//                        thread_log->curr += total_size;
-//                    }
                 }
                 current_ptr += total_size;
             }
@@ -904,90 +804,6 @@ int log_start_perf(const char *perf_fn) {
 
     (void) perf_fn;
 
-//    char command[2048];
-//
-//    int sticks[] = {0, 1, 2, 3, 4, 5, 6, 7};
-//    int num_of_sticks = 8;
-//
-//    char *chaser = command;
-//
-//
-//    for (int i = 0; i < num_of_sticks; i++) {
-//
-//        if (i == 0) {
-//            chaser += sprintf(chaser, "stat -e ");
-//        }
-//
-//        chaser += sprintf(chaser,
-//                          "uncore_imc_%d/event=0xe2,umask=0x0/,"
-//                          "uncore_imc_%d/event=0xe3,umask=0x0/,"
-//                          "uncore_imc_%d/event=0xe6,umask=0x0/,"
-//                          "uncore_imc_%d/event=0xe7,umask=0x0/",
-//                          sticks[i], sticks[i], sticks[i], sticks[i]
-//        );
-//
-//        if (i == num_of_sticks - 1) {
-//            chaser += sprintf(chaser, " > %s 2>&1 &", perf_fn);
-//        } else {
-//            chaser += sprintf(chaser, ",");
-//        }
-//
-//    }
-
-//    sprintf(command,
-//            "sudo /home/blepers/linux-huge/tools/perf/perf stat -e "
-//
-//            "uncore_imc_1/event=0xe2,umask=0x0/,"
-//            "uncore_imc_1/event=0xe3,umask=0x0/,"
-//            "uncore_imc_1/event=0xe6,umask=0x0/,"
-//            "uncore_imc_1/event=0xe7,umask=0x0/,"
-//
-//            "uncore_imc_4/event=0xe2,umask=0x0/,"
-//            "uncore_imc_4/event=0xe3,umask=0x0/,"
-//            "uncore_imc_4/event=0xe6,umask=0x0/,"
-//            "uncore_imc_4/event=0xe7,umask=0x0/,"
-//
-//            "uncore_imc_7/event=0xe2,umask=0x0/,"
-//            "uncore_imc_7/event=0xe3,umask=0x0/,"
-//            "uncore_imc_7/event=0xe6,umask=0x0/,"
-//            "uncore_imc_7/event=0xe7,umask=0x0/,"
-//
-//            "uncore_imc_10/event=0xe2,umask=0x0/,"
-//            "uncore_imc_10/event=0xe3,umask=0x0/,"
-//            "uncore_imc_10/event=0xe6,umask=0x0/,"
-//            "uncore_imc_10/event=0xe7,umask=0x0/ "
-//
-//
-//            "> %s 2>&1 &",
-//            perf_fn
-//    );
-
-
-//    sleep(1);
-
-//    sprintf(command,
-//            "sudo /home/blepers/linux/tools/perf/perf stat "
-//            "-e SQ_MISC.SQ_FULL "
-//            "-e CYCLE_ACTIVITY.CYCLES_MEM_ANY "
-//            "-e OFFCORE_REQUESTS_OUTSTANDING.CYCLES_WITH_DATA_RD "
-//            "-e OFFCORE_REQUESTS_OUTSTANDING.CYCLES_WITH_DEMAND_RFO "
-//            "-e RESOURCE_STALLS.SB "
-//            "-e UNC_M_RPQ_OCCUPANCY_PCH0 "
-//            "-e UNC_M_RPQ_OCCUPANCY_PCH1 "
-//            "-e UNC_M_WPQ_OCCUPANCY_PCH0 "
-//            "-e UNC_M_WPQ_OCCUPANCY_PCH1 "
-//            "-p %d > %s 2>&1 &",
-//            getpid(), perf_fn
-//    );
-//
-//    sprintf(command,
-//            "sudo /home/blepers/linux/tools/perf/perf stat -d -d -d -p %d > %s 2>&1 &",
-//            getpid(), perf_fn
-//    );
-
-//    sprintf(command,
-//            "/home/blepers/linux/tools/perf/perf record -p %d -o %s -g >> perf.out 2>&1 &",
-//            getpid(), perf_fn);
 
     int cores = sysconf(_SC_NPROCESSORS_ONLN);
     int res = 1;
@@ -1061,96 +877,12 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed, FILE *f) {
         return;
     }
 
-//    const char *pmem_sticks[] = {
-////            "uncore_imc_1/",
-////            "uncore_imc_4/",
-////            "uncore_imc_7/",
-////            "uncore_imc_10/"
-//
-//            "uncore_imc_0/",
-//            "uncore_imc_1/",
-//            "uncore_imc_2/",
-//            "uncore_imc_3/",
-//            "uncore_imc_4/",
-//            "uncore_imc_5/",
-//            "uncore_imc_6/",
-//            "uncore_imc_7/",
-//    };
-//    int length = 8;
-//
-//    char buf[1024];
-//    double elapsed_perf = 0;
 
     uint64_t read = 0;
     uint64_t write = 0;
     uint64_t dram_read = 0;
     uint64_t dram_write = 0;
-//    uint64_t read_b_cycle;
-//    uint64_t write_b_cycle;
-//    int repeat = 0;
 
-
-//    for (; repeat < 3 && elapsed_perf < 0.01; repeat++) {
-//
-//        if (repeat != 0)sleep(1);
-//
-//        read = 0;
-//        write = 0;
-//        read_b_cycle = 0;
-//        write_b_cycle = 0;
-//
-//
-//        FILE *file = fopen(perf_fn, "r");
-//        if (file == NULL) continue;
-//
-//        while (fgets(buf, 1024, file)) {
-//
-////            printf("%s", buf);
-//            char no_use[1024];
-//
-//            for (int i = 0; i < length; i++) {
-//
-//                if (strstr(buf, pmem_sticks[i])) {
-//
-//                    uint64_t number;
-//
-//                    char num_str[1024];
-//                    num_str[0] = '\0';
-//
-//                    char num_raw[1024];
-//                    sscanf(buf, "%s %s", num_raw, no_use);
-//
-//                    strcat(num_str, strtok(num_raw, ","));
-//                    char *curr;
-//                    while ((curr = strtok(NULL, ",")) != NULL) {
-//                        strcat(num_str, curr);
-//                    }
-//
-//                    sscanf(num_str, "%lu", &number);
-////                    printf("number: %s\n", num_str);
-//
-//                    if (strstr(buf, "0xe2")) {
-//                        if (number > read_b_cycle)read_b_cycle = number;
-//                    } else if (strstr(buf, "0xe3")) {
-//                        read += number;
-//                    } else if (strstr(buf, "0xe6")) {
-//                        if (number > write_b_cycle)write_b_cycle = number;
-//                    } else if (strstr(buf, "0xe7")) {
-//                        write += number;
-//                    }
-//                }
-//            }
-//
-//            if (strstr(buf, "elapsed"))
-//                sscanf(buf, "%lf %s %s %s", &elapsed_perf, no_use, no_use, no_use);
-//
-//        }
-//        fclose(file);
-//    }
-
-
-//    uint64_t elapsed_cycles = perf_stop_rtd - perf_start_rtd;
-//    elapsed = elapsed_perf - 1; // todo: offset to adjust sleep(1)
 
     int scanned_channel = 0;
 
