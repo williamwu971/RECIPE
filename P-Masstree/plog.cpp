@@ -737,17 +737,9 @@ void log_debug_print(FILE *f, int using_log) {
         if (lm.entries[i][0] == OCCUPIED) {
 //            printf("%5lu ", i);
             used++;
-//            if (to_file) {
-//                struct log *target_log = log_meta + i;
-//                fprintf(file, "log %lu available:%lu free:%lu\n",
-//                        i, target_log->available, target_log->freed.load());
-//
-//            }
+
         }
 
-//        if (used > 0 && used % 100 == 0) {
-//            printf("\n");
-//        }
 
     }
 
