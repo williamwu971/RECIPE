@@ -44,7 +44,7 @@ PMEMobjpool *pop = NULL;
 
 POBJ_LAYOUT_BEGIN(masstree);
 POBJ_LAYOUT_TOID(masstree,
-struct masstree_obj)
+                 struct masstree_obj)
 
 POBJ_LAYOUT_END(masstree)
 
@@ -115,8 +115,8 @@ struct section_arg {
 static uint64_t YCSB_SIZE = 64000000;
 //static uint64_t YCSB_SIZE = 64000000;
 
-std::vector <uint64_t> ycsb_init_keys;
-std::vector <uint64_t> ycsb_keys;
+std::vector<uint64_t> ycsb_init_keys;
+std::vector<uint64_t> ycsb_keys;
 std::vector<int> ycsb_ranges;
 std::vector<int> ycsb_ops;
 
@@ -479,43 +479,41 @@ static inline void masstree_branched_update(
 
         struct masstree_obj *mo = NULL;
 
-        TX_BEGIN(pop)
-        {
+        TX_BEGIN(pop) {
 
-            PMEMoid
-            ht_oid = pmemobj_tx_alloc(total_size, TOID_TYPE_NUM(
-            struct masstree_obj));
+                        PMEMoid
+                                ht_oid = pmemobj_tx_alloc(total_size, TOID_TYPE_NUM(
+                                struct masstree_obj));
 
-            struct masstree_obj *o = (struct masstree_obj *) tplate;
-            o->data = u_value;
-            o->ht_oid = ht_oid;
-            if (!masstree_checksum(tplate, 0, u_value)) throw;
+                        struct masstree_obj *o = (struct masstree_obj *) tplate;
+                        o->data = u_value;
+                        o->ht_oid = ht_oid;
+                        if (!masstree_checksum(tplate, 0, u_value)) throw;
 
-            pmemobj_tx_add_range(ht_oid, 0, total_size);
-            mo = (struct masstree_obj *) pmemobj_direct(ht_oid);
-            memcpy(mo, tplate, total_size);
+                        pmemobj_tx_add_range(ht_oid, 0, total_size);
+                        mo = (struct masstree_obj *) pmemobj_direct(ht_oid);
+                        memcpy(mo, tplate, total_size);
 
-        }
-        TX_ONABORT{
-                throw;
-        }
+                    }
+                        TX_ONABORT {
+                        throw;
+                    }
         TX_END
 
         struct masstree_obj *old_obj = (struct masstree_obj *)
                 tree->put_and_return(u_key, mo, !no_allow_prev_null, 0, t);
 
         if (no_allow_prev_null || old_obj != NULL) {
-            TX_BEGIN(pop)
-            {
+            TX_BEGIN(pop) {
 
-                pmemobj_tx_add_range(old_obj->ht_oid, sizeof(struct masstree_obj) + memset_size,
-                                     sizeof(uint64_t));
-                if (!masstree_checksum(old_obj, -1, u_value)) throw;
-                pmemobj_tx_free(old_obj->ht_oid);
-            }
-            TX_ONABORT{
-                    throw;
-            }
+                            pmemobj_tx_add_range(old_obj->ht_oid, sizeof(struct masstree_obj) + memset_size,
+                                                 sizeof(uint64_t));
+                            if (!masstree_checksum(old_obj, -1, u_value)) throw;
+                            pmemobj_tx_free(old_obj->ht_oid);
+                        }
+                            TX_ONABORT {
+                            throw;
+                        }
             TX_END
         }
 
@@ -525,7 +523,7 @@ static inline void masstree_branched_update(
         struct log_cell *lc = (struct log_cell *) tplate;
         lc->key = u_key;
         rdtscll(lc->version)
-        *((uint64_t * )(lc + 1)) = u_value;
+        *((uint64_t *) (lc + 1)) = u_value;
         if (!masstree_checksum(tplate, 0, u_value)) throw;
 
         char *raw = (char *) log_malloc(total_size);
@@ -534,6 +532,7 @@ static inline void masstree_branched_update(
         void *returned = tree->put_and_return(u_key, raw, !no_allow_prev_null, 0, t);
 
         if (no_allow_prev_null || returned != NULL) {
+            puts("returned");
             log_free(returned);
         }
 
@@ -649,17 +648,16 @@ static inline void masstree_branched_delete(
                                      NULL, t);
 
 
-        TX_BEGIN(pop)
-        {
+        TX_BEGIN(pop) {
 
-            pmemobj_tx_add_range(old_obj->ht_oid, sizeof(struct masstree_obj) + memset_size,
-                                 sizeof(uint64_t));
-            if (!masstree_checksum(old_obj, -1, d_key))throw;
-            pmemobj_tx_free(old_obj->ht_oid);
-        }
-        TX_ONABORT{
-                throw;
-        }
+                        pmemobj_tx_add_range(old_obj->ht_oid, sizeof(struct masstree_obj) + memset_size,
+                                             sizeof(uint64_t));
+                        if (!masstree_checksum(old_obj, -1, d_key))throw;
+                        pmemobj_tx_free(old_obj->ht_oid);
+                    }
+                        TX_ONABORT {
+                        throw;
+                    }
         TX_END
 
 
