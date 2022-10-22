@@ -532,7 +532,6 @@ static inline void masstree_branched_update(
         void *returned = tree->put_and_return(u_key, raw, !no_allow_prev_null, 0, t);
 
         if (no_allow_prev_null || returned != NULL) {
-            printf("returned %p\n", returned);
             log_free(returned);
         }
 
