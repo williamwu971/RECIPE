@@ -32,8 +32,6 @@
 #define NUM_LOG_PER_COLLECTION (10)
 #define MASSTREE_FLUSH
 
-size_t PAGE_SIZE = sysconf(_SC_PAGESIZE);
-
 #define likely(x)       __builtin_expect((x),1)
 #define unlikely(x)     __builtin_expect((x),0)
 
