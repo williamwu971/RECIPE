@@ -857,22 +857,24 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed, FILE *f) {
 
 
     printf("PR: ");
-//    printf("%.2fgb ", read_gb);
-    printf("%.2fgb/s ", read_bw);
+    printf("%7.2fgb ", read_gb);
+    printf("%7.2fgb/s ", read_bw);
 
     printf("PW: ");
-//    printf("%.2fgb ", write_gb);
-    printf("%.2fgb/s ", write_bw);
+    printf("%7.2fgb ", write_gb);
+    printf("%7.2fgb/s ", write_bw);
 
-    printf("elapsed: %.2f ", elapsed);
+    printf("\n");
+
+//    printf("elapsed: %.2f ", elapsed);
 
     printf("DR: ");
-//    printf("%.2fgb ", dram_read_gb);
-    printf("%.2fgb/s ", dram_read_bw);
+    printf("%7.2fgb ", dram_read_gb);
+    printf("%7.2fgb/s ", dram_read_bw);
 
     printf("DW: ");
-//    printf("%.2fgb ", dram_write_gb);
-    printf("%.2fgb/s ", dram_write_bw);
+    printf("%7.2fgb ", dram_write_gb);
+    printf("%7.2fgb/s ", dram_write_bw);
 
     printf("\n");
 
