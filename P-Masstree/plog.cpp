@@ -159,10 +159,10 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
     void *map = NULL;
     size_t mapped_len = 0;
     int is_pmem = 1;
-//    void *(*memset_func)(void *s, int c, size_t n);
+
 
     if (use_pmem) {
-//        memset_func = pmem_memset_persist;
+
 
         if (file_size == 0) {
             map = pmem_map_file(fn, 0, 0, 0, &mapped_len, &is_pmem);
@@ -175,7 +175,7 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
         is_pmem = is_pmem && pmem_is_pmem(map, mapped_len);
 
     } else {
-//        memset_func = memset;
+
 
         mapped_len = file_size;
 
@@ -184,7 +184,6 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
 
     }
 
-//    memset_func = log_prefault_custom_func;
 
     if (map == NULL || map == MAP_FAILED || !is_pmem)
         die("map error map:%p is_pmem:%d", map, is_pmem);
@@ -198,10 +197,6 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
         if (mapped_len % CACHE_LINE_SIZE != 0 && mapped_len % PAGE_SIZE != 0) {
             die("cannot memset size:%zu", mapped_len);
         }
-
-        std::atomic<uint64_t> sum;
-        sum.store(0);
-
 
         log_start_perf("fault.perf");
 
@@ -221,9 +216,9 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
         log_print_pmem_bandwidth("fault.perf", duration.count() / 1000000.0, NULL);
 
 
-        printf("\n\tpre-faulted %p %-30s %7.2f gb/s %7.2f s sum:%lu \n",
+        printf("\n\tpre-faulted %p %-30s %7.2fgb/s %7.2fs\n",
                map, fn, (mapped_len * 2.0 / 1024.0 / 1024.0 / 1024.0) / (duration.count() / 1000000.0),
-               duration.count() / 1000000.0, sum.load());
+               duration.count() / 1000000.0);
 
     }
 
@@ -913,10 +908,6 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed, FILE *f) {
         }
     }
 
-//    double read_b_percent = (double) read_b_cycle / (double) elapsed_cycles * 100.0f;
-//    double read_bw = (double) read * 64.0f / 1024.0f / 1024.0f / 1024.0f / elapsed;
-//    double write_b_percent = (double) write_b_cycle / (double) elapsed_cycles * 100.0f;
-//    double write_bw = (double) write * 64.0f / 1024.0f / 1024.0f / 1024.0f / elapsed;
 
     double read_gb = (double) read / 1024.0f / 1024.0f / 1024.0f;
     double write_gb = (double) write / 1024.0f / 1024.0f / 1024.0f;
@@ -934,37 +925,27 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed, FILE *f) {
     printf("\n");
 
 
-//    if (repeat == 3 && elapsed_perf < 0.01) {
-//        printf("time too short to display bandwidth!\n");
-//        if (f != NULL)fprintf(f, ",,");
-//        return;
-//    }
-
     printf("PR: ");
-//    printf("%.2f%% ", read_b_percent);
-    printf("%.2fgb ", read_gb);
+//    printf("%.2fgb ", read_gb);
     printf("%.2fgb/s ", read_bw);
 
     printf("PW: ");
-//    printf("%.2f%% ", write_b_percent);
-    printf("%.2fgb ", write_gb);
+//    printf("%.2fgb ", write_gb);
     printf("%.2fgb/s ", write_bw);
 
     printf("elapsed: %.2f ", elapsed);
 
     printf("DR: ");
-//    printf("%.2f%% ", read_b_percent);
-    printf("%.2fgb ", dram_read_gb);
+//    printf("%.2fgb ", dram_read_gb);
     printf("%.2fgb/s ", dram_read_bw);
 
     printf("DW: ");
-//    printf("%.2f%% ", write_b_percent);
-    printf("%.2fgb ", dram_write_gb);
+//    printf("%.2fgb ", dram_write_gb);
     printf("%.2fgb/s ", dram_write_bw);
 
     printf("\n");
 
-//    printf("read %lu bytes write %lu bytes\n",read,write);
+
 
     if (f != NULL) {
         fprintf(f, "%.2f,%.2f,%.2f,%.2f,", read_gb, read_bw, write_gb, write_bw);
