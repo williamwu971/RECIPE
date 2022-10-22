@@ -559,7 +559,7 @@ void *log_garbage_collection(void *arg) {
                 }
 
 
-//                struct log_cell *new_lc = (struct log_cell *) thread_log->curr;
+
 
 
                 // persist this entry to the new log first
@@ -944,7 +944,6 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed, FILE *f) {
     printf("%.2fgb/s ", dram_write_bw);
 
     printf("\n");
-
 
 
     if (f != NULL) {
