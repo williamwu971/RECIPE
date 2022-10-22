@@ -386,6 +386,7 @@ char *log_acquire(int write_thread_log) {
 void log_release(uint64_t idx) {
 
     // todo: how to reduce the number of logs need to be scanned
+    // BUG here, did not store FULL
 
     pthread_mutex_lock(&lm_lock);
 
@@ -521,13 +522,9 @@ void *log_garbage_collection(void *arg) {
 
         pthread_mutex_unlock(&gq.lock);
 
-//        if (gq.num != GAR_QUEUE_LENGTH) die("gc detected gq length:%lu", gq.num);
-//        if (queue_length < GAR_QUEUE_LENGTH) die("gc detected gq length:%lu", queue_length);
-
-//        uint64_t counter = 0;
 
 
-        // todo: how to properly store metadata
+
         while (queue != NULL) {
 
             // acquire a new log, it is poss
