@@ -889,14 +889,17 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed, FILE *f) {
         char buffer[256];
         int is_first_line = 1;
         while (fgets(buffer, 256, file) != NULL) {
+
             if (is_first_line) {
                 is_first_line = 0;
                 continue;
             }
+
             uint64_t skt, channel, pmmReads, pmmWrites, elapsedTime, dramReads, dramWrites;
             sscanf(buffer, "%lu %lu %lu %lu %lu %lu %lu",
                    &skt, &channel, &pmmReads, &pmmWrites, &elapsedTime, &dramReads, &dramWrites
             );
+
             scanned_channel++;
             pmem_read += pmmReads;
             pmem_write += pmmWrites;
