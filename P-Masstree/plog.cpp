@@ -188,6 +188,8 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
 
     if (pre_set != NULL) {
 
+        printf("\n");
+
         int value = *pre_set;
         size_t PAGE_SIZE = sysconf(_SC_PAGESIZE);
 
@@ -213,7 +215,7 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
         log_print_pmem_bandwidth("fault.perf", duration.count() / 1000000.0, NULL);
 
 
-        printf("\n\tpre-faulted %p %-30s %7.2fs\n", map, fn, duration.count() / 1000000.0);
+        printf("pre-faulted %p %-30s %7.2fs\n", map, fn, duration.count() / 1000000.0);
 
     }
 
