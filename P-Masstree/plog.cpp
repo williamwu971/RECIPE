@@ -477,7 +477,6 @@ void log_free(void *ptr) {
 
 }
 
-//#define GC_DEBUG_OUTPUT
 
 void *log_garbage_collection(void *arg) {
 
@@ -533,9 +532,6 @@ void *log_garbage_collection(void *arg) {
 
 //        uint64_t counter = 0;
 
-#ifdef GC_DEBUG_OUTPUT
-        printf("merge ");
-#endif
 
         // todo: how to properly store metadata
         while (queue != NULL) {
@@ -651,9 +647,7 @@ void *log_garbage_collection(void *arg) {
                 die("log overflow detected used:%ld", thread_log->curr - thread_log->base);
         }
 
-#ifdef GC_DEBUG_OUTPUT
-        printf("\n");
-#endif
+
     }
 
 //    printf("tombstone: %lu\n", tombstones);
@@ -706,35 +700,16 @@ void log_join_all_gc() {
 
     puts("waiting gc");
     gc_stopped = 1;
+
+    // possible signal lost
     pthread_cond_broadcast(&gq.cond);
 
-//    int collected = 0;
-//    while (!collected) {
-//        pthread_mutex_lock(&gq.lock);
-//
-//
-//        if (gq.num == 0) {
 
-//        } else {
-
-//            collected = 1;
-//        }
-//
-//        pthread_cond_broadcast(&gq.cond);
-//        pthread_mutex_unlock(&gq.lock);
-//    }
-
-//    uint64_t tombstone = 0;
     for (int i = 0; i < num_gcs; i++) {
-
-//        uint64_t local;
-//        pthread_join(gc_ids[i], (void **) &local);
         pthread_join(gc_ids[i], NULL);
-
-//        tombstone += local;
     }
 
-//    printf("total collected: %lu\n", tombstone);
+
 }
 
 
