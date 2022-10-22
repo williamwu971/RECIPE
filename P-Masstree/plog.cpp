@@ -869,21 +869,22 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed, FILE *f) {
     }
 
 
-    uint64_t read = 0;
-    uint64_t write = 0;
-    uint64_t dram_read = 0;
-    uint64_t dram_write = 0;
+    uint64_t pmem_read;
+    uint64_t pmem_write;
+    uint64_t dram_read;
+    uint64_t dram_write;
 
+    int scanned_channel;
 
-    int scanned_channel = 0;
-
-    while (scanned_channel < 16) {
+    while (1) {
 
         scanned_channel = 0;
 
         FILE *file = fopen("/mnt/sdb/xiaoxiang/pcm.txt", "r");
-        read = 0;
-        write = 0;
+        pmem_read = 0;
+        pmem_write = 0;
+        dram_read = 0;
+        dram_write = 0;
 
         char buffer[256];
         int is_first_line = 1;
@@ -897,16 +898,22 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed, FILE *f) {
                    &skt, &channel, &pmmReads, &pmmWrites, &elapsedTime, &dramReads, &dramWrites
             );
             scanned_channel++;
-            read += pmmReads;
-            write += pmmWrites;
+            pmem_read += pmmReads;
+            pmem_write += pmmWrites;
             dram_read += dramReads;
             dram_write += dramWrites;
+        }
+
+        if (scanned_channel >= 16) {
+            break;
+        } else {
+            puts("pcm.txt parse failed");
         }
     }
 
 
-    double read_gb = (double) read / 1024.0f / 1024.0f / 1024.0f;
-    double write_gb = (double) write / 1024.0f / 1024.0f / 1024.0f;
+    double read_gb = (double) pmem_read / 1024.0f / 1024.0f / 1024.0f;
+    double write_gb = (double) pmem_write / 1024.0f / 1024.0f / 1024.0f;
 
     double read_bw = read_gb / elapsed;
     double write_bw = write_gb / elapsed;
