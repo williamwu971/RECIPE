@@ -462,12 +462,15 @@ void log_free(void *ptr) {
 
     // update metadata and add the log to GC queue if suitable
     uint64_t freed = target_log->freed.fetch_add(sizeof(struct log_cell) + lc->value_size);
-    uint64_t can_collect = target_log->full.load();
 
-    if (can_collect && freed >= LOG_MERGE_THRESHOLD &&
-        target_log->full.compare_exchange_strong(can_collect, 0)) {
 
-        log_gq_add(idx);
+    if (freed >= LOG_MERGE_THRESHOLD) {
+
+        uint64_t can_collect = target_log->full.load();
+
+        if (can_collect && target_log->full.compare_exchange_strong(can_collect, 0)) {
+            log_gq_add(idx);
+        }
     }
 
 }
@@ -521,8 +524,6 @@ void *log_garbage_collection(void *arg) {
 //        gq.num = 0;
 
         pthread_mutex_unlock(&gq.lock);
-
-
 
 
         while (queue != NULL) {
