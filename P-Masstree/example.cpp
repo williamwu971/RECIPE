@@ -931,6 +931,8 @@ void run(
 
     char perf_fn[64];
     sprintf(perf_fn, "%s-%s.perf", prefix == NULL ? "" : prefix, section_name);
+    printf("\n");
+
     pthread_t *threads = (pthread_t *) calloc(num_thread, sizeof(pthread_t));
 
     if (use_perf)log_start_perf(perf_fn);

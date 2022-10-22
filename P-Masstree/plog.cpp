@@ -853,9 +853,6 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed, FILE *f) {
     double dram_write_bw = dram_write_gb / elapsed;
 
 
-    printf("\n");
-
-
     printf("PR: ");
     printf("%7.2fgb ", read_gb);
     printf("%7.2fgb/s ", read_bw);
