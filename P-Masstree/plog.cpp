@@ -520,13 +520,13 @@ void *log_garbage_collection(void *arg) {
                     if (old_lc->is_delete) {
 
                         // if process a delete-type entry, check if the reference is at 0 first
-                        // if ref=0 then the tombstone is not protecting anything
 
                         if (l->reference(pack.p) == 0) {
 
+                            // if ref=0 then the tombstone is not protecting anything
                             // we have a tombstone and the reference is 0, attempt to delete again
                             tree->put_to_unlock(pack.leafnode);
-//                            tombstones++;
+
                             // the version trick should solve the put-del-put situation
                             // a tombstone with old version will not be accepted
 
