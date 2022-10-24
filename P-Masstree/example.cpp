@@ -1389,7 +1389,7 @@ int main(int argc, char **argv) {
             log_recover(tree, 20);
             goto_lookup = 1;
         } else {
-            log_init(PMEM_POOL_SIZE, num_thread);
+            log_init(PMEM_POOL_SIZE);
         }
 
         if (num_of_gc > 0) {
