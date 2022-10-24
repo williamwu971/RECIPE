@@ -570,13 +570,17 @@ void *log_garbage_collection(void *arg) {
     return NULL;
 }
 
-void log_start_gc(masstree::masstree *t, int use_me) {
+void log_start_gc(masstree::masstree *, int start_cpu, int end_cpu) {
 
 
     pthread_attr_t attr;
     cpu_set_t cpu;
     CPU_ZERO(&cpu);
-    CPU_SET(use_me, &cpu); // reserving CPU 0
+
+    // reserving CPU 0
+    for (int i = start_cpu; i < end_cpu; i++) {
+        CPU_SET(i, &cpu);
+    }
 
     pthread_attr_init(&attr);
     pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpu);

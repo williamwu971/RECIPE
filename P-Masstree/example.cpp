@@ -1395,18 +1395,19 @@ int main(int argc, char **argv) {
         if (num_of_gc > 0) {
             puts("\tbegin creating Gc");
 
+            int start_cpu;
+            int end_cpu;
 
-            int use_me = numberOfProcessors / 2 - 1;
-            if (interfere) use_me = 1;
+            if (interfere) {
+                start_cpu = 1;
+                end_cpu = 1 + num_thread;
+            } else {
+                start_cpu = 1 + num_thread;
+                end_cpu = start_cpu + num_of_gc;
+            }
 
             for (int gcc = 0; gcc < num_of_gc; gcc++) {
-                log_start_gc(tree, use_me);
-
-                if (interfere) {
-                    use_me++;
-                } else {
-                    use_me--;
-                }
+                log_start_gc(tree, start_cpu, end_cpu);
             }
         }
     }
