@@ -323,6 +323,9 @@ char *log_acquire(int write_thread_log) {
         lm.used++;
     } else {
         i = lm.next_available;
+        if (i >= lm.num_entries) {
+            printf("errrrrrr %lu\n", i);
+        }
         lm.next_available = lm.entries[i][0];
     }
 
