@@ -1117,6 +1117,7 @@ namespace masstree {
 
                 void *tombstone = tombstone_callback(key);
                 l->assign_value(kx_.p, tombstone);
+                l->modify_reference(kx_.p, 1);
 
                 l->writeUnlock(false);
                 return snapshot_v;
@@ -2291,7 +2292,7 @@ namespace masstree {
             p->checkOrRestart(v, needRestart);
             if (needRestart)
                 goto inter_retry;
-            else{
+            else {
                 p = reinterpret_cast<leafnode *> (snapshot_v);
                 buffer[counter++] = p;
             }
