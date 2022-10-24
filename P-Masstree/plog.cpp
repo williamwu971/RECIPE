@@ -186,10 +186,6 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
         int value = *pre_set;
         size_t PAGE_SIZE = sysconf(_SC_PAGESIZE);
 
-        if (mapped_len % CACHE_LINE_SIZE != 0 && mapped_len % PAGE_SIZE != 0) {
-            die("cannot memset size:%zu", mapped_len);
-        }
-
         log_start_perf("fault.perf");
 
 
