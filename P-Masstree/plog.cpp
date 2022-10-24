@@ -505,10 +505,6 @@ void *log_garbage_collection(void *arg) {
                 struct log_cell *old_lc = (struct log_cell *) current_ptr;
                 uint64_t total_size = sizeof(struct log_cell) + old_lc->value_size;
 
-                if (unlikely(thread_log == NULL || thread_log->available < total_size)) {
-                    if (log_acquire(1) == NULL)die("cannot acquire new log");
-                }
-
                 // lock the node
                 struct masstree_put_to_pack pack = tree->put_to_lock(old_lc->key, t);
                 if (pack.leafnode != NULL && pack.p != -1) {
@@ -536,6 +532,10 @@ void *log_garbage_collection(void *arg) {
                             tree->put_to_unlock(pack.leafnode);
                             tree->del_and_return(old_lc->key, 1, old_lc->version, NULL, t);
                         } else {
+
+                            if (unlikely(thread_log == NULL || thread_log->available < total_size)) {
+                                if (log_acquire(1) == NULL)die("cannot acquire new log");
+                            }
 
                             // move entry to a new location
                             pmem_memcpy_persist(thread_log->curr, current_ptr, total_size);
