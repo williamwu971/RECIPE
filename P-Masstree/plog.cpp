@@ -521,9 +521,6 @@ void *log_garbage_collection(void *arg) {
 
                         // if process a delete-type entry, check if the reference is at 0 first
                         // if ref=0 then the tombstone is not protecting anything
-                        // do we need to check version?
-
-
 
                         if (l->reference(pack.p) == 0) {
 
