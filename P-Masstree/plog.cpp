@@ -560,9 +560,9 @@ void *log_garbage_collection(void *arg) {
 
             queue = queue->next;
 
-            if (thread_log->curr > thread_log->base + LOG_SIZE) {
-                die("log overflow detected used:%ld", thread_log->curr - thread_log->base);
-            }
+//            if (thread_log->curr > thread_log->base + LOG_SIZE) {
+//                die("log overflow detected used:%ld", thread_log->curr - thread_log->base);
+//            }
         }
 
 
