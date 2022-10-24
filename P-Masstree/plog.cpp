@@ -22,10 +22,6 @@ int gc_stopped = 0;
 pthread_t *gc_ids = NULL;
 int num_gcs;
 
-uint64_t perf_start_rtd;
-uint64_t perf_stop_rtd;
-int perf_stat = 1;
-
 void log_structs_size_check() {
 
     // some structs are required to occupy a cache line
@@ -61,7 +57,6 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) 
 
         auto starttime = std::chrono::system_clock::now();
 
-        // process inserts first todo: OCCUPIED ENUM IS WRONG NOW
 #pragma omp parallel for schedule(static, 1)
         for (uint64_t i = 0; i < lm.num_entries; i++) {
 
@@ -153,7 +148,7 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
 
     (void) pre_fault_threads;
     void *map = NULL;
-    size_t mapped_len = 0;
+    size_t mapped_len = file_size;
     int is_pmem = 1;
 
 
@@ -166,13 +161,9 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
             map = pmem_map_file(fn, file_size,
                                 PMEM_FILE_CREATE | PMEM_FILE_EXCL, 00666,
                                 &mapped_len, &is_pmem);
-            if (mapped_len != file_size) die("map error mapped_len:%zu", mapped_len);
         }
 
     } else {
-
-
-        mapped_len = file_size;
 
 //        map = mmap(NULL, file_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS, -1, 0);
         map = malloc(file_size);
@@ -180,11 +171,14 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
     }
 
 
-    if (map == NULL || map == MAP_FAILED || !is_pmem)
+    if (map == NULL || map == MAP_FAILED || !is_pmem) {
         die("map error map:%p is_pmem:%d", map, is_pmem);
+    }
 
-    if (mapped_len == 0 || mapped_len % alignment != 0)
-        die("alignment check error size:%zu", mapped_len);
+    if (mapped_len != file_size || mapped_len % alignment != 0) {
+        die("map length / alignment check error size:%zu", mapped_len);
+    }
+
 
     if (pre_set != NULL) {
 
@@ -201,8 +195,6 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
 
 
         auto starttime = std::chrono::system_clock::now();
-
-//        memset(map, value, mapped_len);
 
         for (size_t i = 0; i < mapped_len; i += PAGE_SIZE) {
             ((char *) map)[i] = value;
@@ -759,14 +751,11 @@ int log_start_perf(const char *perf_fn) {
     res &= system(real_command);
 
     sleep(1);
-    rdtscll(perf_start_rtd)
 
     return res;
 }
 
 int log_stop_perf() {
-
-    rdtscll(perf_stop_rtd)
 
     char command[1024];
     sprintf(command, "sudo killall -s INT -w perf");
@@ -788,13 +777,6 @@ int log_stop_perf() {
 void log_print_pmem_bandwidth(const char *perf_fn, double elapsed, FILE *f) {
 
     (void) perf_fn;
-
-    if (!perf_stat) {
-
-        if (f != NULL)fprintf(f, ",,");
-        return;
-    }
-
 
     uint64_t pmem_read;
     uint64_t pmem_write;
