@@ -101,7 +101,7 @@ extra_sizes=(256)
 #total_sizes=(0)
 #total_sizes=(64)
 #total_sizes=(256)
-total_sizes=($(seq 40 8 1024))
+total_sizes=($(seq 40 8 256))
 #total_sizes=(1024)
 
 #persist=("flush" "non-temporal")
@@ -116,6 +116,7 @@ ycsbs=("N")
 
 #workload=16000000
 workload=140000000 # todo: do not change this
+workload=400000000
 #workload=1900
 #workload=100000000
 
