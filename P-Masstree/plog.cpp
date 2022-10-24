@@ -528,24 +528,24 @@ void *log_garbage_collection(void *arg) {
                         if (ref == 1 && current_value_in_tree->is_delete) {
                             log_free(current_value_in_tree);
                         }
+                        tree->put_to_unlock(pack.leafnode);
 
                     } else {
 
                         if (old_lc->is_delete && ref == 0) {
                             tree->put_to_unlock(pack.leafnode);
                             tree->del_and_return(old_lc->key, 1, old_lc->version, NULL, t);
+                        } else {
+                            // move entry to a new location
+
+                            pmem_memcpy_persist(thread_log->curr, current_ptr, total_size);
+
+                            l->assign_value(pack.p, thread_log->curr);
+                            thread_log->available -= total_size;
+                            thread_log->curr += total_size;
+                            tree->put_to_unlock(pack.leafnode);
                         }
-
-
-                        // move entry to a new location
-
-                        pmem_memcpy_persist(thread_log->curr, current_ptr, total_size);
-
-                        l->assign_value(pack.p, thread_log->curr);
-                        thread_log->available -= total_size;
-                        thread_log->curr += total_size;
                     }
-
 
 
                 }
