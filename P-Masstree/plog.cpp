@@ -516,71 +516,37 @@ void *log_garbage_collection(void *arg) {
                     // now we have the lock
                     masstree::leafnode *l = (masstree::leafnode *) pack.leafnode;
                     struct log_cell *current_value_in_tree = (struct log_cell *) l->value(pack.p);
+                    int ref = l->reference(pack.p);
 
-                    if (old_lc->is_delete) {
-
-                        // if process a delete-type entry, check if the reference is at 0 first
-
-                        if (l->reference(pack.p) == 0) {
-
-                            // if ref=0 then the tombstone is not protecting anything
-                            // we have a tombstone and the reference is 0, attempt to delete again
-                            tree->put_to_unlock(pack.leafnode);
-
-                            // the version trick should solve the put-del-put situation
-                            // a tombstone with old version will not be accepted
-
-                            tree->del_and_return(old_lc->key, 1,
-                                                 old_lc->version, NULL, t);
-
-                        } else {
-
-                            // move tombstone to a new location
-
-                            pmem_memcpy_persist(thread_log->curr, current_ptr, total_size);
-
-
-                            l->assign_value(pack.p, thread_log->curr);
-                            thread_log->available -= total_size;
-                            thread_log->curr += total_size;
-
-                            tree->put_to_unlock(pack.leafnode);
+                    // always compare version fist, regardless of entry type
+                    if (current_value_in_tree->version > old_lc->version) {
+                        if (ref > 0) {
+                            l->modify_reference(pack.p, -1);
                         }
 
+                        // free if it's a tombstone
+                        if (ref == 1 && current_value_in_tree->is_delete) {
+                            log_free(current_value_in_tree);
+                        }
 
                     } else {
 
-                        // process a normal entry
-
-                        if (current_value_in_tree->version <= old_lc->version) {
-
-                            pmem_memcpy_persist(thread_log->curr, current_ptr, total_size);
-
-
-                            l->assign_value(pack.p, thread_log->curr);
-                            thread_log->available -= total_size;
-                            thread_log->curr += total_size;
-
-                        } else {
-
-                            // if this entry is ignored, then decrease the reference counter by 1
-                            // no lock is needed, the leaf node is already locked
-
-                            int ref = l->reference(pack.p);
-                            if (ref > 0) {
-                                l->modify_reference(pack.p, -1);
-                            }
-
-                            // free if it's a tombstone
-                            if (ref == 1 && current_value_in_tree->is_delete) {
-
-                                log_free(current_value_in_tree);
-                            }
+                        if (old_lc->is_delete && ref == 0) {
+                            tree->put_to_unlock(pack.leafnode);
+                            tree->del_and_return(old_lc->key, 1, old_lc->version, NULL, t);
                         }
 
-                        tree->put_to_unlock(pack.leafnode);
 
+                        // move entry to a new location
+
+                        pmem_memcpy_persist(thread_log->curr, current_ptr, total_size);
+
+                        l->assign_value(pack.p, thread_log->curr);
+                        thread_log->available -= total_size;
+                        thread_log->curr += total_size;
                     }
+
+
 
                 }
                 current_ptr += total_size;
