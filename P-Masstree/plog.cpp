@@ -557,8 +557,9 @@ void *log_garbage_collection(void *arg) {
 
             queue = queue->next;
 
-            if (thread_log->curr > thread_log->base + LOG_SIZE)
+            if (thread_log->curr > thread_log->base + LOG_SIZE) {
                 die("log overflow detected used:%ld", thread_log->curr - thread_log->base);
+            }
         }
 
 
@@ -596,13 +597,13 @@ void log_end_gc() {
 void log_wait_all_gc() {
 
     while (1) {
+        pthread_cond_broadcast(&gq.cond);
         pthread_mutex_lock(&gq.lock);
         if (gq.num == 0) {
             pthread_mutex_unlock(&gq.lock);
             break;
         }
         pthread_mutex_unlock(&gq.lock);
-        pthread_cond_broadcast(&gq.cond);
         usleep(4);
     }
 }
@@ -615,11 +616,9 @@ void log_join_all_gc() {
     // possible signal lost
     pthread_cond_broadcast(&gq.cond);
 
-
     for (int i = 0; i < num_gcs; i++) {
         pthread_join(gc_ids[i], NULL);
     }
-
 
 }
 
@@ -638,9 +637,7 @@ void log_debug_print(FILE *f, int using_log) {
     for (uint64_t i = 0; i < lm.num_entries; i++) {
 
         if (lm.entries[i][0] == OCCUPIED) {
-//            printf("%5lu ", i);
             used++;
-
         }
     }
 
