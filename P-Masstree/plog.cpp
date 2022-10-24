@@ -535,6 +535,8 @@ void *log_garbage_collection(void *arg) {
 
                         } else {
 
+                            // move tombstone to a new location
+
                             pmem_memcpy_persist(thread_log->curr, current_ptr, total_size);
 
 
@@ -547,6 +549,8 @@ void *log_garbage_collection(void *arg) {
 
 
                     } else {
+
+                        // process a normal entry
 
                         if (current_value_in_tree->version <= old_lc->version) {
 
