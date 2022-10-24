@@ -123,7 +123,7 @@ void *log_malloc(size_t size);
 
 void log_free(void *ptr);
 
-void log_start_gc(masstree::masstree *, int start_cpu, int end_cpuz);
+void log_start_gc(masstree::masstree *, int start_cpu, int end_cpu);
 
 void log_wait_all_gc();
 
