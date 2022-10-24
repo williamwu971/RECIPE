@@ -128,8 +128,7 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) 
 
         struct log *target_log = log_meta + i;
 
-        if (target_log->available == LOG_SIZE ||
-            target_log->freed.load() == LOG_SIZE - target_log->available) {
+        if (target_log->available == LOG_SIZE || target_log->freed.load() == LOG_SIZE - target_log->available) {
 
             if (lm.used == i + 1) {
                 lm.used--;
@@ -292,12 +291,11 @@ void log_init(uint64_t pool_size) {
 void log_gq_add(uint64_t idx) {
     struct garbage_queue_node *node = (struct garbage_queue_node *) malloc(sizeof(struct garbage_queue_node));
     node->index = idx;
-    node->next = NULL;
 
     pthread_mutex_lock(&gq.lock);
 
     // add the node to the queue
-    if (gq.head != NULL) { node->next = gq.head; }
+    node->next = gq.head;
     gq.head = node;
     gq.num++;
 
@@ -312,10 +310,9 @@ void log_gq_add(uint64_t idx) {
 
 char *log_acquire(int write_thread_log) {
 
-    char *log_address;
-
     if (!inited)die("not inited");
-    log_address = NULL;
+
+    char *log_address = NULL;
     uint64_t i;
 
     pthread_mutex_lock(&lm_lock);
@@ -330,27 +327,28 @@ char *log_acquire(int write_thread_log) {
     }
 
     if (i >= lm.num_entries) die("all logs are occupied");
-
     lm.entries[i][0] = OCCUPIED;
-//    pmem_persist(lm.entries[i], sizeof(int));
+
+    pthread_mutex_unlock(&lm_lock);
 
     log_address = big_map + i * LOG_SIZE;
+
     if (write_thread_log) {
 
         // retire and mark the old log for collection
         if (thread_log != NULL) {
 
+            thread_log->full.store(1);
+
             if (thread_log->freed.load() > LOG_MERGE_THRESHOLD) {
                 log_gq_add(thread_log->index);
-            } else {
-                thread_log->full.store(1);
             }
         }
 
         thread_log = log_meta + i;
 
     }
-    pthread_mutex_unlock(&lm_lock);
+
     return log_address;
 
 }
@@ -358,17 +356,17 @@ char *log_acquire(int write_thread_log) {
 void log_release(uint64_t idx) {
 
     // todo: how to reduce the number of logs need to be scanned
-    // BUG here, did not store FULL
+
+    struct log *target_log = log_meta + idx;
+    target_log->freed.store(0);
+    target_log->available = LOG_SIZE;
+    target_log->full.store(0);
+    target_log->curr = target_log->base;
 
     pthread_mutex_lock(&lm_lock);
 
     lm.entries[idx][0] = lm.next_available;
     lm.next_available = idx;
-
-    struct log *target_log = log_meta + idx;
-    target_log->curr = target_log->base;
-    target_log->available = LOG_SIZE;
-    target_log->freed.store(0);
 
     pthread_mutex_unlock(&lm_lock);
 }
@@ -415,7 +413,6 @@ void *log_get_tombstone(uint64_t key) {
 
 
     pmem_persist(lc, sizeof(struct log_cell));
-
 
     return lc;
 }
@@ -507,15 +504,10 @@ void *log_garbage_collection(void *arg) {
                 // read and advance the pointer
                 struct log_cell *old_lc = (struct log_cell *) current_ptr;
                 uint64_t total_size = sizeof(struct log_cell) + old_lc->value_size;
-                if (thread_log == NULL || thread_log->available < total_size) {
+
+                if (unlikely(thread_log == NULL || thread_log->available < total_size)) {
                     if (log_acquire(1) == NULL)die("cannot acquire new log");
                 }
-
-                // persist this entry to the new log first
-
-
-                // this step might be buggy if went out of bound of the new log
-                // ignore a cell if it is deleted
 
                 // lock the node
                 struct masstree_put_to_pack pack = tree->put_to_lock(old_lc->key, t);
@@ -525,37 +517,7 @@ void *log_garbage_collection(void *arg) {
                     masstree::leafnode *l = (masstree::leafnode *) pack.leafnode;
                     struct log_cell *current_value_in_tree = (struct log_cell *) l->value(pack.p);
 
-                    if (!old_lc->is_delete) {
-
-                        if (current_value_in_tree->version <= old_lc->version) {
-
-                            pmem_memcpy_persist(thread_log->curr, current_ptr, total_size);
-
-
-                            l->assign_value(pack.p, thread_log->curr);
-                            thread_log->available -= total_size;
-                            thread_log->curr += total_size;
-
-                        } else {
-
-                            // if this entry is ignored, then decrease the reference counter by 1
-                            // no lock is needed, the leaf node is already locked
-
-                            int ref = l->reference(pack.p);
-                            if (ref > 0) {
-                                l->modify_reference(pack.p, -1);
-                            }
-
-                            // free if it's a tombstone
-                            if (ref == 1 && current_value_in_tree->is_delete) {
-
-                                log_free(current_value_in_tree);
-                            }
-                        }
-
-                        tree->put_to_unlock(pack.leafnode);
-
-                    } else {
+                    if (old_lc->is_delete) {
 
                         // if process a delete-type entry, check if the reference is at 0 first
                         // if ref=0 then the tombstone is not protecting anything
@@ -585,6 +547,38 @@ void *log_garbage_collection(void *arg) {
 
                             tree->put_to_unlock(pack.leafnode);
                         }
+
+
+                    } else {
+
+                        if (current_value_in_tree->version <= old_lc->version) {
+
+                            pmem_memcpy_persist(thread_log->curr, current_ptr, total_size);
+
+
+                            l->assign_value(pack.p, thread_log->curr);
+                            thread_log->available -= total_size;
+                            thread_log->curr += total_size;
+
+                        } else {
+
+                            // if this entry is ignored, then decrease the reference counter by 1
+                            // no lock is needed, the leaf node is already locked
+
+                            int ref = l->reference(pack.p);
+                            if (ref > 0) {
+                                l->modify_reference(pack.p, -1);
+                            }
+
+                            // free if it's a tombstone
+                            if (ref == 1 && current_value_in_tree->is_delete) {
+
+                                log_free(current_value_in_tree);
+                            }
+                        }
+
+                        tree->put_to_unlock(pack.leafnode);
+
                     }
 
                 }
@@ -595,8 +589,6 @@ void *log_garbage_collection(void *arg) {
             log_release(queue->index);
 
             queue = queue->next;
-//            counter++;
-//            if (counter == GAR_QUEUE_LENGTH) counter = 0;
 
             if (thread_log->curr > thread_log->base + LOG_SIZE)
                 die("log overflow detected used:%ld", thread_log->curr - thread_log->base);
@@ -604,9 +596,6 @@ void *log_garbage_collection(void *arg) {
 
 
     }
-
-//    printf("tombstone: %lu\n", tombstones);
-//    return (void *) tombstones;
     return NULL;
 }
 

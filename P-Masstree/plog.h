@@ -83,7 +83,6 @@ struct log_map {
 
 // metadata for the current log, should be in DRAM
 struct log {
-//    std::atomic<size_t> free_space;
     std::atomic<uint64_t> freed;
     uint64_t available;
     uint64_t index;
