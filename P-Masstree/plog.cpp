@@ -570,7 +570,7 @@ void *log_garbage_collection(void *arg) {
     return NULL;
 }
 
-void log_start_gc(masstree::masstree *, int start_cpu, int end_cpu) {
+void log_start_gc(masstree::masstree *t, int start_cpu, int end_cpu) {
 
 
     pthread_attr_t attr;
