@@ -62,7 +62,7 @@ void log_gq_add(uint64_t idx) {
         sem_getvalue(&gq.sem, &sem_value);
         assert(sem_value != -1);
 
-        int diff = sem_value - gq.num / GAR_QUEUE_LENGTH;
+        int diff = gq.num / GAR_QUEUE_LENGTH - sem_value;
         for (int i = 0; i < diff; i++) {
             sem_post(&gq.sem);
         }
