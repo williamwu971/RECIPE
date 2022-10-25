@@ -58,8 +58,9 @@ void log_gq_add(uint64_t idx) {
 
     if (gq.num >= GAR_QUEUE_LENGTH) {
 
-        int sem_value;
+        int sem_value = -1;
         sem_getvalue(&gq.sem, &sem_value);
+        assert(sem_value != -1);
 
         int diff = sem_value - gq.num / GAR_QUEUE_LENGTH;
         for (int i = 0; i < diff; i++) {
