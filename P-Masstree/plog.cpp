@@ -4,7 +4,7 @@
 int inited = 0;
 
 // the absolute base address
-char *inodes;
+int *inodes;
 char *big_map;
 
 // log map and lock to protect the map
@@ -16,9 +16,7 @@ __thread struct log *thread_log = NULL;
 
 
 struct garbage_queue gq;
-int gc_stopped = 0;
-pthread_t *gc_ids = NULL;
-int num_gcs;
+
 
 void log_structs_size_check() {
 
@@ -31,14 +29,46 @@ void log_structs_size_check() {
 
 }
 
-void log_list_init(int num_log) {
+void log_gq_init() {
+
+    pthread_mutex_init(&gq.lock, NULL);
+    pthread_cond_init(&gq.cond, NULL);
+    gq.head = NULL;
+    gq.num = 0;
+
+    gq.gc_stopped = 0;
+    gq.gc_ids = NULL;
+    gq.num_gcs = 0;
+}
+
+void log_gq_add(uint64_t idx) {
+    struct garbage_queue_node *node = (struct garbage_queue_node *) malloc(sizeof(struct garbage_queue_node));
+    node->index = idx;
+
+    pthread_mutex_lock(&gq.lock);
+
+    // add the node to the queue
+    node->next = gq.head;
+    gq.head = node;
+    gq.num++;
+
+
+    // wake up ONE garbage collector if queue is long enough
+    if (gq.num >= GAR_QUEUE_LENGTH) {
+        pthread_cond_signal(&gq.cond);
+    }
+
+    pthread_mutex_unlock(&gq.lock);
+}
+
+void log_list_init(int num_log, int *list_area) {
 
     memset(&log_list, 0, sizeof(struct log_list_pack));
 
     log_list.occupied = 0;
     log_list.num_log = num_log;
     log_list.next = 0;
-    log_list.list = (int *) malloc(sizeof(int) * num_log);
+    log_list.list = list_area;
 
     int i = 0;
     for (; i < num_log - 1; i++) {
@@ -251,35 +281,26 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
 }
 
 void log_recover(masstree::masstree *tree, int num_threads) {
+
     log_structs_size_check();
 
-    uint64_t mapped_len;
+    uint64_t mapped_len = log_map(1, LOG_FN, 0, (void **) &big_map, NULL, LOG_SIZE);
+    uint64_t num_logs = mapped_len / LOG_SIZE;
 
-    mapped_len = log_map(1, INODE_FN, 0, (void **) &inodes, NULL, CACHE_LINE_SIZE);
+    int preset = 0;
+    int *pptr = &preset;
 
-
-    if (log_map(1, META_FN, 0,
-                (void **) &log_meta, NULL,
-                CACHE_LINE_SIZE) != mapped_len)
-        die("META filesize inconsistent");
-
-    uint64_t num_logs = mapped_len / CACHE_LINE_SIZE;
-
-    mapped_len = log_map(1, LOG_FN, 0, (void **) &big_map, NULL, LOG_SIZE);
-    if (mapped_len != num_logs * LOG_SIZE) die("big_map mapped_len:%zu", mapped_len);
-
+    log_map(0, INODE_FN, sizeof(int) * num_logs, (void **) &inodes, pptr, sizeof(int));
+    log_map(0, META_FN, sizeof(struct log) * num_logs, (void **) &log_meta, pptr, sizeof(struct log));
 
     // inodes
-    log_list_init(num_logs);
+    log_list_init(num_logs, inodes);
 
     // reconstruct tree
     log_tree_rebuild(tree, num_threads, 1);
 
     // gc
-    pthread_mutex_init(&gq.lock, NULL);
-    pthread_cond_init(&gq.cond, NULL);
-    gq.head = NULL;
-    gq.num = 0;
+    log_gq_init();
 
     inited = 1;
 }
@@ -291,52 +312,30 @@ void log_init(uint64_t pool_size) {
     log_structs_size_check();
 
     uint64_t num_logs = pool_size / LOG_SIZE;
-    uint64_t file_size = num_logs * CACHE_LINE_SIZE;
-    int preset = 0;
+    uint64_t file_size = num_logs * LOG_SIZE;
 
+
+    int preset = 0;
     int *pptr = &preset;
 
-    // this region controls pre fault?
-    log_map(0, INODE_FN, file_size, (void **) &inodes, pptr, CACHE_LINE_SIZE);
-    log_map(0, META_FN, file_size, (void **) &log_meta, pptr, CACHE_LINE_SIZE);
-
-    file_size = num_logs * LOG_SIZE;
     log_map(1, LOG_FN, file_size, (void **) &big_map, pptr, LOG_SIZE);
 
+    // this region controls pre fault?
+    log_map(0, INODE_FN, num_logs * sizeof(int), (void **) &inodes, pptr, sizeof(int));
+    log_map(0, META_FN, num_logs * sizeof(struct log), (void **) &log_meta, pptr, sizeof(struct log));
+
+
     // inodes
-    log_list_init(num_logs);
+    log_list_init(num_logs, inodes);
 
     // usage
     log_tree_rebuild(NULL, 0, 0);
 
 
     // gc
-    pthread_mutex_init(&gq.lock, NULL);
-    pthread_cond_init(&gq.cond, NULL);
-    gq.head = NULL;
-    gq.num = 0;
+    log_gq_init();
 
     inited = 1;
-}
-
-void log_gq_add(uint64_t idx) {
-    struct garbage_queue_node *node = (struct garbage_queue_node *) malloc(sizeof(struct garbage_queue_node));
-    node->index = idx;
-
-    pthread_mutex_lock(&gq.lock);
-
-    // add the node to the queue
-    node->next = gq.head;
-    gq.head = node;
-    gq.num++;
-
-
-    // wake up ONE garbage collector if queue is long enough
-    if (gq.num >= GAR_QUEUE_LENGTH) {
-        pthread_cond_signal(&gq.cond);
-    }
-
-    pthread_mutex_unlock(&gq.lock);
 }
 
 char *log_acquire(int write_thread_log) {
@@ -465,7 +464,7 @@ void *log_garbage_collection(void *arg) {
         // wait for other threads to wait me up
         pthread_mutex_lock(&gq.lock);
 
-        if (!gc_stopped) {
+        if (!gq.gc_stopped) {
             if (gq.num == 0) {
                 pthread_cond_wait(&gq.cond, &gq.lock);
             }
@@ -596,9 +595,9 @@ void log_start_gc(masstree::masstree *t, int start_cpu, int end_cpu) {
     pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpu);
 
 
-    gc_ids = (pthread_t *) realloc(gc_ids, sizeof(pthread_t) * (++num_gcs));
+    gq.gc_ids = (pthread_t *) realloc(gq.gc_ids, sizeof(pthread_t) * (++gq.num_gcs));
 
-    pthread_create(gc_ids + (num_gcs - 1), &attr, log_garbage_collection, t);
+    pthread_create(gq.gc_ids + (gq.num_gcs - 1), &attr, log_garbage_collection, t);
 
 //    pthread_detach(gc_ids[num_gcs - 1]);
 
@@ -606,8 +605,8 @@ void log_start_gc(masstree::masstree *t, int start_cpu, int end_cpu) {
 
 void log_end_gc() {
 
-    pthread_cancel(gc_ids[num_gcs - 1]);
-    gc_ids = (pthread_t *) realloc(gc_ids, sizeof(pthread_t) * (--num_gcs));
+    pthread_cancel(gq.gc_ids[gq.num_gcs - 1]);
+    gq.gc_ids = (pthread_t *) realloc(gq.gc_ids, sizeof(pthread_t) * (--gq.num_gcs));
 }
 
 
@@ -627,14 +626,13 @@ void log_wait_all_gc() {
 
 void log_join_all_gc() {
 
-    puts("waiting gc");
-    gc_stopped = 1;
+    gq.gc_stopped = 1;
 
     // possible signal lost
     pthread_cond_broadcast(&gq.cond);
 
-    for (int i = 0; i < num_gcs; i++) {
-        pthread_join(gc_ids[i], NULL);
+    for (int i = 0; i < gq.num_gcs; i++) {
+        pthread_join(gq.gc_ids[i], NULL);
     }
 
 }

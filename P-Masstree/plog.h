@@ -101,6 +101,10 @@ struct garbage_queue {
     pthread_cond_t cond;
     struct garbage_queue_node *head;
     uint64_t num;
+
+    int gc_stopped;
+    pthread_t *gc_ids;
+    int num_gcs;
 };
 
 // metadata for each cell in a log
