@@ -129,6 +129,9 @@ interfere="1"
 file_prefixes=("perf")
 
 for fp in "${file_prefixes[@]}"; do
+
+  echo"" >>"$fp".csv
+
   echo "$fp,workload=$workload,key_order=$key_order" >>"$fp".csv
 
   # the header of csv file
