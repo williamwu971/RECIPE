@@ -170,8 +170,6 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) 
 
     while (log_list_get() != -1) {}
 
-    int prev = -1;
-
     for (int i = log_list.num_log - 1; i >= 0; i--) {
 
         struct log *target_log = log_meta + i;
