@@ -143,4 +143,6 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed, FILE *f);
 
 void *log_get_tombstone(uint64_t key);
 
+void *log_garbage_collection(void *arg);
+
 #endif

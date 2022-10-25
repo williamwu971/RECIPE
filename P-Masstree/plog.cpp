@@ -23,10 +23,56 @@ void log_structs_size_check() {
     // some structs are required to occupy a cache line
     assert(sizeof(char) == 1);
     assert (sizeof(struct log) == CACHE_LINE_SIZE);
-//    if (sizeof(struct garbage_queue) != CACHE_LINE_SIZE)
-//        die("struct garbage_queue size %ld", sizeof(struct garbage_queue));
-//    if (sizeof(struct log_cell) == sizeof(uint64_t)) die("log cell size");
+}
 
+void log_list_init(int num_log, int *list_area) {
+
+    memset(&log_list, 0, sizeof(struct log_list_pack));
+
+    log_list.occupied = 0;
+    log_list.num_log = num_log;
+    log_list.next = 0;
+    log_list.list = list_area;
+
+    int i = 0;
+    for (; i < num_log - 1; i++) {
+        log_list.list[i] = i + 1;
+    }
+    log_list.list[i] = -1;
+
+    pthread_mutex_init(&log_list.list_lock, NULL);
+}
+
+void log_list_push(int log_index) {
+    pthread_mutex_lock(&log_list.list_lock);
+
+    log_list.occupied--;
+    log_list.list[log_index] = log_list.next;
+    log_list.next = log_index;
+
+    pthread_mutex_unlock(&log_list.list_lock);
+}
+
+int log_list_get() {
+    pthread_mutex_lock(&log_list.list_lock);
+
+    log_list.occupied++;
+    int res = log_list.next;
+
+    if (res != -1)log_list.next = log_list.list[res];
+
+    pthread_mutex_unlock(&log_list.list_lock);
+
+    return res;
+}
+
+int log_list_occupied() {
+
+    pthread_mutex_lock(&log_list.list_lock);
+    int res = log_list.occupied;
+    pthread_mutex_unlock(&log_list.list_lock);
+
+    return res;
 }
 
 void log_gq_init() {
@@ -107,54 +153,79 @@ int log_gq_get(struct garbage_queue_node **place) {
     return 1;
 }
 
-void log_list_init(int num_log, int *list_area) {
+void log_start_gc(masstree::masstree *t, int start_cpu, int end_cpu) {
 
-    memset(&log_list, 0, sizeof(struct log_list_pack));
+    cpu_set_t cpu;
+    CPU_ZERO(&cpu);
 
-    log_list.occupied = 0;
-    log_list.num_log = num_log;
-    log_list.next = 0;
-    log_list.list = list_area;
-
-    int i = 0;
-    for (; i < num_log - 1; i++) {
-        log_list.list[i] = i + 1;
+    // reserving CPU 0
+    for (int i = start_cpu; i < end_cpu; i++) {
+        CPU_SET(i, &cpu);
     }
-    log_list.list[i] = -1;
 
-    pthread_mutex_init(&log_list.list_lock, NULL);
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpu);
+
+
+    gq.gc_ids = (pthread_t *) realloc(gq.gc_ids, sizeof(pthread_t) * (++gq.num_gcs));
+
+    pthread_create(gq.gc_ids + (gq.num_gcs - 1), &attr, log_garbage_collection, t);
+
+//    pthread_detach(gc_ids[num_gcs - 1]);
+
 }
 
-void log_list_push(int log_index) {
-    pthread_mutex_lock(&log_list.list_lock);
+void log_end_gc() {
 
-    log_list.occupied--;
-    log_list.list[log_index] = log_list.next;
-    log_list.next = log_index;
-
-    pthread_mutex_unlock(&log_list.list_lock);
+    pthread_cancel(gq.gc_ids[gq.num_gcs - 1]);
+    gq.gc_ids = (pthread_t *) realloc(gq.gc_ids, sizeof(pthread_t) * (--gq.num_gcs));
 }
 
-int log_list_get() {
-    pthread_mutex_lock(&log_list.list_lock);
 
-    log_list.occupied++;
-    int res = log_list.next;
+void log_wait_all_gc() {
 
-    if (res != -1)log_list.next = log_list.list[res];
-
-    pthread_mutex_unlock(&log_list.list_lock);
-
-    return res;
+    while (1) {
+        pthread_cond_broadcast(&gq.cond);
+        pthread_mutex_lock(&gq.lock);
+        if (gq.num == 0) {
+            pthread_mutex_unlock(&gq.lock);
+            break;
+        }
+        pthread_mutex_unlock(&gq.lock);
+        usleep(4);
+    }
 }
 
-int log_list_occupied() {
+void log_join_all_gc() {
 
-    pthread_mutex_lock(&log_list.list_lock);
-    int res = log_list.occupied;
-    pthread_mutex_unlock(&log_list.list_lock);
+    gq.gc_stopped = 1;
 
-    return res;
+    // possible signal lost
+    pthread_cond_broadcast(&gq.cond);
+
+    for (int i = 0; i < gq.num_gcs; i++) {
+        pthread_join(gq.gc_ids[i], NULL);
+    }
+
+}
+
+void log_debug_print(FILE *f, int using_log) {
+
+    if (!using_log) {
+        fprintf(f, "0,");
+        return;
+    }
+
+    int used = log_list_occupied();
+
+    pthread_mutex_lock(&gq.lock);
+    uint64_t len = gq.num;
+    pthread_mutex_unlock(&gq.lock);
+
+
+    printf("total logs used:%d gq length:%lu\n", used, len);
+    fprintf(f, "%.2f,", ((double) (used * LOG_SIZE)) / 1024. / 1024. / 1024.);
 }
 
 
@@ -582,83 +653,6 @@ void *log_garbage_collection(void *arg) {
 
     }
     return NULL;
-}
-
-void log_start_gc(masstree::masstree *t, int start_cpu, int end_cpu) {
-
-
-    pthread_attr_t attr;
-    cpu_set_t cpu;
-    CPU_ZERO(&cpu);
-
-    // reserving CPU 0
-    for (int i = start_cpu; i < end_cpu; i++) {
-        CPU_SET(i, &cpu);
-    }
-
-    pthread_attr_init(&attr);
-    pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpu);
-
-
-    gq.gc_ids = (pthread_t *) realloc(gq.gc_ids, sizeof(pthread_t) * (++gq.num_gcs));
-
-    pthread_create(gq.gc_ids + (gq.num_gcs - 1), &attr, log_garbage_collection, t);
-
-//    pthread_detach(gc_ids[num_gcs - 1]);
-
-}
-
-void log_end_gc() {
-
-    pthread_cancel(gq.gc_ids[gq.num_gcs - 1]);
-    gq.gc_ids = (pthread_t *) realloc(gq.gc_ids, sizeof(pthread_t) * (--gq.num_gcs));
-}
-
-
-void log_wait_all_gc() {
-
-    while (1) {
-        pthread_cond_broadcast(&gq.cond);
-        pthread_mutex_lock(&gq.lock);
-        if (gq.num == 0) {
-            pthread_mutex_unlock(&gq.lock);
-            break;
-        }
-        pthread_mutex_unlock(&gq.lock);
-        usleep(4);
-    }
-}
-
-void log_join_all_gc() {
-
-    gq.gc_stopped = 1;
-
-    // possible signal lost
-    pthread_cond_broadcast(&gq.cond);
-
-    for (int i = 0; i < gq.num_gcs; i++) {
-        pthread_join(gq.gc_ids[i], NULL);
-    }
-
-}
-
-
-void log_debug_print(FILE *f, int using_log) {
-
-    if (!using_log) {
-        fprintf(f, "0,");
-        return;
-    }
-
-    int used = log_list_occupied();
-
-    pthread_mutex_lock(&gq.lock);
-    uint64_t len = gq.num;
-    pthread_mutex_unlock(&gq.lock);
-
-
-    printf("total logs used:%d gq length:%lu\n", used, len);
-    fprintf(f, "%.2f,", ((double) (used * LOG_SIZE)) / 1024. / 1024. / 1024.);
 }
 
 
