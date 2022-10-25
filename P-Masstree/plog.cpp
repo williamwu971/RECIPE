@@ -33,7 +33,6 @@ void log_gq_init() {
 
     pthread_mutex_init(&gq.lock, NULL);
     pthread_cond_init(&gq.cond, NULL);
-    sem_init(&gq.sem, 0, 0);
     gq.head = NULL;
     gq.num = 0;
 
@@ -57,53 +56,39 @@ void log_gq_add(uint64_t idx) {
     // wake up ONE garbage collector if queue is long enough
 
     if (gq.num >= GAR_QUEUE_LENGTH) {
-
-        int sem_value = -1;
-        sem_getvalue(&gq.sem, &sem_value);
-        assert(sem_value != -1);
-
-        int diff = gq.num / GAR_QUEUE_LENGTH - sem_value;
-        for (int i = 0; i < diff; i++) {
-            sem_post(&gq.sem);
-        }
-
-//        pthread_cond_signal(&gq.cond);
+        pthread_cond_signal(&gq.cond);
     }
 
     pthread_mutex_unlock(&gq.lock);
 }
 
-struct garbage_queue_node *log_gq_get() {
+int log_gq_get(struct garbage_queue_node **place) {
+
     // wait for other threads to wait me up
-    sem_wait(&gq.sem);
-
-
     pthread_mutex_lock(&gq.lock);
 
     if (gq.num == 0) {
-
         if (gq.gc_stopped) {
             pthread_mutex_unlock(&gq.lock);
-            return NULL;
+            return 0;
+        } else {
+            pthread_cond_wait(&gq.cond, &gq.lock);
         }
-//        else {
-//            pthread_cond_wait(&gq.cond, &gq.lock);
-//        }
     }
 
 
     // gc takes the entire queue and release the lock instantly
+    *place = gq.head;
     struct garbage_queue_node *queue = gq.head;
 
     if (queue == NULL) {
-        puts("confused...");
         pthread_mutex_unlock(&gq.lock);
-        return NULL;
+        return 1;
     }
 
     for (int tmp = 1; tmp < NUM_LOG_PER_COLLECTION; tmp++) {
 
-        if (queue == NULL) {
+        if (queue->next == NULL) {
             break;
         } else {
             queue = queue->next;
@@ -113,14 +98,13 @@ struct garbage_queue_node *log_gq_get() {
 
     struct garbage_queue_node *new_head = queue->next;
     queue->next = NULL;
-    queue = gq.head;
     gq.head = new_head;
     gq.num--;
 
     if (gq.head != NULL) pthread_cond_signal(&gq.cond);
 
     pthread_mutex_unlock(&gq.lock);
-    return queue;
+    return 1;
 }
 
 void log_list_init(int num_log, int *list_area) {
@@ -566,17 +550,12 @@ void *log_garbage_collection(void *arg) {
                             tree->put_to_unlock(pack.leafnode);
                             tree->del_and_return(old_lc->key, 1, old_lc->version, NULL, t);
                         } else {
-
-                            if (unlikely(thread_log == NULL || thread_log->available < total_size)) {
-                                if (log_acquire(1) == NULL)die("cannot acquire new log");
-                            }
+                            void *new_slot = log_malloc(total_size);
 
                             // move entry to a new location
-                            pmem_memcpy_persist(thread_log->curr, current_ptr, total_size);
+                            pmem_memcpy_persist(new_slot, current_ptr, total_size);
 
-                            l->assign_value(pack.p, thread_log->curr);
-                            thread_log->available -= total_size;
-                            thread_log->curr += total_size;
+                            l->assign_value(pack.p, new_slot);
                             tree->put_to_unlock(pack.leafnode);
                         }
                     }

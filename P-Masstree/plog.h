@@ -100,7 +100,6 @@ struct garbage_queue_node {
 struct garbage_queue {
     pthread_mutex_t lock;
     pthread_cond_t cond;
-    sem_t sem;
     struct garbage_queue_node *head;
     uint64_t num;
 
