@@ -507,8 +507,9 @@ void *log_garbage_collection(void *arg) {
 
     while (1) {
 
-        struct garbage_queue_node *queue = log_gq_get();
-        if (queue == NULL) break;
+        struct garbage_queue_node *queue;
+
+        if (!log_gq_get(&queue)) break;
 
         while (queue != NULL) {
 
