@@ -66,9 +66,31 @@ done
 cd build || exit
 #rm -f ./*.rdtsc ./*.png ./*.csv ./max_latencies.txt
 
-pmdk_no_flush=("0" "1")
-#pmdk_no_flush=("0")
-#pmdk_no_flush=("1")
+use_perf="yes"
+record_latency="yes"
+
+#workload=16000000
+#workload=140000000
+workload=400000000 # todo: do not change this
+#workload=1900
+#workload=100000000
+
+key_order="random"
+#key_order="seq"
+
+#interfere="0"
+interfere="1"
+
+extra_sizes=(0)
+extra_sizes=(256)
+#extra_sizes=($(seq 0 8 240)) # the size of the value impact performance a lot
+#extra_sizes=($(seq 0 32 240))
+
+#total_sizes=(0)
+#total_sizes=(64)
+total_sizes=(256)
+#total_sizes=($(seq 40 8 256))
+#total_sizes=(1024)
 
 #index_location=("dram" "ralloc" "obj")
 index_location=("dram")
@@ -87,26 +109,12 @@ value_location=("log" "ralloc")
 num_threads=(19) # todo: do not change this
 #num_threads=(1)
 
-use_perf="yes"
-record_latency="yes"
-
 num_of_gc=(8 0)
 num_of_gc=(8)
 
-extra_sizes=(0)
-extra_sizes=(256)
-#extra_sizes=($(seq 0 8 240)) # the size of the value impact performance a lot
-#extra_sizes=($(seq 0 32 240))
-
-#total_sizes=(0)
-#total_sizes=(64)
-total_sizes=(256)
-#total_sizes=($(seq 40 8 256))
-#total_sizes=(1024)
-
-#persist=("flush" "non-temporal")
-persist=("flush")
-#persist=("non-temporal")
+pmdk_no_flush=("0" "1")
+#pmdk_no_flush=("0")
+#pmdk_no_flush=("1")
 
 ycsbs=("N")
 #ycsbs=("a" "b" "c" "e")
@@ -114,17 +122,9 @@ ycsbs=("N")
 #ycsbs=("au" "bu" "cu" "eu" "az" "bz" "cz" "ez")
 #ycsbs=("eu" "ez")
 
-#workload=16000000
-#workload=140000000
-workload=400000000 # todo: do not change this
-#workload=1900
-#workload=100000000
-
-key_order="random"
-#key_order="seq"
-
-#interfere="0"
-interfere="1"
+#persist=("flush" "non-temporal")
+persist=("flush")
+#persist=("non-temporal")
 
 file_prefixes=("perf")
 
@@ -182,13 +182,13 @@ done
 
 echo 0 >/proc/sys/kernel/nmi_watchdog
 
-for i in "${index_location[@]}"; do
-  for v in "${value_location[@]}"; do
-    for n in "${num_threads[@]}"; do
-      for g in "${num_of_gc[@]}"; do
-        for f in "${pmdk_no_flush[@]}"; do
-          for s in "${extra_sizes[@]}"; do
-            for t in "${total_sizes[@]}"; do
+for s in "${extra_sizes[@]}"; do
+  for t in "${total_sizes[@]}"; do
+    for i in "${index_location[@]}"; do
+      for v in "${value_location[@]}"; do
+        for n in "${num_threads[@]}"; do
+          for g in "${num_of_gc[@]}"; do
+            for f in "${pmdk_no_flush[@]}"; do
               for y in "${ycsbs[@]}"; do
                 for p in "${persist[@]}"; do
 
