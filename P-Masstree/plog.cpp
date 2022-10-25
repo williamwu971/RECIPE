@@ -33,6 +33,7 @@ void log_gq_init() {
 
     pthread_mutex_init(&gq.lock, NULL);
     pthread_cond_init(&gq.cond, NULL);
+    sem_init(&gq.sem, 0, 0);
     gq.head = NULL;
     gq.num = 0;
 
@@ -54,8 +55,18 @@ void log_gq_add(uint64_t idx) {
 
 
     // wake up ONE garbage collector if queue is long enough
+
     if (gq.num >= GAR_QUEUE_LENGTH) {
-        pthread_cond_signal(&gq.cond);
+
+        int sem_value;
+        assert(sem_getvalue(&gq.sem, &sem_value) == 0);
+
+        int diff = sem_value - gq.num / GAR_QUEUE_LENGTH;
+        for (int i = 0; i < diff; i++) {
+            sem_post(&gq.sem);
+        }
+
+//        pthread_cond_signal(&gq.cond);
     }
 
     pthread_mutex_unlock(&gq.lock);
@@ -63,6 +74,9 @@ void log_gq_add(uint64_t idx) {
 
 struct garbage_queue_node *log_gq_get() {
     // wait for other threads to wait me up
+    sem_wait(&gq.sem);
+
+
     pthread_mutex_lock(&gq.lock);
 
     if (gq.num == 0) {
@@ -70,9 +84,10 @@ struct garbage_queue_node *log_gq_get() {
         if (gq.gc_stopped) {
             pthread_mutex_unlock(&gq.lock);
             return NULL;
-        } else {
-            pthread_cond_wait(&gq.cond, &gq.lock);
         }
+//        else {
+//            pthread_cond_wait(&gq.cond, &gq.lock);
+//        }
     }
 
 
@@ -80,6 +95,7 @@ struct garbage_queue_node *log_gq_get() {
     struct garbage_queue_node *queue = gq.head;
 
     if (queue == NULL) {
+        puts("confused...");
         pthread_mutex_unlock(&gq.lock);
         return NULL;
     }
