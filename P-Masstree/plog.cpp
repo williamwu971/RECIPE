@@ -469,10 +469,10 @@ char *log_acquire(int write_thread_log) {
         // retire and mark the old log for collection
         if (thread_log != NULL) {
 
-            thread_log->full.store(1);
-
             if (thread_log->freed.load() > LOG_MERGE_THRESHOLD) {
                 log_gq_add(thread_log->index);
+            } else {
+                thread_log->full.store(1);
             }
         }
 
