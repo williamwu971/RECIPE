@@ -94,74 +94,74 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) 
         target_log->full.store(0);
     }
 
-    if (read_tree) {
+    if (!read_tree) return;
 
-        printf("\n... rebuilding tree using %d omp threads ...\n", num_threads);
+    printf("\n... rebuilding tree using %d omp threads ...\n", num_threads);
 
-        int old_num_threads = omp_get_num_threads();
-        omp_set_num_threads(num_threads);
-        std::atomic<uint64_t> recovered;
-        recovered.store(0);
+    int old_num_threads = omp_get_num_threads();
+    omp_set_num_threads(num_threads);
+    std::atomic<uint64_t> recovered;
+    recovered.store(0);
 
-        auto starttime = std::chrono::system_clock::now();
+    auto starttime = std::chrono::system_clock::now();
 
 #pragma omp parallel for schedule(static, 1)
-        for (int i = 0; i < log_list.num_log; i++) {
+    for (int i = 0; i < log_list.num_log; i++) {
 
-            // todo: not sure if this has overhead
-            auto t = tree->getThreadInfo();
+        // todo: not sure if this has overhead
+        auto t = tree->getThreadInfo();
 
-            char *end = big_map + (i + 1) * LOG_SIZE;
-            char *curr = big_map + i * LOG_SIZE;
-            struct log *current_log = log_meta + i;
+        char *end = big_map + (i + 1) * LOG_SIZE;
+        char *curr = big_map + i * LOG_SIZE;
+        struct log *current_log = log_meta + i;
 
-            while (curr < end) {
+        while (curr < end) {
 
-                struct log_cell *lc = (struct log_cell *) curr;
+            struct log_cell *lc = (struct log_cell *) curr;
 
-                // if field of the struct is zero, then abort the entire log
-                if (lc->version == 0) break;
+            // if field of the struct is zero, then abort the entire log
+            if (lc->version == 0) break;
 
-                uint64_t total_size = sizeof(struct log_cell) + lc->value_size;
-                current_log->available -= total_size;
+            uint64_t total_size = sizeof(struct log_cell) + lc->value_size;
+            current_log->available -= total_size;
 
-                if (!lc->is_delete) {
+            if (!lc->is_delete) {
 
-                    struct log_cell *res = (struct log_cell *)
-                            tree->put_and_return(lc->key, lc, 1, 1, t);
+                struct log_cell *res = (struct log_cell *)
+                        tree->put_and_return(lc->key, lc, 1, 1, t);
 
-                    // insert success and created a new key-value
-                    // replaced a value, should free some space in other log
-                    if (res != NULL) {
+                // insert success and created a new key-value
+                // replaced a value, should free some space in other log
+                if (res != NULL) {
 
-                        if (res != lc) {
-                            uint64_t idx = (uint64_t) ((char *) res - big_map) / LOG_SIZE;
-                            struct log *target_log = log_meta + idx;
-                            target_log->freed.fetch_add(sizeof(struct log_cell) + res->value_size);
-                        } else {
-                            recovered.fetch_add(1);
-                        }
+                    if (res != lc) {
+                        uint64_t idx = (uint64_t) ((char *) res - big_map) / LOG_SIZE;
+                        struct log *target_log = log_meta + idx;
+                        target_log->freed.fetch_add(sizeof(struct log_cell) + res->value_size);
+                    } else {
+                        recovered.fetch_add(1);
                     }
-
-                } else {
-
-                    //todo: this is incorrect now
-                    tree->del_and_return(lc->key, 1, lc->version,
-                                         log_get_tombstone, t);
                 }
 
-                // todo: should probably update the metadata here
-                curr += sizeof(struct log_cell) + lc->value_size;
+            } else {
+
+                //todo: this is incorrect now
+                tree->del_and_return(lc->key, 1, lc->version,
+                                     log_get_tombstone, t);
             }
+
+            // todo: should probably update the metadata here
+            curr += sizeof(struct log_cell) + lc->value_size;
         }
-
-        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
-                std::chrono::system_clock::now() - starttime);
-
-        omp_set_num_threads(old_num_threads);
-        printf("... rebuild complete, recovered %lu keys throughput %.2f ops/us...\n",
-               recovered.load(), (recovered.load() * 1.0) / duration.count());
     }
+
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
+            std::chrono::system_clock::now() - starttime);
+
+    omp_set_num_threads(old_num_threads);
+    printf("... rebuild complete, recovered %lu keys throughput %.2f ops/us...\n",
+           recovered.load(), (recovered.load() * 1.0) / duration.count());
+
 
 
 
