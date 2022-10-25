@@ -61,6 +61,51 @@ void log_gq_add(uint64_t idx) {
     pthread_mutex_unlock(&gq.lock);
 }
 
+struct garbage_queue_node *log_gq_get() {
+    // wait for other threads to wait me up
+    pthread_mutex_lock(&gq.lock);
+
+    if (gq.num == 0) {
+
+        if (gq.gc_stopped) {
+            pthread_mutex_unlock(&gq.lock);
+            return NULL;
+        } else {
+            pthread_cond_wait(&gq.cond, &gq.lock);
+        }
+    }
+
+
+    // gc takes the entire queue and release the lock instantly
+    struct garbage_queue_node *queue = gq.head;
+
+    if (queue == NULL) {
+        pthread_mutex_unlock(&gq.lock);
+        return NULL;
+    }
+
+    for (int tmp = 1; tmp < NUM_LOG_PER_COLLECTION; tmp++) {
+
+        if (queue == NULL) {
+            break;
+        } else {
+            queue = queue->next;
+            gq.num--;
+        }
+    }
+
+    struct garbage_queue_node *new_head = queue->next;
+    queue->next = NULL;
+    queue = gq.head;
+    gq.head = new_head;
+    gq.num--;
+
+    if (gq.head != NULL) pthread_cond_signal(&gq.cond);
+
+    pthread_mutex_unlock(&gq.lock);
+    return queue;
+}
+
 void log_list_init(int num_log, int *list_area) {
 
     memset(&log_list, 0, sizeof(struct log_list_pack));
@@ -461,47 +506,8 @@ void *log_garbage_collection(void *arg) {
 
     while (1) {
 
-        // wait for other threads to wait me up
-        pthread_mutex_lock(&gq.lock);
-
-        if (gq.num == 0) {
-
-            if (gq.gc_stopped) {
-                pthread_mutex_unlock(&gq.lock);
-                break;
-            } else {
-                pthread_cond_wait(&gq.cond, &gq.lock);
-            }
-        }
-
-
-        // gc takes the entire queue and release the lock instantly
-        struct garbage_queue_node *queue = gq.head;
-
-        if (queue == NULL) {
-            puts("confused...");
-            pthread_mutex_unlock(&gq.lock);
-            continue;
-        }
-
-        for (int tmp = 1; tmp < NUM_LOG_PER_COLLECTION; tmp++) {
-
-            if (queue == NULL) {
-                break;
-            } else {
-                queue = queue->next;
-            }
-        }
-
-        struct garbage_queue_node *new_head = queue->next;
-        queue->next = NULL;
-        queue = gq.head;
-        gq.head = new_head;
-
-        if (gq.head != NULL) pthread_cond_signal(&gq.cond);
-
-        pthread_mutex_unlock(&gq.lock);
-
+        struct garbage_queue_node *queue = log_gq_get();
+        if (queue == NULL) break;
 
         while (queue != NULL) {
 
