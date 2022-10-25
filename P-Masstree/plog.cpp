@@ -464,37 +464,39 @@ void *log_garbage_collection(void *arg) {
         // wait for other threads to wait me up
         pthread_mutex_lock(&gq.lock);
 
-        if (!gq.gc_stopped) {
-            if (gq.num == 0) {
+        if (gq.num == 0) {
+
+            if (gq.gc_stopped) {
+                pthread_mutex_unlock(&gq.lock);
+                break;
+            } else {
                 pthread_cond_wait(&gq.cond, &gq.lock);
             }
-        } else if (gq.num == 0) {
-            pthread_mutex_unlock(&gq.lock);
-            break;
         }
 
 
         // gc takes the entire queue and release the lock instantly
         struct garbage_queue_node *queue = gq.head;
-//        uint64_t queue_length = gq.num;
 
-        if (gq.head != NULL) {
-            gq.head = gq.head->next;
-            gq.num--;
+        if (queue == NULL) {
+            puts("confused...");
+            pthread_mutex_unlock(&gq.lock);
+            continue;
         }
-
-        struct garbage_queue_node *tail = queue;
 
         for (int tmp = 1; tmp < NUM_LOG_PER_COLLECTION; tmp++) {
 
-            if (gq.head == NULL) break;
-            gq.head = gq.head->next;
-            gq.num--;
-
-            tail = tail->next;
+            if (queue == NULL) {
+                break;
+            } else {
+                queue = queue->next;
+            }
         }
 
-        if (tail != NULL)tail->next = NULL;
+        struct garbage_queue_node *new_head = queue->next;
+        queue->next = NULL;
+        queue = gq.head;
+        gq.head = new_head;
 
         if (gq.head != NULL) pthread_cond_signal(&gq.cond);
 
