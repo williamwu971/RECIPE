@@ -8,9 +8,7 @@ char *inodes;
 char *big_map;
 
 // log map and lock to protect the map
-struct log_map lm;
-int OCCUPIED;
-pthread_mutex_t lm_lock = PTHREAD_MUTEX_INITIALIZER;
+struct log_list_pack log_list;
 
 // every thread hold its own log
 struct log *log_meta;
@@ -33,10 +31,60 @@ void log_structs_size_check() {
 
 }
 
+void log_list_init(int num_log) {
+
+    memset(&log_list, 0, sizeof(struct log_list_pack));
+
+    log_list.occupied = 0;
+    log_list.num_log = num_log;
+    log_list.next = 0;
+    log_list.list = (int *) malloc(sizeof(int) * num_log);
+
+    int i = 0;
+    for (; i < num_log - 1; i++) {
+        log_list.list[i] = i + 1;
+    }
+    log_list.list[i] = -1;
+
+    pthread_mutex_init(&log_list.list_lock, NULL);
+}
+
+void log_list_push(int log_index) {
+    pthread_mutex_lock(&log_list.list_lock);
+
+    log_list.occupied--;
+    log_list.list[log_index] = log_list.next;
+    log_list.next = log_index;
+
+    pthread_mutex_unlock(&log_list.list_lock);
+}
+
+int log_list_get() {
+    pthread_mutex_lock(&log_list.list_lock);
+
+    log_list.occupied++;
+    int res = log_list.next;
+
+    if (res != -1)log_list.next = log_list.list[res];
+
+    pthread_mutex_unlock(&log_list.list_lock);
+
+    return res;
+}
+
+int log_list_occupied() {
+
+    pthread_mutex_lock(&log_list.list_lock);
+    int res = log_list.occupied;
+    pthread_mutex_unlock(&log_list.list_lock);
+
+    return res;
+}
+
 
 void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) {
 
-    for (uint64_t i = 0; i < lm.num_entries; i++) {
+    for (int i = 0; i < log_list.num_log; i++) {
         struct log *target_log = log_meta + i;
         target_log->freed.store(0);
         target_log->available = LOG_SIZE;
@@ -58,7 +106,7 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) 
         auto starttime = std::chrono::system_clock::now();
 
 #pragma omp parallel for schedule(static, 1)
-        for (uint64_t i = 0; i < lm.num_entries; i++) {
+        for (int i = 0; i < log_list.num_log; i++) {
 
             // todo: not sure if this has overhead
             auto t = tree->getThreadInfo();
@@ -120,22 +168,17 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) 
     // sequentially reconstruct metadata
     // from end to beginning
 
+    while (log_list_get() != -1) {}
 
-    lm.used = lm.num_entries;
-    lm.next_available = -1;
+    int prev = -1;
 
-    for (int i = lm.num_entries - 1; i >= 0; i--) {
+    for (int i = log_list.num_log - 1; i >= 0; i--) {
 
         struct log *target_log = log_meta + i;
 
         if (target_log->available == LOG_SIZE || target_log->freed.load() == LOG_SIZE - target_log->available) {
 
-            if (lm.used == i + 1) {
-                lm.used--;
-            } else {
-                lm.entries[i][0] = lm.next_available;
-                lm.next_available = i;
-            }
+            log_list_push(i);
         }
     }
 
@@ -229,12 +272,7 @@ void log_recover(masstree::masstree *tree, int num_threads) {
 
 
     // inodes
-    lm.num_entries = num_logs;
-    lm.entries = (int **) malloc(sizeof(int *) * lm.num_entries);
-    OCCUPIED = num_logs + 1;
-    for (uint64_t i = 0; i < lm.num_entries; i++) {
-        lm.entries[i] = (int *) (inodes + CACHE_LINE_SIZE * i);
-    }
+    log_list_init(num_logs);
 
     // reconstruct tree
     log_tree_rebuild(tree, num_threads, 1);
@@ -268,12 +306,7 @@ void log_init(uint64_t pool_size) {
     log_map(1, LOG_FN, file_size, (void **) &big_map, pptr, LOG_SIZE);
 
     // inodes
-    lm.num_entries = num_logs;
-    lm.entries = (int **) malloc(sizeof(int *) * lm.num_entries);
-    OCCUPIED = num_logs + 1;
-    for (uint64_t i = 0; i < lm.num_entries; i++) {
-        lm.entries[i] = (int *) (inodes + CACHE_LINE_SIZE * i);
-    }
+    log_list_init(num_logs);
 
     // usage
     log_tree_rebuild(NULL, 0, 0);
@@ -312,29 +345,10 @@ char *log_acquire(int write_thread_log) {
 
     if (!inited)die("not inited");
 
-    char *log_address = NULL;
-    uint64_t i;
+    int i = log_list_get();
+    if (i == -1) die("all logs are occupied");
 
-    pthread_mutex_lock(&lm_lock);
-
-
-    if (lm.next_available == -1) {
-        i = lm.used;
-        lm.used++;
-    } else {
-        i = lm.next_available;
-        if (i >= lm.num_entries) {
-            printf("errrrrrr %lu\n", i);
-        }
-        lm.next_available = lm.entries[i][0];
-    }
-
-    if (i >= lm.num_entries) die("all logs are occupied");
-    lm.entries[i][0] = OCCUPIED;
-
-    pthread_mutex_unlock(&lm_lock);
-
-    log_address = big_map + i * LOG_SIZE;
+    char *log_address = big_map + i * LOG_SIZE;
 
     if (write_thread_log) {
 
@@ -356,7 +370,7 @@ char *log_acquire(int write_thread_log) {
 
 }
 
-void log_release(uint64_t idx) {
+void log_release(int idx) {
 
     // todo: how to reduce the number of logs need to be scanned
 
@@ -366,12 +380,7 @@ void log_release(uint64_t idx) {
     target_log->full.store(0);
     target_log->curr = target_log->base;
 
-    pthread_mutex_lock(&lm_lock);
-
-    lm.entries[idx][0] = lm.next_available;
-    lm.next_available = idx;
-
-    pthread_mutex_unlock(&lm_lock);
+    log_list_push(idx);
 }
 
 void *log_malloc(size_t size) {
@@ -558,7 +567,10 @@ void *log_garbage_collection(void *arg) {
 
             log_release(queue->index);
 
-            queue = queue->next;
+
+            struct garbage_queue_node *next = queue->next;
+            free(queue);
+            queue = next;
 
 //            if (thread_log->curr > thread_log->base + LOG_SIZE) {
 //                die("log overflow detected used:%ld", thread_log->curr - thread_log->base);
@@ -637,25 +649,14 @@ void log_debug_print(FILE *f, int using_log) {
         return;
     }
 
-    pthread_mutex_lock(&lm_lock);
-
-    uint64_t used = 0;
-
-    for (uint64_t i = 0; i < lm.num_entries; i++) {
-
-        if (lm.entries[i][0] == OCCUPIED) {
-            used++;
-        }
-    }
-
-    pthread_mutex_unlock(&lm_lock);
+    int used = log_list_occupied();
 
     pthread_mutex_lock(&gq.lock);
     uint64_t len = gq.num;
     pthread_mutex_unlock(&gq.lock);
 
 
-    printf("total logs used:%lu gq length:%lu\n", used, len);
+    printf("total logs used:%d gq length:%lu\n", used, len);
     fprintf(f, "%.2f,", ((double) (used * LOG_SIZE)) / 1024. / 1024. / 1024.);
 }
 

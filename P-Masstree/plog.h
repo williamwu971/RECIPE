@@ -71,14 +71,13 @@
 //};
 
 // occupy the first 4m of log file
-struct log_map {
-    uint64_t num_entries;
+struct log_list_pack {
 
-    int next_available;
-    int used;
-
-    // aligned to CACHELINE size
-    int **entries;
+    int occupied;
+    int num_log;
+    int next;
+    int *list;
+    pthread_mutex_t list_lock;
 };
 
 // metadata for the current log, should be in DRAM
