@@ -273,7 +273,7 @@ void *log_rebuild_thread(void *arg) {
                 struct log *target_log = log_meta + idx;
                 target_log->freed.fetch_add(sizeof(struct log_cell) + res->value_size);
 
-            } else if (!res->is_delete) {
+            } else if (!lc->is_delete) {
                 recovered++;
             }
 
