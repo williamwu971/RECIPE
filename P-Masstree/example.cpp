@@ -1356,7 +1356,7 @@ int main(int argc, char **argv) {
                 access(LOG_FN, F_OK) == 0
 
                 ) {
-            log_recover(tree, 19);
+            log_recover(tree, num_thread);
             goto_lookup = 1;
         } else {
             log_init(PMEM_POOL_SIZE);
