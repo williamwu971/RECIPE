@@ -228,39 +228,21 @@ void log_debug_print(FILE *f, int using_log) {
     fprintf(f, "%.2f,", ((double) (used * LOG_SIZE)) / 1024. / 1024. / 1024.);
 }
 
+struct log_rebuild_args {
+    masstree::masstree *tree;
+    int start;
+    int end;
+};
 
-void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) {
+void *log_rebuild_thread(void *arg) {
 
-    for (int i = 0; i < log_list.num_log; i++) {
-        struct log *target_log = log_meta + i;
-        target_log->freed.store(0);
-        target_log->available = LOG_SIZE;
-        target_log->curr = big_map + i * LOG_SIZE;
-        target_log->index = i;
-        target_log->base = big_map + i * LOG_SIZE;
-        target_log->full.store(0);
-    }
+    struct log_rebuild_args *args = (struct log_rebuild_args *) arg;
+    masstree::masstree *tree = args->tree;
+    auto t = tree->getThreadInfo();
 
-    if (!read_tree) return;
+    uint64_t recovered = 0;
 
-    printf("\n... rebuilding tree using %d omp threads ...\n", num_threads);
-
-    int old_num_threads = omp_get_num_threads();
-
-
-    omp_set_num_threads(num_threads);
-    omp_set_affinity_format("1-27");
-
-    std::atomic<uint64_t> recovered;
-    recovered.store(0);
-
-    auto starttime = std::chrono::system_clock::now();
-
-
-#pragma omp parallel for schedule(static, 1)
-    for (int i = 0; i < log_list.num_log; i++) {
-
-        auto t = tree->getThreadInfo();
+    for (int i = args->start; i != args->end; i++) {
 
         struct log *current_log = log_meta + i;
         char *end = current_log->base + LOG_SIZE;
@@ -293,7 +275,7 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) 
                 target_log->freed.fetch_add(sizeof(struct log_cell) + res->value_size);
 
             } else {
-                recovered.fetch_add(1);
+                recovered++;
             }
 
 
@@ -301,15 +283,73 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) 
         }
     }
 
+    return (void *) recovered;
+}
+
+void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) {
+
+    for (int i = 0; i < log_list.num_log; i++) {
+        struct log *target_log = log_meta + i;
+        target_log->freed.store(0);
+        target_log->available = LOG_SIZE;
+        target_log->curr = big_map + i * LOG_SIZE;
+        target_log->index = i;
+        target_log->base = big_map + i * LOG_SIZE;
+        target_log->full.store(0);
+    }
+
+    if (!read_tree) return;
+
+    printf("\n... rebuilding tree using %d threads ...\n", num_threads);
+
+    pthread_t *rebuild_threads = (pthread_t *) malloc(sizeof(pthread_t) * num_threads);
+    struct log_rebuild_args *args = (struct log_rebuild_args *) malloc(sizeof(struct log_rebuild_args) * num_threads);
+    int per_thread = log_list.num_log / num_threads;
+    int remainder = log_list.num_log % num_threads;
+
+    uint64_t recovered = 0;
+
+    auto starttime = std::chrono::system_clock::now();
+
+    for (int i = 0; i < num_threads; i++) {
+        args[i].tree = tree;
+        if (i == 0) {
+            args[i].start = 0;
+        } else {
+            args[i].start = args[i - 1].end;
+        }
+
+        args[i].end = args[i].start + per_thread;
+        if (remainder != 0) {
+            args[i].end++;
+            remainder--;
+        }
+
+        cpu_set_t cpu;
+        CPU_ZERO(&cpu);
+
+        // reserving CPU 0
+        CPU_SET(i + 1, &cpu);
+
+
+        pthread_attr_t attr;
+        pthread_attr_init(&attr);
+        pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpu);
+
+        pthread_create(rebuild_threads + i, &attr, log_rebuild_thread, args + i);
+    }
+    for (int i = 0; i < num_threads; i++) {
+        uint64_t local;
+        pthread_join(rebuild_threads[i], (void **) &local);
+        recovered += local;
+    }
 
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now() - starttime);
 
-    omp_set_num_threads(old_num_threads);
+
     printf("... rebuild complete, recovered %lu keys throughput %.2f ops/us...\n",
-           recovered.load(), (recovered.load() * 1.0) / duration.count());
-
-
+           recovered, (recovered * 1.0) / duration.count());
 
 
     // sequentially reconstruct metadata
