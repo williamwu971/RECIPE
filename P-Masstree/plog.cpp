@@ -269,12 +269,11 @@ void *log_rebuild_thread(void *arg) {
             // replaced a value, should free some space in other log
             if (res != NULL) {
 
-
                 uint64_t idx = (uint64_t) ((char *) res - big_map) / LOG_SIZE;
                 struct log *target_log = log_meta + idx;
                 target_log->freed.fetch_add(sizeof(struct log_cell) + res->value_size);
 
-            } else {
+            } else if (!res->is_delete) {
                 recovered++;
             }
 
