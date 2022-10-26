@@ -309,6 +309,8 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) 
 
     uint64_t recovered = 0;
 
+    log_start_perf("rebuild.perf");
+
     auto starttime = std::chrono::system_clock::now();
 
     for (int i = 0; i < num_threads; i++) {
@@ -347,6 +349,8 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) 
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now() - starttime);
 
+    log_stop_perf();
+    log_print_pmem_bandwidth("rebuild.perf", duration.count() / 1000000.0, NULL);
 
     printf("... rebuild complete, recovered %lu keys throughput %.2f ops/us...\n",
            recovered, (recovered * 1.0) / duration.count());
