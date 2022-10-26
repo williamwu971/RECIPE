@@ -80,8 +80,8 @@ workload=43000000 # todo: do not change this
 key_order="random"
 #key_order="seq"
 
-#interfere="0"
-interfere="1"
+interfere="0"
+#interfere="1"
 
 extra_sizes=(0)
 extra_sizes=(256)
@@ -103,9 +103,9 @@ index_location=("dram")
 #value_location=("ralloc" "log" "obj")
 #value_location=("obj" "log" "ralloc")
 #value_location=("ralloc")
-#value_location=("log")
+value_location=("log")
 #value_location=("obj")
-value_location=("log" "ralloc")
+#value_location=("log" "ralloc")
 
 #num_threads=(1 3 5 7 9 11 13 15)
 #num_threads=(24)
