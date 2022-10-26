@@ -253,7 +253,7 @@ void *log_rebuild_thread(void *arg) {
 
             // if field of the struct is zero, then abort the entire log
             uint64_t total_size = sizeof(struct log_cell) + lc->value_size;
-            if (current_log->curr + total_size >= end) break; //  prevent overflow
+            if (current_log->curr + total_size >= end || lc->value_size == 0) break; //  prevent overflow
 
             if (!masstree_checksum(lc, 1, 0, total_size / sizeof(uint64_t) - 1, 0)) {
                 break;
