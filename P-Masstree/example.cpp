@@ -1442,7 +1442,7 @@ int main(int argc, char **argv) {
          * section DELETE
          */
 //        throw;
-        run("delete", throughput_file, attrs, section_args, latencies, section_delete);
+//        run("delete", throughput_file, attrs, section_args, latencies, section_delete);
 //        if (use_log) log_debug_print(0, show_log_usage);
     }
 
