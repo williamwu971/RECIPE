@@ -969,7 +969,7 @@ void run(
 //    if (record_latency) dump_latencies(perf_fn, latencies, section_args[0].end);
     if (record_latency) {
         dump_latencies(perf_fn, latencies,
-                       section_args[0].end > 1000 ? 1000 : section_args[0].end);
+                       section_args[0].end > 1000000 ? 1000000 : section_args[0].end);
     }
 
 
