@@ -71,6 +71,48 @@
 //    OCCUPIED,
 //};
 
+static inline uint64_t *masstree_checksum(void *value, int check, uint64_t v, uint64_t iteration, uint64_t offset) {
+
+    (void) v;
+    (void) offset;
+
+    uint64_t *numbers = (uint64_t *) value;
+    uint64_t *check_result = (uint64_t *) 1;
+
+    if (check == -1) {
+        numbers += iteration;
+
+        numbers[0] = 0;
+        return numbers;
+    }
+
+    uint64_t sum = 0;
+
+
+    for (uint64_t i = 0; i < iteration; i++) {
+        sum += numbers[0];
+//        if (check && i == offset && numbers[0] != v) {
+//            check_result = 0;
+//            printf("value incorrect, offset %lu expecting %lu got %lu\n", offset, v, numbers[0]);
+//        }
+        numbers++;
+    }
+
+    if (check) {
+        if (numbers[0] != sum || sum == 0) {
+            check_result = 0;
+//            printf("sum incorrect, expecting %lu got %lu\n", sum, numbers[0]);
+        }
+//        else if (sum == 0) {
+//            check_result = 0;
+//        }
+    } else {
+        numbers[0] = sum;
+    }
+
+    return check_result;
+}
+
 // occupy the first 4m of log file
 struct log_list_pack {
 

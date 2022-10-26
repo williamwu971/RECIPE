@@ -429,42 +429,6 @@ static inline uint64_t masstree_getsum(void *value) {
     return sum;
 }
 
-static inline uint64_t *masstree_checksum(void *value, int check, uint64_t v) {
-
-    uint64_t *numbers = (uint64_t *) value;
-    uint64_t *check_result = (uint64_t *) 1;
-
-    if (check == -1) {
-        numbers += iter;
-
-        numbers[0] = 0;
-        return numbers;
-    }
-
-    uint64_t sum = 0;
-
-
-    for (uint64_t i = 0; i < iter; i++) {
-        sum += numbers[0];
-        if (i == value_offset && numbers[0] != v) {
-            check_result = 0;
-            printf("value incorrect, offset %lu expecting %lu got %lu\n", value_offset, v, numbers[0]);
-        }
-        numbers++;
-    }
-
-    if (check) {
-        if (numbers[0] != sum) {
-            check_result = 0;
-            printf("sum incorrect, expecting %lu got %lu\n", sum, numbers[0]);
-        }
-    } else {
-        numbers[0] = sum;
-    }
-
-    return check_result;
-}
-
 static inline void masstree_branched_update(
         masstree::masstree *tree,
         MASS::ThreadInfo t,
@@ -488,7 +452,7 @@ static inline void masstree_branched_update(
                         struct masstree_obj *o = (struct masstree_obj *) tplate;
                         o->data = u_value;
                         o->ht_oid = ht_oid;
-                        if (!masstree_checksum(tplate, 0, u_value)) throw;
+                        if (!masstree_checksum(tplate, 0, u_value, iter, value_offset)) throw;
 
                         pmemobj_tx_add_range(ht_oid, 0, total_size);
                         mo = (struct masstree_obj *) pmemobj_direct(ht_oid);
@@ -508,7 +472,7 @@ static inline void masstree_branched_update(
 
                             pmemobj_tx_add_range(old_obj->ht_oid, sizeof(struct masstree_obj) + memset_size,
                                                  sizeof(uint64_t));
-                            if (!masstree_checksum(old_obj, -1, u_value)) throw;
+                            if (!masstree_checksum(old_obj, -1, u_value, iter, value_offset)) throw;
                             pmemobj_tx_free(old_obj->ht_oid);
                         }
                             TX_ONABORT {
@@ -524,7 +488,7 @@ static inline void masstree_branched_update(
         lc->key = u_key;
         rdtscll(lc->version)
         *((uint64_t *) (lc + 1)) = u_value;
-        if (!masstree_checksum(tplate, 0, u_value)) throw;
+        if (!masstree_checksum(tplate, 0, u_value, iter, value_offset)) throw;
 
         char *raw = (char *) log_malloc(total_size);
         cpy_persist(raw, tplate, total_size);
@@ -538,7 +502,7 @@ static inline void masstree_branched_update(
     } else if (use_ralloc) {
 
         *((uint64_t *) tplate) = u_value;
-        if (!masstree_checksum(tplate, 0, u_value)) throw;
+        if (!masstree_checksum(tplate, 0, u_value, iter, value_offset)) throw;
 
 
         void *value = RP_malloc(total_size);
@@ -547,7 +511,7 @@ static inline void masstree_branched_update(
         uint64_t *returned = (uint64_t *) tree->put_and_return(u_key, value, !no_allow_prev_null, 0, t);
 
         if (no_allow_prev_null || returned != NULL) {
-            uint64_t *footer_loc = masstree_checksum(returned, -1, u_value);
+            uint64_t *footer_loc = masstree_checksum(returned, -1, u_value, iter, value_offset);
             if (!footer_loc) throw;
             pmem_persist(footer_loc, sizeof(uint64_t));
 
@@ -558,7 +522,7 @@ static inline void masstree_branched_update(
     } else {
 
         *((uint64_t *) tplate) = u_value;
-        if (!masstree_checksum(tplate, 0, u_value)) throw;
+        if (!masstree_checksum(tplate, 0, u_value, iter, value_offset)) throw;
 
         void *value = malloc(total_size);
         memcpy(value, tplate, total_size);
@@ -566,7 +530,7 @@ static inline void masstree_branched_update(
         uint64_t *returned = (uint64_t *) tree->put_and_return(u_key, value, !no_allow_prev_null, 0, t);
 
         if (no_allow_prev_null || returned != NULL) {
-            masstree_checksum(returned, -1, u_value);
+            masstree_checksum(returned, -1, u_value, iter, value_offset);
             free(returned);
         }
 
@@ -589,7 +553,7 @@ static inline void masstree_branched_lookup(
         }
 
 
-        if (!masstree_checksum(raw, 1, g_value)) {
+        if (!masstree_checksum(raw, 1, g_value, iter, value_offset)) {
 
             printf("error key %lu value %lu pointer %p\n", g_key, g_value, raw);
             throw;
@@ -651,7 +615,7 @@ static inline void masstree_branched_delete(
 
                         pmemobj_tx_add_range(old_obj->ht_oid, sizeof(struct masstree_obj) + memset_size,
                                              sizeof(uint64_t));
-                        if (!masstree_checksum(old_obj, -1, d_key))throw;
+                        if (!masstree_checksum(old_obj, -1, d_key, iter, value_offset))throw;
                         pmemobj_tx_free(old_obj->ht_oid);
                     }
                         TX_ONABORT {
@@ -668,7 +632,7 @@ static inline void masstree_branched_delete(
         uint64_t *returned = (uint64_t *) tree->del_and_return(d_key, 0, 0,
                                                                NULL, t);
 
-        uint64_t *footer_loc = masstree_checksum(returned, -1, d_key);
+        uint64_t *footer_loc = masstree_checksum(returned, -1, d_key, iter, value_offset);
         if (!footer_loc) throw;
         pmem_persist(footer_loc, sizeof(uint64_t));
 
@@ -679,7 +643,7 @@ static inline void masstree_branched_delete(
         uint64_t *returned = (uint64_t *) tree->del_and_return(d_key, 0, 0,
                                                                NULL, t);
 
-        masstree_checksum(returned, -1, d_key);
+        masstree_checksum(returned, -1, d_key, iter, value_offset);
 
         free(returned);
     }
@@ -1387,11 +1351,12 @@ int main(int argc, char **argv) {
         puts("\tbegin preparing Log");
 
         if (
-                access(INODE_FN, F_OK) == 0 &&
-                access(LOG_FN, F_OK) == 0 &&
-                access(META_FN, F_OK) == 0
+//                access(INODE_FN, F_OK) == 0 &&
+//                access(META_FN, F_OK) == 0 &&
+                access(LOG_FN, F_OK) == 0
+
                 ) {
-            log_recover(tree, 20);
+            log_recover(tree, 19);
             goto_lookup = 1;
         } else {
             log_init(PMEM_POOL_SIZE);

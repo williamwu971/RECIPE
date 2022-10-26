@@ -246,61 +246,61 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) 
     printf("\n... rebuilding tree using %d omp threads ...\n", num_threads);
 
     int old_num_threads = omp_get_num_threads();
+
+
     omp_set_num_threads(num_threads);
+    omp_set_affinity_format("1-27");
+
     std::atomic<uint64_t> recovered;
     recovered.store(0);
 
     auto starttime = std::chrono::system_clock::now();
 
+
 #pragma omp parallel for schedule(static, 1)
     for (int i = 0; i < log_list.num_log; i++) {
 
-        // todo: not sure if this has overhead
         auto t = tree->getThreadInfo();
 
-        char *end = big_map + (i + 1) * LOG_SIZE;
-        char *curr = big_map + i * LOG_SIZE;
         struct log *current_log = log_meta + i;
+        char *end = current_log->base + LOG_SIZE;
 
-        while (curr < end) {
+        while (current_log->curr < end) {
 
-            struct log_cell *lc = (struct log_cell *) curr;
+            struct log_cell *lc = (struct log_cell *) current_log->curr;
 
             // if field of the struct is zero, then abort the entire log
-            if (lc->version == 0) break;
-
             uint64_t total_size = sizeof(struct log_cell) + lc->value_size;
-            current_log->available -= total_size;
+            if (current_log->curr + total_size >= end) break; //  prevent overflow
 
-            if (!lc->is_delete) {
-
-                struct log_cell *res = (struct log_cell *)
-                        tree->put_and_return(lc->key, lc, 1, 1, t);
-
-                // insert success and created a new key-value
-                // replaced a value, should free some space in other log
-                if (res != NULL) {
-
-                    if (res != lc) {
-                        uint64_t idx = (uint64_t) ((char *) res - big_map) / LOG_SIZE;
-                        struct log *target_log = log_meta + idx;
-                        target_log->freed.fetch_add(sizeof(struct log_cell) + res->value_size);
-                    } else {
-                        recovered.fetch_add(1);
-                    }
-                }
-
-            } else {
-
-                //todo: this is incorrect now
-                tree->del_and_return(lc->key, 1, lc->version,
-                                     log_get_tombstone, t);
+            if (!masstree_checksum(lc, 1, 0, total_size / sizeof(uint64_t) - 1, 0)) {
+                break;
             }
 
-            // todo: should probably update the metadata here
-            curr += sizeof(struct log_cell) + lc->value_size;
+            current_log->available -= total_size;
+
+
+            struct log_cell *res = (struct log_cell *)
+                    tree->put_and_return(lc->key, lc, 1, 1, t);
+
+            // insert success and created a new key-value
+            // replaced a value, should free some space in other log
+            if (res != NULL) {
+
+
+                uint64_t idx = (uint64_t) ((char *) res - big_map) / LOG_SIZE;
+                struct log *target_log = log_meta + idx;
+                target_log->freed.fetch_add(sizeof(struct log_cell) + res->value_size);
+
+            } else {
+                recovered.fetch_add(1);
+            }
+
+
+            current_log->curr += total_size;
         }
     }
+
 
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now() - starttime);
@@ -315,17 +315,17 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) 
     // sequentially reconstruct metadata
     // from end to beginning
 
-    while (log_list_get() != -1) {}
-
-    for (int i = log_list.num_log - 1; i >= 0; i--) {
-
-        struct log *target_log = log_meta + i;
-
-        if (target_log->available == LOG_SIZE || target_log->freed.load() == LOG_SIZE - target_log->available) {
-
-            log_list_push(i);
-        }
-    }
+//    while (log_list_get() != -1) {}
+//
+//    for (int i = log_list.num_log - 1; i >= 0; i--) {
+//
+//        struct log *target_log = log_meta + i;
+//
+//        if (target_log->available == LOG_SIZE || target_log->freed.load() == LOG_SIZE - target_log->available) {
+//
+//            log_list_push(i);
+//        }
+//    }
 
 }
 
@@ -501,7 +501,7 @@ void *log_malloc(size_t size) {
 
 
     // the "freed" space should be strictly increasing
-    if (unlikely(thread_log == NULL || thread_log->available < size)) {
+    while (unlikely(thread_log == NULL || thread_log->available < size)) {
         if (log_acquire(1) == NULL)die("cannot acquire new log");
     }
 
@@ -528,19 +528,24 @@ int log_memalign(void **memptr, size_t alignment, size_t size) {
 void *log_get_tombstone(uint64_t key) {
 
 
-    // todo: this here is potentially not 256-byte aligned
-    struct log_cell *lc = (struct log_cell *) log_malloc(sizeof(struct log_cell));
-//    struct log_cell *lc = (struct log_cell *) log_malloc(256);
+    struct log_cell *lc = (struct log_cell *) malloc(sizeof(struct log_cell) + sizeof(uint64_t));
 
     rdtscll(lc->version)
-    lc->value_size = 0;
+    lc->value_size = sizeof(uint64_t);
     lc->key = key;
     lc->is_delete = 1;
 
+    masstree_checksum(lc, 0, 0, sizeof(struct log_cell) / sizeof(uint64_t), 0);
 
-    pmem_persist(lc, sizeof(struct log_cell));
 
-    return lc;
+    // todo: this here is potentially not 256-byte aligned
+    void *raw = log_malloc(sizeof(struct log_cell) + sizeof(uint64_t));
+//    struct log_cell *lc = (struct log_cell *) log_malloc(256);
+
+    pmem_memcpy_persist(raw, lc, sizeof(struct log_cell) + sizeof(uint64_t));
+    free(lc);
+
+    return raw;
 }
 
 void log_free(void *ptr) {
