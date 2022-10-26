@@ -230,8 +230,8 @@ void log_debug_print(FILE *f, int using_log) {
 
 struct log_rebuild_args {
     masstree::masstree *tree;
-    int start;
-    int end;
+    int id;
+    int step;
 };
 
 void *log_rebuild_thread(void *arg) {
@@ -242,7 +242,7 @@ void *log_rebuild_thread(void *arg) {
 
     uint64_t recovered = 0;
 
-    for (int i = args->start; i != args->end; i++) {
+    for (int i = args->id; i < log_list.num_log; i += args->step) {
 
         struct log *current_log = log_meta + i;
         char *end = current_log->base + LOG_SIZE;
@@ -315,17 +315,8 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) 
 
     for (int i = 0; i < num_threads; i++) {
         args[i].tree = tree;
-        if (i == 0) {
-            args[i].start = 0;
-        } else {
-            args[i].start = args[i - 1].end;
-        }
-
-        args[i].end = args[i].start + per_thread;
-        if (remainder != 0) {
-            args[i].end++;
-            remainder--;
-        }
+        args[i].id = i;
+        args[i].step = num_threads;
 
         cpu_set_t cpu;
         CPU_ZERO(&cpu);
