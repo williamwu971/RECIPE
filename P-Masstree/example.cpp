@@ -1406,6 +1406,7 @@ int main(int argc, char **argv) {
          * section INSERT
          */
         run("insert", throughput_file, attrs, section_args, latencies, section_insert);
+        throw;
 //        if (use_log) log_debug_print(1, show_log_usage);
     }
 
