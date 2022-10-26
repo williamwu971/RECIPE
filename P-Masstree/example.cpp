@@ -966,7 +966,12 @@ void run(
                section_name, n, (n * 1.0) / duration.count(), duration.count() / 1000000.0);
 
     sprintf(perf_fn, "%s-%s.rdtsc", prefix, section_name);
-    if (record_latency) dump_latencies(perf_fn, latencies, section_args[0].end);
+//    if (record_latency) dump_latencies(perf_fn, latencies, section_args[0].end);
+    if (record_latency) {
+        dump_latencies(perf_fn, latencies,
+                       section_args[0].end > 1000 ? 1000 : section_args[0].end);
+    }
+
 
     if (throughput_file != NULL) {
         fprintf(throughput_file, "%.2f,%.2f,",
