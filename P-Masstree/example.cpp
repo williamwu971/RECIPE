@@ -885,6 +885,15 @@ void *section_delete(void *arg) {
     return NULL;
 }
 
+void masstree_shuffle(uint64_t *array, uint64_t size) {
+    for (uint64_t i = 0; i < size - 1; i++) {
+        uint64_t j = i + rand() / (RAND_MAX / (size - i) + 1);
+        uint64_t t = array[j];
+        array[j] = array[i];
+        array[i] = t;
+    }
+}
+
 void run(
         const char *section_name,
         FILE *throughput_file,
@@ -1127,15 +1136,6 @@ int main(int argc, char **argv) {
     }
 
     // (TP dropped) shuffle the array
-    if (shuffle_keys) {
-
-        for (uint64_t i = 0; i < n - 1; i++) {
-            uint64_t j = i + rand() / (RAND_MAX / (n - i) + 1);
-            uint64_t t = keys[j];
-            keys[j] = keys[i];
-            keys[i] = t;
-        }
-    }
 
 //#ifdef CLFLUSH
 //    puts("\tdetected CLFLUSH");
@@ -1405,9 +1405,8 @@ int main(int argc, char **argv) {
         /**
          * section INSERT
          */
+        if (shuffle_keys) masstree_shuffle(keys, n);
         run("insert", throughput_file, attrs, section_args, latencies, section_insert);
-//        throw;
-//        if (use_log) log_debug_print(1, show_log_usage);
     }
 
 //    printf("count RP_MALLOC %lu\n", RP_lock_count);
@@ -1416,22 +1415,20 @@ int main(int argc, char **argv) {
         /**
          * section UPDATE
          */
+        if (shuffle_keys) masstree_shuffle(keys, n);
         run("update", throughput_file, attrs, section_args, latencies, section_update);
-//        if (use_log) log_debug_print(0, show_log_usage);
     }
 
-//    printf("count RP_MALLOC %lu\n", RP_lock_count);
 
     lookup:
     {
         /**
          * section LOOKUP
          */
+        if (shuffle_keys) masstree_shuffle(keys, n);
         run("lookup", throughput_file, attrs, section_args, latencies, section_lookup);
-//        if (use_log) log_debug_print(0, show_log_usage);
     }
 
-//    printf("count RP_MALLOC %lu\n", RP_lock_count);
 
     if (which_memalign == RP_memalign) {
         RP_set_root(tree->root(), 0);
@@ -1443,8 +1440,8 @@ int main(int argc, char **argv) {
          * section DELETE
          */
 //        throw;
-//        run("delete", throughput_file, attrs, section_args, latencies, section_delete);
-//        if (use_log) log_debug_print(0, show_log_usage);
+        if (shuffle_keys) masstree_shuffle(keys, n);
+        run("delete", throughput_file, attrs, section_args, latencies, section_delete);
     }
 
 
