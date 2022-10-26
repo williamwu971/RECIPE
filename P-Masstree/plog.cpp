@@ -347,6 +347,10 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
             map = pmem_map_file(fn, file_size,
                                 PMEM_FILE_CREATE | PMEM_FILE_EXCL, 00666,
                                 &mapped_len, &is_pmem);
+
+            if (mapped_len != file_size) {
+                die("map length check mapped:%zu expecting:%zu", mapped_len, file_size);
+            }
         }
 
     } else {
@@ -359,10 +363,6 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
 
     if (map == NULL || map == MAP_FAILED || !is_pmem) {
         die("map error map:%p is_pmem:%d", map, is_pmem);
-    }
-
-    if (mapped_len != file_size) {
-        die("map length check mapped:%zu expecting:%zu", mapped_len, file_size);
     }
 
     if (mapped_len % alignment != 0) {
