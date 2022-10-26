@@ -260,7 +260,9 @@ void *log_rebuild_thread(void *arg) {
             }
 
             current_log->available -= total_size;
+            current_log->curr += total_size;
 
+            if (lc->is_delete) continue;
 
             struct log_cell *res = (struct log_cell *)
                     tree->put_and_return(lc->key, lc, 1, 1, t);
@@ -277,8 +279,6 @@ void *log_rebuild_thread(void *arg) {
                 recovered++;
             }
 
-
-            current_log->curr += total_size;
         }
     }
 
