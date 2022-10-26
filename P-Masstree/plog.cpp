@@ -361,8 +361,12 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
         die("map error map:%p is_pmem:%d", map, is_pmem);
     }
 
-    if (mapped_len != file_size || mapped_len % alignment != 0) {
-        die("map length / alignment check error size:%zu", mapped_len);
+    if (mapped_len != file_size) {
+        die("map length check mapped:%zu expecting:%zu", mapped_len, file_size);
+    }
+
+    if (mapped_len % alignment != 0) {
+        die("map alignment check size:%zu alignment:%d", mapped_len, alignment);
     }
 
 
