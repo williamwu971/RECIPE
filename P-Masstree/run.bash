@@ -73,7 +73,7 @@ record_latency="yes"
 #workload=16000000
 #workload=140000000
 workload=430000000 # todo: do not change this
-workload=43000000 # todo: do not change this
+#workload=43000000
 #workload=1900
 #workload=100000000
 
@@ -103,9 +103,9 @@ index_location=("dram")
 #value_location=("ralloc" "log" "obj")
 #value_location=("obj" "log" "ralloc")
 #value_location=("ralloc")
-value_location=("log")
+#value_location=("log")
 #value_location=("obj")
-#value_location=("log" "ralloc")
+value_location=("log" "ralloc")
 
 #num_threads=(1 3 5 7 9 11 13 15)
 #num_threads=(24)
@@ -115,8 +115,8 @@ num_threads=(19) # todo: do not change this
 #num_of_gc=(8 0)
 num_of_gc=(8)
 
-#pmdk_no_flush=("0" "1")
-pmdk_no_flush=("0")
+pmdk_no_flush=("0" "1")
+#pmdk_no_flush=("0")
 #pmdk_no_flush=("1")
 
 ycsbs=("N")
