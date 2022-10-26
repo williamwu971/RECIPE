@@ -304,8 +304,6 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) 
 
     pthread_t *rebuild_threads = (pthread_t *) malloc(sizeof(pthread_t) * num_threads);
     struct log_rebuild_args *args = (struct log_rebuild_args *) malloc(sizeof(struct log_rebuild_args) * num_threads);
-    int per_thread = log_list.num_log / num_threads;
-    int remainder = log_list.num_log % num_threads;
 
     uint64_t recovered = 0;
 
