@@ -55,8 +55,9 @@ for var in "$@"; do
       fi
     done
 
-    sleep 1
-    wait "$(pgrep -f simple_graph)"
+    while pgrep -i -f simple_graph >/dev/null; do
+      sleep 1
+    done
 
     exit
   fi
@@ -224,18 +225,6 @@ for s in "${extra_sizes[@]}"; do
                     echo "" >>"$fp".csv
                   done
 
-                  if [ "$record_latency" = "yes" ]; then
-                    for filename in *.rdtsc; do
-                      #              python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$filename" --ylim 100000000 --xlim "$workload" || exit
-                      if [ ! -f graph-"$filename".png ]; then
-                        python3 ../simple_graph.py --r "$filename" --fn graph-"$filename" --y "ops/ms" --x "time(ms)" --xlim 300 --ylim 1900
-                      fi
-
-                      rm "$filename"
-                      #              python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$filename"|| exit
-                    done
-                  fi
-
                 done
               done
             done
@@ -245,6 +234,20 @@ for s in "${extra_sizes[@]}"; do
     done
   done
 done
+
+if [ "$record_latency" = "yes" ]; then
+  for filename in *.rdtsc; do
+    #              python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$filename" --ylim 100000000 --xlim "$workload" || exit
+    if [ ! -f graph-"$filename".png ]; then
+      python3 ../simple_graph.py --r "$filename" --fn graph-"$filename" --y "ops/ms" --x "time(ms)" --xlim 300 --ylim 1900 &
+    fi
+    #              python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$filename"|| exit
+  done
+
+  while pgrep -i -f simple_graph >/dev/null; do
+    sleep 1
+  done
+fi
 
 echo 1 >/proc/sys/kernel/nmi_watchdog
 
