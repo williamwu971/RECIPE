@@ -223,6 +223,19 @@ for s in "${extra_sizes[@]}"; do
                   for fp in "${file_prefixes[@]}"; do
                     echo "" >>"$fp".csv
                   done
+
+                  if [ "$record_latency" = "yes" ]; then
+                    for filename in *.rdtsc; do
+                      #              python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$filename" --ylim 100000000 --xlim "$workload" || exit
+                      if [ ! -f graph-"$filename".png ]; then
+                        python3 ../simple_graph.py --r "$filename" --fn graph-"$filename" --y "ops/ms" --x "time(ms)" --xlim 300 --ylim 1900
+                      fi
+
+                      rm "$filename"
+                      #              python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$filename"|| exit
+                    done
+                  fi
+
                 done
               done
             done
@@ -234,22 +247,6 @@ for s in "${extra_sizes[@]}"; do
 done
 
 echo 1 >/proc/sys/kernel/nmi_watchdog
-
-if [ "$record_latency" = "yes" ]; then
-  for filename in *.rdtsc; do
-    #              python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$filename" --ylim 100000000 --xlim "$workload" || exit
-    if [ ! -f graph-"$filename".png ]; then
-      python3 ../simple_graph.py --r "$filename" --fn graph-"$filename" --y "ops/ms" --x "time(ms)" --xlim 300 --ylim 1900 &
-      pids[${i}]=$!
-    fi
-    #              python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$filename"|| exit
-  done
-
-  sleep 1
-  for pid in ${pids[*]}; do
-    wait $pid
-  done
-fi
 
 # move perf files
 #for pfn in *.perf; do
