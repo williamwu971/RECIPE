@@ -888,6 +888,7 @@ void *section_delete(void *arg) {
 void masstree_shuffle(uint64_t *array, uint64_t size) {
 
     printf("shuffling array of size %lu\n", size);
+    srand(time(NULL));
 
     for (uint64_t i = 0; i < size - 1; i++) {
         uint64_t j = i + rand() / (RAND_MAX / (size - i) + 1);
