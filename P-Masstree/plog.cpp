@@ -702,37 +702,39 @@ int log_start_perf(const char *perf_fn) {
     int cores = sysconf(_SC_NPROCESSORS_ONLN);
     int res = 1;
 
-//    sprintf(command,
-//            "sudo taskset -c %d-%d /home/blepers/linux-huge/tools/perf/perf record --call-graph dwarf -F 100 -p %d -o %s.record -g >> perf_record.out 2>&1 &",
-//            cores * 3 / 4, cores - 1, getpid(), perf_fn);
-//    res &= system(command);
-//    perf_stat = 0;
+    char command[4096];
 
-    char real_command[4096];
-//    sprintf(real_command, "sudo taskset -c %d-%d /home/blepers/linux-huge/tools/perf/perf %s", cores * 3 / 4, cores - 1,
+    sprintf(command,
+            "sudo taskset -c %d-%d /home/blepers/linux-huge/tools/perf/perf record "
+            "--call-graph dwarf -F 100 -p %d -o %s.record -g >> perf_record.out 2>&1 &",
+            cores * 3 / 4, cores - 1, getpid(), perf_fn);
+    res &= system(command);
+
+
+//    sprintf(command, "sudo taskset -c %d-%d /home/blepers/linux-huge/tools/perf/perf %s", cores * 3 / 4, cores - 1,
 //            command);
 
 //    printf("perf: %s\n", command);
 
     remove("/mnt/sdb/xiaoxiang/pcm.txt");
-    sprintf(real_command,
+    sprintf(command,
             "sudo taskset -c %d-%d /mnt/sdb/xiaoxiang/pcm/build/bin/pcm-memory -all >pcm-memory.log 2>&1 &",
             cores * 3 / 4, cores - 1);
 
-    res &= system(real_command);
+    res &= system(command);
 
 
-    sprintf(real_command, "sudo taskset -c %d-%d /home/blepers/linux-huge/tools/perf/perf stat "
-                          "-e cycle_activity.stalls_l1d_miss "
-                          "-e cycle_activity.stalls_l2_miss "
-                          "-e cycle_activity.stalls_l3_miss "
-                          "-e cycle_activity.stalls_mem_any "
-                          "-e cycle_activity.stalls_total "
-                          "-e resource_stalls.sb "
-                          "-p %d -o %s.stat -g >> perf_stat.out 2>&1 &",
+    sprintf(command, "sudo taskset -c %d-%d /home/blepers/linux-huge/tools/perf/perf stat "
+                     "-e cycle_activity.stalls_l1d_miss "
+                     "-e cycle_activity.stalls_l2_miss "
+                     "-e cycle_activity.stalls_l3_miss "
+                     "-e cycle_activity.stalls_mem_any "
+                     "-e cycle_activity.stalls_total "
+                     "-e resource_stalls.sb "
+                     "-p %d -o %s.stat -g >> perf_stat.out 2>&1 &",
             cores * 3 / 4, cores - 1, getpid(), perf_fn);
 
-    res &= system(real_command);
+    res &= system(command);
 
     sleep(1);
 
