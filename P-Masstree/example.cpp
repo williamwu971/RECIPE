@@ -511,6 +511,7 @@ static inline void masstree_branched_update(
         uint64_t *returned = (uint64_t *) tree->put_and_return(u_key, value, !no_allow_prev_null, 0, t);
 
         if (no_allow_prev_null || returned != NULL) {
+            // todo enable
 //            uint64_t *footer_loc = masstree_checksum(returned, -1, u_value, iter, value_offset);
 //            if (!footer_loc) throw;
 //            pmem_persist(footer_loc, sizeof(uint64_t));
