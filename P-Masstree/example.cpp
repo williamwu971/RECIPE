@@ -512,11 +512,12 @@ static inline void masstree_branched_update(
 
         if (no_allow_prev_null || returned != NULL) {
 
-            uint64_t *footer_loc = masstree_checksum(returned, -1, u_value, iter, value_offset);
-            if (!footer_loc) throw;
-            pmem_persist(footer_loc, sizeof(uint64_t));
+//            uint64_t *footer_loc = masstree_checksum(returned, -1, u_value, iter, value_offset);
+//            if (!footer_loc) throw;
+//            pmem_persist(footer_loc, sizeof(uint64_t));
 
             RP_free(returned);
+            pmem_persist(returned, sizeof(void *));
         }
 
 
@@ -930,7 +931,7 @@ void run(
             std::chrono::system_clock::now() - starttime);
     if (throughput_file != NULL)log_debug_print(throughput_file, require_log_init);
 
-    log_wait_all_gc();
+//    log_wait_all_gc(); todo enable
     auto duration_with_gc = std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now() - starttime);
     if (throughput_file != NULL)log_debug_print(throughput_file, require_log_init);
