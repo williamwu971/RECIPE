@@ -634,11 +634,12 @@ static inline void masstree_branched_delete(
         uint64_t *returned = (uint64_t *) tree->del_and_return(d_key, 0, 0,
                                                                NULL, t);
 
-        uint64_t *footer_loc = masstree_checksum(returned, -1, d_key, iter, value_offset);
-        if (!footer_loc) throw;
-        pmem_persist(footer_loc, sizeof(uint64_t));
+//        uint64_t *footer_loc = masstree_checksum(returned, -1, d_key, iter, value_offset);
+//        if (!footer_loc) throw;
+//        pmem_persist(footer_loc, sizeof(uint64_t));
 
         RP_free(returned);
+        pmem_persist(returned, sizeof(void *));
 
     } else {
 
