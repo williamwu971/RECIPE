@@ -90,9 +90,9 @@ extra_sizes=(256)
 
 #total_sizes=(0)
 #total_sizes=(64)
-#total_sizes=(256)
+total_sizes=(256)
 #total_sizes=($(seq 40 8 256))
-total_sizes=($(seq 40 24 256))
+#total_sizes=($(seq 40 24 256))
 #total_sizes=(1024)
 
 #index_location=("dram" "ralloc" "obj")
@@ -115,8 +115,8 @@ num_threads=(19) # todo: do not change this
 #num_of_gc=(8 0)
 num_of_gc=(8)
 
-pmdk_no_flush=("0" "1")
-#pmdk_no_flush=("0")
+#pmdk_no_flush=("0" "1")
+pmdk_no_flush=("0")
 #pmdk_no_flush=("1")
 
 ycsbs=("N")
