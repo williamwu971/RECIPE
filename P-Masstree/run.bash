@@ -73,7 +73,7 @@ record_latency="yes"
 #workload=16000000
 #workload=140000000
 workload=430000000 # todo: do not change this
-#workload=43000000
+workload=43000000
 #workload=1900
 #workload=100000000
 

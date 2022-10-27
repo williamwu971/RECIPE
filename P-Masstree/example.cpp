@@ -929,7 +929,7 @@ void run(
             std::chrono::system_clock::now() - starttime);
     if (throughput_file != NULL)log_debug_print(throughput_file, require_log_init);
 
-    log_wait_all_gc();
+//    log_wait_all_gc();
     auto duration_with_gc = std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now() - starttime);
     if (throughput_file != NULL)log_debug_print(throughput_file, require_log_init);
@@ -938,6 +938,9 @@ void run(
         log_stop_perf();
         log_print_pmem_bandwidth(perf_fn, duration.count() / 1000000.0, throughput_file);
     }
+
+    log_wait_all_gc();
+
     if (display_throughput)
         printf("Throughput: %s,%ld,%.2f ops/us %.2f sec\n",
                section_name, n, (n * 1.0) / duration.count(), duration.count() / 1000000.0);
