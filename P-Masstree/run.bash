@@ -90,10 +90,10 @@ extra_sizes=(256)
 
 #total_sizes=(0)
 #total_sizes=(64)
-total_sizes=(256)
+#total_sizes=(256)
 #total_sizes=($(seq 40 8 256))
 #total_sizes=($(seq 40 24 256))
-#total_sizes=(1024)
+total_sizes=(1024)
 
 #index_location=("dram" "ralloc" "obj")
 index_location=("dram")
