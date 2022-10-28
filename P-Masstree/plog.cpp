@@ -255,7 +255,7 @@ void *log_rebuild_thread(void *arg) {
             uint64_t total_size = sizeof(struct log_cell) + lc->value_size;
             if (current_log->curr + total_size > end || lc->value_size == 0) break; //  prevent overflow
 
-            if (!masstree_checksum(lc, 1, 0, total_size / sizeof(uint64_t) - 1, 0)) {
+            if (!masstree_checksum(lc, SUM_LOG, 0, total_size / sizeof(uint64_t) - 1, 0)) {
                 break;
             }
 
@@ -571,7 +571,7 @@ void *log_get_tombstone(uint64_t key) {
     lc->key = key;
     lc->is_delete = 1;
 
-    masstree_checksum(lc, 0, 0, sizeof(struct log_cell) / sizeof(uint64_t), 0);
+    masstree_checksum(lc, SUM_WRITE, 0, sizeof(struct log_cell) / sizeof(uint64_t), 0);
 
 
     // todo: this here is potentially not 256-byte aligned
