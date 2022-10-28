@@ -80,9 +80,6 @@ workload=43000000
 key_order="random"
 #key_order="seq"
 
-interfere="0"
-#interfere="1"
-
 extra_sizes=(0)
 extra_sizes=(256)
 #extra_sizes=($(seq 0 8 240)) # the size of the value impact performance a lot
@@ -106,7 +103,7 @@ index_location=("dram")
 #value_location=("ralloc")
 #value_location=("log")
 #value_location=("obj")
-value_location=("log" "ralloc")
+value_location=("log" "log-best" "ralloc")
 
 #num_threads=(1 3 5 7 9 11 13 15)
 #num_threads=(24)
@@ -216,7 +213,7 @@ for s in "${extra_sizes[@]}"; do
                   #      /home/blepers/linux/tools/perf/perf record -g ./example "$workload" "$n" index="$i" value="$v" key="$key_order"
                   PMEM_NO_FLUSH="$f" ./example "$workload" "$n" extra_size="$s" total_size="$t" \
                     index="$i" value="$v" key="$key_order" perf="$use_perf" \
-                    gc="$g" ycsb="$y" latency="$record_latency" persist="$p" interfere="$interfere" \
+                    gc="$g" ycsb="$y" latency="$record_latency" persist="$p" \
                     prefix="$i"-"$v"-"$n"-"$g"-NF"$f"-"$s"b-"$t"B-"$y"-"$p" || exit
 
                   #      mv out.png out_"$i"_"$v".png
