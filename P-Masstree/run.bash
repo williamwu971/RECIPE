@@ -132,7 +132,10 @@ file_prefixes=("perf")
 
 for fp in "${file_prefixes[@]}"; do
 
-  echo"$(date)" >>"$fp".csv
+  {
+    echo ""
+    "date"
+  } >>"$fp".csv
 
   echo "$fp,workload=$workload,key_order=$key_order" >>"$fp".csv
 
