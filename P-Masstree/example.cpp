@@ -444,7 +444,7 @@ static inline void masstree_ralloc_update(masstree::masstree *tree,
                                           int no_allow_prev_null,
                                           void *tplate) {
     *((uint64_t *) tplate) = u_value;
-    if (!masstree_checksum(tplate, 0, u_value, iter, value_offset)) throw;
+    if (!masstree_checksum(tplate, SUM_WRITE, u_value, iter, value_offset)) throw;
 
 
     void *value = RP_malloc(total_size);
@@ -488,7 +488,7 @@ static inline void masstree_log_update(masstree::masstree *tree,
     lc->key = u_key;
     rdtscll(lc->version)
     *((uint64_t *) (lc + 1)) = u_value;
-    if (!masstree_checksum(tplate, 0, u_value, iter, value_offset)) throw;
+    if (!masstree_checksum(tplate, SUM_WRITE, u_value, iter, value_offset)) throw;
 
     char *raw = (char *) log_malloc(total_size);
     cpy_persist(raw, tplate, total_size);
@@ -529,7 +529,7 @@ static inline void masstree_obj_update(masstree::masstree *tree,
                     struct masstree_obj *o = (struct masstree_obj *) tplate;
                     o->data = u_value;
                     o->ht_oid = ht_oid;
-                    if (!masstree_checksum(tplate, 0, u_value, iter, value_offset)) throw;
+                    if (!masstree_checksum(tplate, SUM_WRITE, u_value, iter, value_offset)) throw;
 
                     pmemobj_tx_add_range(ht_oid, 0, total_size);
                     mo = (struct masstree_obj *) pmemobj_direct(ht_oid);
@@ -549,7 +549,7 @@ static inline void masstree_obj_update(masstree::masstree *tree,
 
                         pmemobj_tx_add_range(old_obj->ht_oid, sizeof(struct masstree_obj) + memset_size,
                                              sizeof(uint64_t));
-                        if (!masstree_checksum(old_obj, -1, u_value, iter, value_offset)) throw;
+                        if (!masstree_checksum(old_obj, SUM_INVALID, u_value, iter, value_offset)) throw;
                         pmemobj_tx_free(old_obj->ht_oid);
                     }
                         TX_ONABORT {
@@ -574,7 +574,7 @@ static inline void masstree_obj_delete(
 
                     pmemobj_tx_add_range(old_obj->ht_oid, sizeof(struct masstree_obj) + memset_size,
                                          sizeof(uint64_t));
-                    if (!masstree_checksum(old_obj, -1, d_key, iter, value_offset))throw;
+                    if (!masstree_checksum(old_obj, SUM_INVALID, d_key, iter, value_offset))throw;
                     pmemobj_tx_free(old_obj->ht_oid);
                 }
                     TX_ONABORT {
@@ -602,7 +602,7 @@ static inline void masstree_universal_lookup(
         }
 
 
-        if (!masstree_checksum(raw, 1, g_value, iter, value_offset)) {
+        if (!masstree_checksum(raw, SUM_CHECK, g_value, iter, value_offset)) {
 
             printf("error key %lu value %lu pointer %p\n", g_key, g_value, raw);
             throw;

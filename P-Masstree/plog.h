@@ -71,15 +71,23 @@
 //    OCCUPIED,
 //};
 
-static inline uint64_t *masstree_checksum(void *value, int check, uint64_t v, uint64_t iteration, uint64_t offset) {
+enum {
+    SUM_INVALID,
+    SUM_WRITE,
+    SUM_CHECK,
+    SUM_LOG
+};
 
-    (void) v;
-    (void) offset;
+static inline uint64_t *masstree_checksum(void *value,
+                                          int check,
+                                          uint64_t v,
+                                          uint64_t iteration,
+                                          uint64_t offset) {
 
     uint64_t *numbers = (uint64_t *) value;
     uint64_t *check_result = (uint64_t *) 1;
 
-    if (check == -1) {
+    if (check == SUM_INVALID) {
         numbers += iteration;
 
         numbers[0] = 0;
@@ -91,24 +99,26 @@ static inline uint64_t *masstree_checksum(void *value, int check, uint64_t v, ui
 
     for (uint64_t i = 0; i < iteration; i++) {
         sum += numbers[0];
-//        if (check && i == offset && numbers[0] != v) {
-//            check_result = 0;
-//            printf("value incorrect, offset %lu expecting %lu got %lu\n", offset, v, numbers[0]);
-//        }
+        if (check == SUM_CHECK && i == offset && numbers[0] != v) {
+            check_result = 0;
+            printf("value incorrect, offset %lu expecting %lu got %lu\n", offset, v, numbers[0]);
+        }
         numbers++;
     }
 
-    if (check) {
+    if (check == SUM_CHECK) {
         if (numbers[0] != sum || sum == 0) {
             check_result = 0;
-//            printf("sum incorrect, expecting %lu got %lu\n", sum, numbers[0]);
+            printf("sum incorrect, expecting %lu got %lu\n", sum, numbers[0]);
         }
-//        else if (sum == 0) {
-//            check_result = 0;
-//        }
-    } else {
+    } else if (check == SUM_LOG) {
+        if (numbers[0] != sum || sum == 0) {
+            check_result = 0;
+        }
+    } else if (check == SUM_WRITE) {
         numbers[0] = sum;
     }
+
 
     return check_result;
 }
