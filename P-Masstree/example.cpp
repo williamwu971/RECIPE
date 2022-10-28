@@ -985,8 +985,9 @@ int main(int argc, char **argv) {
 
                 if (strcasestr(argv[ac], "best")) {
                     interfere = 0;
-                    printf("interfere=%d ", interfere);
                 }
+
+                printf("interfere=%d ", interfere);
 
             } else if (strcasestr(argv[ac], "obj")) {
                 use_obj = 1;
