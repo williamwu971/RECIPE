@@ -104,7 +104,7 @@ index_location=("dram")
 #value_location=("ralloc")
 #value_location=("log")
 #value_location=("obj")
-value_location=("log" "log-best" "ralloc")
+value_location=("ralloc" "log" "log-best")
 
 #num_threads=(1 3 5 7 9 11 13 15)
 #num_threads=(24)
