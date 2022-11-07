@@ -443,6 +443,7 @@ void *ralloc_recover_scan_thread(void *raw) {
 //    auto t = tree->getThreadInfo();
 
     uint64_t valid = 0;
+    uint64_t scanned_bytes = 0;
 
     while (1) {
 
@@ -450,7 +451,7 @@ void *ralloc_recover_scan_thread(void *raw) {
         if (pack.curr == NULL)break;
         if (pack.block_size < (uint32_t) total_size) throw;
 
-        puts("scanning");
+        scanned_bytes += pack.end - pack.curr;
 
         while (pack.curr < pack.end) {
             if (masstree_checksum(pack.curr, SUM_LOG, 0, iter, 0) != NULL) {
@@ -463,7 +464,7 @@ void *ralloc_recover_scan_thread(void *raw) {
         }
 
     }
-    printf("valid: %lu\n", valid);
+    printf("valid: %lu scanned: %fgb\n", valid, (double) scanned_bytes / 1024.0 / 1024.0 / 1024.0);
 
     return NULL;
 }
