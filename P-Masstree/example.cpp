@@ -436,14 +436,18 @@ static inline uint64_t masstree_getsum(void *value) {
     return sum;
 }
 
+pthread_mutex_t ralloc_recover_stats_lock = PTHREAD_MUTEX_INITIALIZER;
+uint64_t ralloc_recovered = 0;
+uint64_t ralloc_abandoned = 0;
 
 void *ralloc_recover_scan_thread(void *raw) {
 
+    (void)raw;
 //    masstree::masstree *tree = (masstree::masstree *) raw;
 //    auto t = tree->getThreadInfo();
 
     uint64_t valid = 0;
-    uint64_t scanned_bytes = 0;
+    uint64_t invalid = 0;
 
     while (1) {
 
@@ -451,20 +455,24 @@ void *ralloc_recover_scan_thread(void *raw) {
         if (pack.curr == NULL)break;
         if (pack.block_size < (uint32_t) total_size) throw;
 
-        scanned_bytes += pack.end - pack.curr;
-
         while (pack.curr < pack.end) {
             if (masstree_checksum(pack.curr, SUM_LOG, 0, iter, 0) != NULL) {
                 valid++;
 
 //                uint64_t key = ((uint64_t *) pack.curr)[0];
 //                tree->put_and_return(key, pack.curr, 1, 0,t);
+            } else {
+                invalid++;
             }
             pack.curr += pack.block_size;
         }
 
     }
 //    printf("valid: %lu scanned: %fgb\n", valid, (double) scanned_bytes / 1024.0 / 1024.0 / 1024.0);
+    pthread_mutex_lock(&ralloc_recover_stats_lock);
+    ralloc_recovered += valid;
+    ralloc_abandoned += invalid;
+    pthread_mutex_unlock(&ralloc_recover_stats_lock);
 
     return (void *) valid;
 }
@@ -488,16 +496,16 @@ void ralloc_recover_scan(masstree::masstree *tree) {
         pthread_create(threads + i, &attr, ralloc_recover_scan_thread, tree);
     }
 
-    uint64_t valid = 0;
+//    uint64_t valid = 0;
 
     for (int i = 0; i < num_thread; i++) {
 
         uint64_t local;
         pthread_join(threads[i], (void **) &local);
-        valid += local;
+//        valid += local;
     }
 
-    printf("total valid entries: %lu\n", valid);
+    printf("recovered: %lu abandoned: %lu\n", ralloc_recovered,ralloc_abandoned);
 
 }
 
