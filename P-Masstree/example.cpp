@@ -437,6 +437,59 @@ static inline uint64_t masstree_getsum(void *value) {
 }
 
 
+void *ralloc_recover_scan_thread(void *raw) {
+
+    masstree::masstree *tree = (masstree::masstree *) raw;
+    auto t = tree->getThreadInfo();
+
+    uint64_t valid = 0;
+
+    while (1) {
+
+        struct RP_scan_pack pack = RP_scan_next();
+        if (pack.curr == NULL)break;
+        if (pack.block_size < (uint32_t) total_size) throw;
+
+        while (pack.curr < pack.end) {
+            if (masstree_checksum(pack.curr, SUM_LOG, 0, iter, 0) != NULL) {
+                valid++;
+
+//                uint64_t key = ((uint64_t *) pack.curr)[0];
+//                tree->put_and_return(key, pack.curr, 1, 0,t);
+            }
+            pack.curr += pack.block_size;
+        }
+
+    }
+    printf("valid: %lu\n", valid);
+
+    return NULL;
+}
+
+void ralloc_recover_scan(masstree::masstree *tree) {
+
+    pthread_t *threads = (pthread_t *) malloc(num_thread * sizeof(pthread_t));
+    RP_scan_init();
+
+    for (int i = 0; i < num_thread; i++) {
+        cpu_set_t cpu;
+        CPU_ZERO(&cpu);
+
+        // reserving CPU 0
+        CPU_SET(i + 1, &cpu);
+
+        pthread_attr_t attr;
+        pthread_attr_init(&attr);
+        pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpu);
+
+        pthread_create(threads + i, &attr, ralloc_recover_scan_thread, tree);
+    }
+    for (int i = 0; i < num_thread; i++) {
+        pthread_join(threads[i], NULL);
+    }
+
+}
+
 static inline void masstree_ralloc_update(masstree::masstree *tree,
                                           MASS::ThreadInfo t,
                                           uint64_t u_key,
@@ -1139,15 +1192,12 @@ int main(int argc, char **argv) {
 //        int should_recover=(access("/pmem0/masstree_sb", F_OK) != -1);
 //        RP_init("masstree", PMEM_POOL_SIZE, &preset);
 
-        if (should_recover){
-            RP_scan(NULL,NULL);
-            assert(0);
+        if (should_recover) {
+            ralloc_recover_scan(NULL);
+            throw;
         }
 
         if (should_recover && which_memalign == RP_memalign) {
-
-            RP_scan(NULL,NULL);
-            assert(0);
 
             puts("\tbegin recovering Ralloc");
 
