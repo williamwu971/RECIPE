@@ -450,6 +450,8 @@ void *ralloc_recover_scan_thread(void *raw) {
         if (pack.curr == NULL)break;
         if (pack.block_size < (uint32_t) total_size) throw;
 
+        puts("scanning");
+
         while (pack.curr < pack.end) {
             if (masstree_checksum(pack.curr, SUM_LOG, 0, iter, 0) != NULL) {
                 valid++;
