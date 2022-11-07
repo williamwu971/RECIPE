@@ -72,7 +72,7 @@ record_latency="yes"
 
 #workload=16000000
 #workload=140000000
-workload=430000000 # todo: do not change this
+#workload=430000000 # todo: do not change this
 workload=43000000
 #workload=1900
 #workload=100000000
@@ -81,18 +81,18 @@ key_order="random"
 #key_order="seq"
 
 extra_sizes=(0)
-extra_sizes=(256)
+#extra_sizes=(256)
 #extra_sizes=($(seq 0 8 240)) # the size of the value impact performance a lot
 #extra_sizes=($(seq 0 32 240))
 
 #total_sizes=(0)
 #total_sizes=(64)
-#total_sizes=(256)
+total_sizes=(256)
 #total_sizes=($(seq 40 8 256))
 #total_sizes=($(seq 40 24 256))
-total_sizes=(1024)
-total_sizes=($(seq 40 24 1024))
-total_sizes=($(seq 2048 -24 40))
+#total_sizes=(1024)
+#total_sizes=($(seq 40 24 1024))
+#total_sizes=($(seq 2048 -24 40))
 
 #index_location=("dram" "ralloc" "obj")
 index_location=("dram")
@@ -101,10 +101,10 @@ index_location=("dram")
 
 #value_location=("ralloc" "log" "obj")
 #value_location=("obj" "log" "ralloc")
-#value_location=("ralloc")
+value_location=("ralloc")
 #value_location=("log")
 #value_location=("obj")
-value_location=("ralloc" "log" "log-best")
+#value_location=("ralloc" "log" "log-best")
 
 #num_threads=(1 3 5 7 9 11 13 15)
 #num_threads=(24)
