@@ -464,9 +464,9 @@ void *ralloc_recover_scan_thread(void *raw) {
         }
 
     }
-    printf("valid: %lu scanned: %fgb\n", valid, (double) scanned_bytes / 1024.0 / 1024.0 / 1024.0);
+//    printf("valid: %lu scanned: %fgb\n", valid, (double) scanned_bytes / 1024.0 / 1024.0 / 1024.0);
 
-    return NULL;
+    return (void *) valid;
 }
 
 void ralloc_recover_scan(masstree::masstree *tree) {
@@ -487,9 +487,17 @@ void ralloc_recover_scan(masstree::masstree *tree) {
 
         pthread_create(threads + i, &attr, ralloc_recover_scan_thread, tree);
     }
+
+    uint64_t valid = 0;
+
     for (int i = 0; i < num_thread; i++) {
-        pthread_join(threads[i], NULL);
+
+        uint64_t local;
+        pthread_join(threads[i], (void **) &local);
+        valid += local;
     }
+
+    printf("total valid entries: %lu\n", valid);
 
 }
 
