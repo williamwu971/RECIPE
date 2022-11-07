@@ -439,8 +439,8 @@ static inline uint64_t masstree_getsum(void *value) {
 
 void *ralloc_recover_scan_thread(void *raw) {
 
-    masstree::masstree *tree = (masstree::masstree *) raw;
-    auto t = tree->getThreadInfo();
+//    masstree::masstree *tree = (masstree::masstree *) raw;
+//    auto t = tree->getThreadInfo();
 
     uint64_t valid = 0;
 
