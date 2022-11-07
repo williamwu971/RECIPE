@@ -1140,6 +1140,10 @@ int main(int argc, char **argv) {
 //        RP_init("masstree", PMEM_POOL_SIZE, &preset);
 
         if (should_recover && which_memalign == RP_memalign) {
+
+            RP_scan(NULL,NULL);
+            assert(0);
+
             puts("\tbegin recovering Ralloc");
 
 
