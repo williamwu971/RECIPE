@@ -545,6 +545,8 @@ void ralloc_recover_scan(masstree::masstree *tree) {
 
 
     // push pointers to ralloc's list single threaded
+    starttime = std::chrono::system_clock::now();
+
     for (int i = 0; i < num_thread; i++) {
         struct ralloc_ptr_list *curr = ptr_lists[i];
 
@@ -556,6 +558,15 @@ void ralloc_recover_scan(masstree::masstree *tree) {
             free(curr);
             curr = next;
         }
+    }
+
+    duration = std::chrono::duration_cast<std::chrono::microseconds>(
+            std::chrono::system_clock::now() - starttime);
+
+    if (display_throughput) {
+        printf("Throughput: %s,%ld,%.2f ops/us %.2f sec\n",
+               "set-insert", ralloc_recovered, (ralloc_recovered * 1.0) / duration.count(),
+               duration.count() / 1000000.0);
     }
 
     RP_recover_xiaoxiang_go();
