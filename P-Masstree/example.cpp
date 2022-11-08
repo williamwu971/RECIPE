@@ -1048,6 +1048,11 @@ void run(
 
 int main(int argc, char **argv) {
 
+    cpu_set_t fcpu;
+    CPU_ZERO(&fcpu);
+    CPU_SET(0, &fcpu);
+    pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &fcpu);
+
     if (argc < 3) {
         printf("usage: %s [n] [nthreads]\nn: number of keys (integer)\nnthreads: number of threads (integer)\n",
                argv[0]);
