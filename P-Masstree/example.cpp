@@ -569,7 +569,16 @@ void ralloc_recover_scan(masstree::masstree *tree) {
                duration.count() / 1000000.0);
     }
 
+    starttime = std::chrono::system_clock::now();
     RP_recover_xiaoxiang_go();
+    duration = std::chrono::duration_cast<std::chrono::microseconds>(
+            std::chrono::system_clock::now() - starttime);
+
+    if (display_throughput) {
+        printf("Throughput: %s,%ld,%.2f ops/us %.2f sec\n",
+               "ralloc-build", ralloc_recovered, (ralloc_recovered * 1.0) / duration.count(),
+               duration.count() / 1000000.0);
+    }
 
     printf("recovered: %lu abandoned: %lu\n", ralloc_recovered, ralloc_abandoned);
 
