@@ -753,7 +753,7 @@ static inline void masstree_universal_lookup(
             throw;
         }
 
-        // todo enable
+
         if (!masstree_checksum(raw, SUM_CHECK, g_value, iter, value_offset)) {
 
             printf("error key %lu value %lu pointer %p\n", g_key, g_value, raw);
