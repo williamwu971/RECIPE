@@ -704,12 +704,12 @@ int log_start_perf(const char *perf_fn) {
 
     char command[4096];
 
-//    sprintf(command,
-//            "sudo taskset -c %d-%d /home/blepers/linux-huge/tools/perf/perf record "
-//            "--call-graph dwarf -F 100 -p %d -o %s.record -g >> perf_record.out 2>&1 &",
-//            cores * 3 / 4, cores - 1, getpid(), perf_fn);
-//    puts("WARNING perf record is enabled");
-//    res &= system(command);
+    sprintf(command,
+            "sudo taskset -c %d-%d /home/blepers/linux-huge/tools/perf/perf record "
+            "--call-graph dwarf -F 100 -p %d -o %s.record -g >> perf_record.out 2>&1 &",
+            cores * 3 / 4, cores - 1, getpid(), perf_fn);
+    puts("WARNING perf record is enabled");
+    res &= system(command);
 
 
 //    sprintf(command, "sudo taskset -c %d-%d /home/blepers/linux-huge/tools/perf/perf %s", cores * 3 / 4, cores - 1,
