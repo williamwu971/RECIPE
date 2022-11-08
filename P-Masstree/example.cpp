@@ -3,6 +3,7 @@
 #include <random>
 #include <libpmemobj.h>
 #include <fstream>
+#include <set>
 //#include "tbb/tbb.h"
 #include "plog.cpp"
 
@@ -440,6 +441,11 @@ pthread_mutex_t ralloc_recover_stats_lock = PTHREAD_MUTEX_INITIALIZER;
 uint64_t ralloc_recovered = 0;
 uint64_t ralloc_abandoned = 0;
 
+struct ralloc_ptr_list {
+    void *ptr;
+    struct ralloc_ptr_list *next;
+};
+
 void *ralloc_recover_scan_thread(void *raw) {
 
     masstree::masstree *tree = (masstree::masstree *) raw;
@@ -447,6 +453,8 @@ void *ralloc_recover_scan_thread(void *raw) {
 
     uint64_t valid = 0;
     uint64_t invalid = 0;
+
+    struct ralloc_ptr_list *ptrs = NULL;
 
     while (1) {
 
@@ -457,6 +465,12 @@ void *ralloc_recover_scan_thread(void *raw) {
         while (pack.curr < pack.end) {
             if (masstree_checksum(pack.curr, SUM_LOG, 0, iter, 0) != NULL) {
                 valid++;
+
+                // record pointer
+                struct ralloc_ptr_list *new_ptr = (struct ralloc_ptr_list *) malloc(sizeof(struct ralloc_ptr_list));
+                new_ptr->ptr = pack.curr;
+                new_ptr->next = ptrs;
+                ptrs = new_ptr;
 
                 uint64_t key = ((uint64_t *) pack.curr)[0];
                 void *returned = tree->put_and_return(key, pack.curr, 1, 0, t);
@@ -479,7 +493,7 @@ void *ralloc_recover_scan_thread(void *raw) {
     ralloc_abandoned += invalid;
     pthread_mutex_unlock(&ralloc_recover_stats_lock);
 
-    return (void *) valid;
+    return ptrs;
 }
 
 void ralloc_recover_scan(masstree::masstree *tree) {
@@ -490,6 +504,8 @@ void ralloc_recover_scan(masstree::masstree *tree) {
     printf("\n");
 
     pthread_t *threads = (pthread_t *) malloc(num_thread * sizeof(pthread_t));
+    struct ralloc_ptr_list **ptr_lists = (struct ralloc_ptr_list **) malloc(
+            num_thread * sizeof(struct ralloc_ptr_list *));
     RP_scan_init();
 
     if (use_perf)log_start_perf(perf_fn);
@@ -510,8 +526,7 @@ void ralloc_recover_scan(masstree::masstree *tree) {
     }
 
     for (int i = 0; i < num_thread; i++) {
-        pthread_join(threads[i], NULL);
-
+        pthread_join(threads[i], (void **) (ptr_lists + i));
     }
 
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
@@ -528,6 +543,22 @@ void ralloc_recover_scan(masstree::masstree *tree) {
                duration.count() / 1000000.0);
     }
 
+
+    // push pointers to ralloc's list single threaded
+    for (int i = 0; i < num_thread; i++) {
+        struct ralloc_ptr_list *curr = ptr_lists[i];
+
+        while (curr != NULL) {
+
+            RP_recover_xiaoxiang_insert(curr->ptr);
+
+            struct ralloc_ptr_list *next = curr->next;
+            free(curr);
+            curr = next;
+        }
+    }
+
+    RP_recover_xiaoxiang_go();
 
     printf("recovered: %lu abandoned: %lu\n", ralloc_recovered, ralloc_abandoned);
 
