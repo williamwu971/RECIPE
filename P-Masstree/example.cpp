@@ -459,7 +459,13 @@ void *ralloc_recover_scan_thread(void *raw) {
                 valid++;
 
                 uint64_t key = ((uint64_t *) pack.curr)[0];
-                tree->put_and_return(key, pack.curr, 1, 0, t);
+                void *returned = tree->put_and_return(key, pack.curr, 1, 0, t);
+
+                if (returned != NULL) {
+                    puts("detected replacing keys");
+                    throw;
+                }
+
             } else {
                 invalid++;
             }
