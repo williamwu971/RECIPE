@@ -754,11 +754,11 @@ static inline void masstree_universal_lookup(
         }
 
         // todo enable
-//        if (!masstree_checksum(raw, SUM_CHECK, g_value, iter, value_offset)) {
-//
-//            printf("error key %lu value %lu pointer %p\n", g_key, g_value, raw);
-//            throw;
-//        }
+        if (!masstree_checksum(raw, SUM_CHECK, g_value, iter, value_offset)) {
+
+            printf("error key %lu value %lu pointer %p\n", g_key, g_value, raw);
+            throw;
+        }
     }
 }
 
@@ -1554,7 +1554,7 @@ int main(int argc, char **argv) {
         /**
          * section UPDATE
          */
-//        if (shuffle_keys) masstree_shuffle(keys, n);
+        if (shuffle_keys) masstree_shuffle(keys, n);
         run("update", throughput_file, attrs, section_args, latencies, section_update);
     }
 
@@ -1564,7 +1564,7 @@ int main(int argc, char **argv) {
         /**
          * section LOOKUP
          */
-//        if (shuffle_keys) masstree_shuffle(keys, n);
+        if (shuffle_keys) masstree_shuffle(keys, n);
         run("lookup", throughput_file, attrs, section_args, latencies, section_lookup);
     }
 
