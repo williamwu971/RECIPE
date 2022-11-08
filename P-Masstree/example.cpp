@@ -1554,7 +1554,7 @@ int main(int argc, char **argv) {
         /**
          * section UPDATE
          */
-        if (shuffle_keys) masstree_shuffle(keys, n);
+//        if (shuffle_keys) masstree_shuffle(keys, n);
         run("update", throughput_file, attrs, section_args, latencies, section_update);
     }
 
@@ -1564,7 +1564,7 @@ int main(int argc, char **argv) {
         /**
          * section LOOKUP
          */
-        if (shuffle_keys) masstree_shuffle(keys, n);
+//        if (shuffle_keys) masstree_shuffle(keys, n);
         run("lookup", throughput_file, attrs, section_args, latencies, section_lookup);
     }
 
