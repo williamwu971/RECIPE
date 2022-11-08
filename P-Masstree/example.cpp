@@ -1369,7 +1369,7 @@ int main(int argc, char **argv) {
         } else if (should_recover) {
             tree = new masstree::masstree();
             ralloc_recover_scan(tree);
-            throw;
+            goto_lookup = 1;
         }
     }
 
