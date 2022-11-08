@@ -472,7 +472,7 @@ void *ralloc_recover_scan_thread(void *raw) {
                 new_ptr->next = ptrs;
                 ptrs = new_ptr;
 
-                uint64_t key = ((uint64_t *) pack.curr)[0];
+                uint64_t key = ((uint64_t *) pack.curr)[1];
                 void *returned = tree->put_and_return(key, pack.curr, 1, 0, t);
 
                 if (returned != NULL) {
@@ -564,6 +564,8 @@ void ralloc_recover_scan(masstree::masstree *tree) {
 
 }
 
+int ralloc_extra = 0;
+
 static inline void masstree_ralloc_update(masstree::masstree *tree,
                                           MASS::ThreadInfo t,
                                           uint64_t u_key,
@@ -571,6 +573,9 @@ static inline void masstree_ralloc_update(masstree::masstree *tree,
                                           int no_allow_prev_null,
                                           void *tplate) {
     *((uint64_t *) tplate) = u_value;
+    if (ralloc_extra) {
+        ((uint64_t *) tplate)[1] = u_key;
+    }
     if (!masstree_checksum(tplate, SUM_WRITE, u_value, iter, value_offset)) throw;
 
 
@@ -1096,6 +1101,12 @@ int main(int argc, char **argv) {
                 require_RP_init = 1;
                 use_ralloc = 1;
                 base_size = sizeof(uint64_t) * 2;
+
+                if (which_memalign == posix_memalign) {
+                    base_size += sizeof(uint64_t);
+                    ralloc_extra = 1;
+                }
+
                 printf("value=ralloc ");
 
                 fs.update_func = masstree_ralloc_update;
