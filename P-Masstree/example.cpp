@@ -442,9 +442,8 @@ uint64_t ralloc_abandoned = 0;
 
 void *ralloc_recover_scan_thread(void *raw) {
 
-    (void)raw;
-//    masstree::masstree *tree = (masstree::masstree *) raw;
-//    auto t = tree->getThreadInfo();
+    masstree::masstree *tree = (masstree::masstree *) raw;
+    auto t = tree->getThreadInfo();
 
     uint64_t valid = 0;
     uint64_t invalid = 0;
@@ -459,8 +458,8 @@ void *ralloc_recover_scan_thread(void *raw) {
             if (masstree_checksum(pack.curr, SUM_LOG, 0, iter, 0) != NULL) {
                 valid++;
 
-//                uint64_t key = ((uint64_t *) pack.curr)[0];
-//                tree->put_and_return(key, pack.curr, 1, 0,t);
+                uint64_t key = ((uint64_t *) pack.curr)[0];
+                tree->put_and_return(key, pack.curr, 1, 0, t);
             } else {
                 invalid++;
             }
@@ -505,7 +504,7 @@ void ralloc_recover_scan(masstree::masstree *tree) {
 //        valid += local;
     }
 
-    printf("recovered: %lu abandoned: %lu\n", ralloc_recovered,ralloc_abandoned);
+    printf("recovered: %lu abandoned: %lu\n", ralloc_recovered, ralloc_abandoned);
 
 }
 
@@ -1211,11 +1210,6 @@ int main(int argc, char **argv) {
 //        int should_recover=(access("/pmem0/masstree_sb", F_OK) != -1);
 //        RP_init("masstree", PMEM_POOL_SIZE, &preset);
 
-        if (should_recover) {
-            ralloc_recover_scan(NULL);
-            throw;
-        }
-
         if (should_recover && which_memalign == RP_memalign) {
 
             puts("\tbegin recovering Ralloc");
@@ -1311,6 +1305,10 @@ int main(int argc, char **argv) {
             RP_recover_xiaoxiang((void **) all_values, n * 2);
             goto_lookup = 1;
 
+        } else if (should_recover) {
+            tree = new masstree::masstree();
+            ralloc_recover_scan(tree);
+            throw;
         }
     }
 
