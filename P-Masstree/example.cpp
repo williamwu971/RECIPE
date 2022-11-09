@@ -600,6 +600,14 @@ static inline void masstree_ralloc_update(masstree::masstree *tree,
 
 
     void *value = RP_malloc(total_size);
+
+    // todo: check memory alignment
+    if ((uint64_t)value % total_size!=0){
+        printf("%p not aligned to %d\n",value,total_size);
+        throw;
+    }
+
+
     cpy_persist(value, tplate, total_size);
 
     uint64_t *returned = (uint64_t *) tree->put_and_return(u_key, value, !no_allow_prev_null, 0, t);
