@@ -656,10 +656,10 @@ void *ralloc_reachability_scan_thread(void *raw) {
 }
 
 
-masstree::masstree *ralloc_reachability_scan() {
+void ralloc_reachability_scan(masstree::masstree *tree) {
+
     puts("\tbegin Ralloc reachability scan");
 
-    masstree::masstree *tree = new masstree::masstree(RP_get_root<masstree::leafnode>(0));
     printf("tree root: %p\n", tree->root());
     masstree::leafnode *root = (masstree::leafnode *) tree->root();
 
@@ -1431,7 +1431,10 @@ int main(int argc, char **argv) {
 
         if (should_recover && which_memalign == RP_memalign) {
 
+            tree = new masstree::masstree(RP_get_root<masstree::leafnode>(0));
+            ralloc_reachability_scan(tree);
 
+            throw;
             goto_lookup = 1;
 
         } else if (should_recover) {
