@@ -612,6 +612,7 @@ void *ralloc_reachability_scan_thread(void *raw) {
     to_visit[0] = (masstree::leafnode *) raw;
     int to_visit_size = 1;
 
+    int recovered_values = 0;
 
     while (to_visit_size) {
 
@@ -642,7 +643,13 @@ void *ralloc_reachability_scan_thread(void *raw) {
 
             } else {
                 for (int kv_idx = 0; kv_idx < LEAF_WIDTH; kv_idx++) {
-                    ralloc_ptr_list_add(&list, curr->value(kv_idx));
+                    void *v = curr->value(kv_idx);
+
+                    if (v != NULL) {
+                        ralloc_ptr_list_add(&list, v);
+                        recovered_values++;
+                    }
+
                 }
             }
         }
@@ -657,6 +664,8 @@ void *ralloc_reachability_scan_thread(void *raw) {
         printf("weird, should be NULL here, %p %d", to_visit, to_visit_size);
         free(to_visit);
     }
+
+    printf("recovered: %d\n", recovered_values);
 
     return list;
 }
