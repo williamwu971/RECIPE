@@ -1492,7 +1492,7 @@ int main(int argc, char **argv) {
             tree = new masstree::masstree(RP_get_root<masstree::leafnode>(0));
             ralloc_reachability_scan(tree);
 
-            throw;
+//            throw;
             goto_lookup = 1;
 
         } else if (should_recover) {
