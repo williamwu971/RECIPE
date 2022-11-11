@@ -621,6 +621,11 @@ void *ralloc_reachability_scan_thread(void *raw) {
         for (int i = 0; i < to_visit_size; i++) {
 
             masstree::leafnode *curr = to_visit[i];
+
+            if (curr == NULL) {
+                continue;
+            }
+
             ralloc_ptr_list_add(&list, curr);
 
 
