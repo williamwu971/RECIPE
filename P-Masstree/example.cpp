@@ -595,10 +595,6 @@ void ralloc_ptr_list_add(struct ralloc_ptr_list **head, void *ptr) {
 
     struct ralloc_ptr_list *new_node = (struct ralloc_ptr_list *) malloc(sizeof(struct ralloc_ptr_list));
 
-    if (new_node==NULL){
-        throw;
-    }
-
     new_node->ptr = ptr;
     new_node->next = *head;
     *head = new_node;
