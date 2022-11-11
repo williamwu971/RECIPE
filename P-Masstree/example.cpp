@@ -687,7 +687,7 @@ void ralloc_reachability_scan(masstree::masstree *tree) {
         pthread_attr_init(&attr);
         pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpu);
 
-        pthread_create(threads + i, &attr, ralloc_recover_scan_thread, root->value(i));
+        pthread_create(threads + i, &attr, ralloc_reachability_scan_thread, root->value(i));
     }
 
     for (int i = 0; i < LEAF_WIDTH; i++) {
