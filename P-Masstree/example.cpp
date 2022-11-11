@@ -643,9 +643,11 @@ void *ralloc_reachability_scan_thread(void *raw) {
 
             } else {
                 for (int kv_idx = 0; kv_idx < LEAF_WIDTH; kv_idx++) {
+
+                    uint64_t k = curr->key(kv_idx);
                     void *v = curr->value(kv_idx);
 
-                    if (v != NULL) {
+                    if (v != NULL && k==(((uint64_t *) v)[0])) {
                         ralloc_ptr_list_add(&list, v);
                         recovered_values++;
                     }
