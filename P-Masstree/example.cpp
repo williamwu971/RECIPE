@@ -602,8 +602,8 @@ void ralloc_ptr_list_add(struct ralloc_ptr_list **head, void *ptr) {
 void *ralloc_reachability_scan_thread(void *raw) {
 
     if (raw == NULL) {
-        puts("WTF");
-        throw;
+        printf("thread %lu returning\n", pthread_self());
+        return NULL;
     }
 
     struct ralloc_ptr_list *list = NULL;
