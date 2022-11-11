@@ -644,6 +644,7 @@ void *ralloc_reachability_scan_thread(void *raw) {
                 to_visit_next_size += LEAF_WIDTH;
 
                 to_visit_next[to_visit_next_size] = (masstree::leafnode *) curr->leftmost();
+                to_visit_next[to_visit_next_size] = NULL; // todo
                 to_visit_next[to_visit_next_size + 1] = (masstree::leafnode *) curr->next_();
                 to_visit_next_size += 2;
 
@@ -714,7 +715,7 @@ void ralloc_reachability_scan(masstree::masstree *tree) {
         pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpu);
 
         if (i == LEAF_WIDTH) {
-            pthread_create(threads + i, &attr, ralloc_reachability_scan_thread, root->leftmost());
+//            pthread_create(threads + i, &attr, ralloc_reachability_scan_thread, root->leftmost());
         } else if (i == LEAF_WIDTH + 1) {
             pthread_create(threads + i, &attr, ralloc_reachability_scan_thread, root->next_());
         } else {
