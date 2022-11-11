@@ -1431,7 +1431,6 @@ int main(int argc, char **argv) {
 
         if (should_recover && which_memalign == RP_memalign) {
 
-            puts("debug");
             tree = new masstree::masstree(RP_get_root<masstree::leafnode>(0));
             ralloc_reachability_scan(tree);
 
