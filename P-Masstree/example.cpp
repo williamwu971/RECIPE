@@ -77,6 +77,13 @@ using namespace std;
 inline int RP_memalign(void **memptr, size_t alignment, size_t size) {
 
     *memptr = RP_malloc(size + (alignment - size % alignment));
+
+    // todo: this can be removed
+    uint64_t casted = (uint64_t) (*memptr);
+    if (casted % alignment != 0) {
+        throw;
+    }
+
     return 0;
 }
 
@@ -581,6 +588,125 @@ void ralloc_recover_scan(masstree::masstree *tree) {
     }
 
     printf("recovered: %lu abandoned: %lu\n", ralloc_recovered, ralloc_abandoned);
+
+}
+
+void ralloc_ptr_list_add(struct ralloc_ptr_list **head, void *ptr) {
+
+    struct ralloc_ptr_list *new_node = (struct ralloc_ptr_list *) malloc(sizeof(struct ralloc_ptr_list));
+    new_node->ptr = ptr;
+    new_node->next = *head;
+    *head = new_node;
+}
+
+void *ralloc_reachability_scan_thread(void *raw) {
+
+    if (raw == NULL) {
+        puts("WTF");
+        throw;
+    }
+
+    struct ralloc_ptr_list *list = NULL;
+    masstree::leafnode **to_visit = (masstree::leafnode **) calloc(1, sizeof(masstree::leafnode *));
+    to_visit[0] = (masstree::leafnode *) raw;
+    int to_visit_size = 1;
+
+
+    while (to_visit_size) {
+
+        masstree::leafnode **to_visit_next = NULL;
+        int to_visit_next_size = 0;
+
+        for (int i = 0; i < to_visit_size; i++) {
+
+            masstree::leafnode *curr = to_visit[i];
+            ralloc_ptr_list_add(&list, curr);
+
+
+            if (curr->level() != 0) {
+
+                to_visit_next = (masstree::leafnode **) realloc(to_visit_next,
+                                                                (to_visit_next_size + LEAF_WIDTH) *
+                                                                sizeof(masstree::leafnode *));
+                for (int kv_idx = 0; kv_idx < LEAF_WIDTH; kv_idx++) {
+                    to_visit_next[to_visit_next_size + kv_idx] = (masstree::leafnode *) curr->value(kv_idx);
+                }
+
+                to_visit_next_size += LEAF_WIDTH;
+
+            } else {
+                for (int kv_idx = 0; kv_idx < LEAF_WIDTH; kv_idx++) {
+                    ralloc_ptr_list_add(&list, curr->value(kv_idx));
+                }
+            }
+        }
+
+        free(to_visit);
+
+        to_visit_size = to_visit_next_size;
+        to_visit = to_visit_next;
+    }
+
+    if (to_visit != NULL) {
+        printf("weird, should be NULL here, %p %d", to_visit, to_visit_size);
+        free(to_visit);
+    }
+
+    return list;
+}
+
+
+masstree::masstree *ralloc_reachability_scan() {
+    puts("\tbegin Ralloc reachability scan");
+
+    masstree::masstree *tree = new masstree::masstree(RP_get_root<masstree::leafnode>(0));
+    printf("tree root: %p\n", tree->root());
+    masstree::leafnode *root = (masstree::leafnode *) tree->root();
+
+    const char *section_name = "ralloc_reachability_scan";
+    char perf_fn[64];
+    sprintf(perf_fn, "%s-%s.perf", prefix == NULL ? "" : prefix, section_name);
+    printf("\n");
+
+    pthread_t *threads = (pthread_t *) malloc(LEAF_WIDTH * sizeof(pthread_t));
+    struct ralloc_ptr_list **ptr_lists = (struct ralloc_ptr_list **) malloc(
+            LEAF_WIDTH * sizeof(struct ralloc_ptr_list *));
+    RP_scan_init();
+
+    if (use_perf)log_start_perf(perf_fn);
+    auto starttime = std::chrono::system_clock::now();
+
+    for (int i = 0; i < LEAF_WIDTH; i++) {
+        cpu_set_t cpu;
+        CPU_ZERO(&cpu);
+
+        // reserving CPU 0
+        CPU_SET(i + 1, &cpu);
+
+        pthread_attr_t attr;
+        pthread_attr_init(&attr);
+        pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpu);
+
+        pthread_create(threads + i, &attr, ralloc_recover_scan_thread, root->value(i));
+    }
+
+    for (int i = 0; i < LEAF_WIDTH; i++) {
+        pthread_join(threads[i], (void **) (ptr_lists + i));
+    }
+
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
+            std::chrono::system_clock::now() - starttime);
+
+    if (use_perf) {
+        log_stop_perf();
+        log_print_pmem_bandwidth(perf_fn, duration.count() / 1000000.0, NULL);
+    }
+
+    if (display_throughput) {
+        printf("Throughput: %s,%ld,%.2f ops/us %.2f sec\n",
+               section_name, ralloc_recovered, (ralloc_recovered * 1.0) / duration.count(),
+               duration.count() / 1000000.0);
+    }
 
 }
 
@@ -1305,97 +1431,7 @@ int main(int argc, char **argv) {
 
         if (should_recover && which_memalign == RP_memalign) {
 
-            puts("\tbegin recovering Ralloc");
 
-
-            tree = new masstree::masstree(RP_get_root<masstree::leafnode>(0));
-            printf("tree root: %p\n", tree->root());
-
-            // read in all the pointers
-            void **all_values = (void **) calloc(n * 2, sizeof(void *));
-            auto info = tree->getThreadInfo();
-
-            // todo: not sure why, but scan does not work
-//            uint64_t min =0;
-//            assert(tree->scan(min, n, all_values, info) == n);
-
-            puts("getting values");
-            for (uint64_t xx = 0; xx < n; xx++) {
-                all_values[xx] = tree->get(xx + 1, info);
-//                printf("ptr %p\n",(void*)(all_values[xx]));
-//                if ((void*)(all_values[xx])==NULL){
-//                    break;
-//                }
-            }
-
-            // duplication check
-            puts("duplication check 0");
-            for (uint64_t xx = 0; xx < n; xx++) {
-                for (uint64_t xxx = xx + 1; xxx < n; xxx++) {
-                    assert(all_values[xx] != all_values[xxx]);
-                }
-            }
-
-
-
-//            int num_leaf = tree->scan_leaf((uint64_t) 0, n,  (all_values + n), info);
-//            printf("num_leaf: %d", num_leaf);
-
-            puts("getting leafs");
-            void **leaf_values = all_values + n;
-            uint64_t leaf_index = 0;
-
-            void **buffer = (void **) malloc(sizeof(void *) * n);
-            int *buffer_in = (int *) malloc(sizeof(int) * n);
-
-
-            for (uint64_t xx = 0; xx < n; xx++) {
-                memset(buffer_in, 1, sizeof(int) * n);
-
-                int got_leafs = tree->get_leaf(xx + 1, buffer, info);
-
-                for (int i = 0; i < got_leafs; i++) {
-
-                    for (int x = i + 1; x < got_leafs; x++) {
-                        if (buffer[i] == buffer[x]) {
-                            buffer_in[x] = 0;
-                        }
-                    }
-
-                    for (uint64_t j = 0; j < leaf_index; j++) {
-                        if (buffer[i] == leaf_values[j]) {
-                            buffer_in[i] = 0;
-                        }
-                    }
-                }
-
-                for (int i = 0; i < got_leafs; i++) {
-                    if (buffer_in[i]) {
-                        leaf_values[leaf_index++] = buffer[i];
-                    }
-                }
-
-//                printf("ptr %p\n",(void*)(all_values[xx]));
-//                if ((void*)(all_values[xx])==NULL){
-//                    break;
-//                }
-            }
-
-
-//            puts("duplication check 1");
-//            for (uint64_t xx = 0; xx < n; xx++) {
-//                if (leaf_values[xx] == NULL) continue;
-//                for (uint64_t xxx = xx + 1; xxx < n; xxx++) {
-//                    if (leaf_values[xxx] == leaf_values[xx]) {
-//                        leaf_values[xxx] = NULL;
-//                    }
-//                }
-//                leaf_index++;
-//            }
-
-            printf("recovered %lu leafs\n", leaf_index);
-
-            RP_recover_xiaoxiang((void **) all_values, n * 2);
             goto_lookup = 1;
 
         } else if (should_recover) {
