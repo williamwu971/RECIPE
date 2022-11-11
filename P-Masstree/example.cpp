@@ -665,7 +665,10 @@ void *ralloc_reachability_scan_thread(void *raw) {
         free(to_visit);
     }
 
-    printf("recovered: %d\n", recovered_values);
+    pthread_mutex_lock(&ralloc_recover_stats_lock);
+    ralloc_recovered += recovered_values;
+//    ralloc_abandoned += invalid;
+    pthread_mutex_unlock(&ralloc_recover_stats_lock);
 
     return list;
 }
