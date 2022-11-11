@@ -731,6 +731,8 @@ void ralloc_reachability_scan(masstree::masstree *tree) {
     // push pointers to ralloc's list single threaded
     starttime = std::chrono::system_clock::now();
 
+    RP_recover_xiaoxiang_insert(root);
+
     for (int i = 0; i < LEAF_WIDTH; i++) {
         struct ralloc_ptr_list *curr = ptr_lists[i];
 
