@@ -647,7 +647,7 @@ void *ralloc_reachability_scan_thread(void *raw) {
                     uint64_t k = curr->key(kv_idx);
                     void *v = curr->value(kv_idx);
 
-                    if (v != NULL && k==(((uint64_t *) v)[0])) {
+                    if (v != NULL) {
                         ralloc_ptr_list_add(&list, v);
                         recovered_values++;
                     }
@@ -727,6 +727,44 @@ void ralloc_reachability_scan(masstree::masstree *tree) {
                section_name, ralloc_recovered, (ralloc_recovered * 1.0) / duration.count(),
                duration.count() / 1000000.0);
     }
+
+    // push pointers to ralloc's list single threaded
+    starttime = std::chrono::system_clock::now();
+
+    for (int i = 0; i < num_thread; i++) {
+        struct ralloc_ptr_list *curr = ptr_lists[i];
+
+        while (curr != NULL) {
+
+            RP_recover_xiaoxiang_insert(curr->ptr);
+
+            struct ralloc_ptr_list *next = curr->next;
+            free(curr);
+            curr = next;
+        }
+    }
+
+    duration = std::chrono::duration_cast<std::chrono::microseconds>(
+            std::chrono::system_clock::now() - starttime);
+
+    if (display_throughput) {
+        printf("Throughput: %s,%ld,%.2f ops/us %.2f sec\n",
+               "set-insert", ralloc_recovered, (ralloc_recovered * 1.0) / duration.count(),
+               duration.count() / 1000000.0);
+    }
+
+    starttime = std::chrono::system_clock::now();
+    RP_recover_xiaoxiang_go();
+    duration = std::chrono::duration_cast<std::chrono::microseconds>(
+            std::chrono::system_clock::now() - starttime);
+
+    if (display_throughput) {
+        printf("Throughput: %s,%ld,%.2f ops/us %.2f sec\n",
+               "ralloc-build", ralloc_recovered, (ralloc_recovered * 1.0) / duration.count(),
+               duration.count() / 1000000.0);
+    }
+
+    printf("recovered: %lu abandoned: %lu\n", ralloc_recovered, ralloc_abandoned);
 
 }
 
