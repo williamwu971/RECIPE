@@ -506,7 +506,7 @@ void *ralloc_recover_scan_thread(void *raw) {
 void ralloc_recover_scan(masstree::masstree *tree) {
 
     const char *section_name = "ralloc_recover_scan";
-    char perf_fn[64];
+    char perf_fn[256];
     sprintf(perf_fn, "%s-%s.perf", prefix == NULL ? "" : prefix, section_name);
     printf("\n");
 
@@ -664,7 +664,7 @@ void ralloc_reachability_scan(masstree::masstree *tree) {
     masstree::leafnode *root = (masstree::leafnode *) tree->root();
 
     const char *section_name = "ralloc_reachability_scan";
-    char perf_fn[64];
+    char perf_fn[256];
     sprintf(perf_fn, "%s-%s.perf", prefix == NULL ? "" : prefix, section_name);
     printf("\n");
 
@@ -1146,7 +1146,7 @@ void run(
         u_int64_t *latencies,
         void *(*routine)(void *)) {
 
-    char perf_fn[64];
+    char perf_fn[256];
     sprintf(perf_fn, "%s-%s.perf", prefix == NULL ? "" : prefix, section_name);
     printf("\n");
 
