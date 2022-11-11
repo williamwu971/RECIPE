@@ -591,6 +591,8 @@ void ralloc_recover_scan(masstree::masstree *tree) {
 
 }
 
+#define REACH_T (LEAF_WIDTH+2)
+
 void ralloc_ptr_list_add(struct ralloc_ptr_list **head, void *ptr) {
 
     struct ralloc_ptr_list *new_node = (struct ralloc_ptr_list *) malloc(sizeof(struct ralloc_ptr_list));
@@ -633,13 +635,17 @@ void *ralloc_reachability_scan_thread(void *raw) {
             if (curr->level() != 0) {
 
                 to_visit_next = (masstree::leafnode **) realloc(to_visit_next,
-                                                                (to_visit_next_size + LEAF_WIDTH) *
+                                                                (to_visit_next_size + REACH_T) *
                                                                 sizeof(masstree::leafnode *));
                 for (int kv_idx = 0; kv_idx < LEAF_WIDTH; kv_idx++) {
                     to_visit_next[to_visit_next_size + kv_idx] = (masstree::leafnode *) curr->value(kv_idx);
                 }
 
                 to_visit_next_size += LEAF_WIDTH;
+
+                to_visit_next[to_visit_next_size] = (masstree::leafnode *) curr->leftmost();
+                to_visit_next[to_visit_next_size + 1] = (masstree::leafnode *) curr->next_();
+                to_visit_next_size += 2;
 
             } else {
                 for (int kv_idx = 0; kv_idx < LEAF_WIDTH; kv_idx++) {
@@ -688,15 +694,15 @@ void ralloc_reachability_scan(masstree::masstree *tree) {
     sprintf(perf_fn, "%s-%s.perf", prefix == NULL ? "" : prefix, section_name);
     printf("\n");
 
-    pthread_t *threads = (pthread_t *) malloc(LEAF_WIDTH * sizeof(pthread_t));
+    pthread_t *threads = (pthread_t *) malloc(REACH_T * sizeof(pthread_t));
     struct ralloc_ptr_list **ptr_lists = (struct ralloc_ptr_list **) malloc(
-            LEAF_WIDTH * sizeof(struct ralloc_ptr_list *));
+            REACH_T * sizeof(struct ralloc_ptr_list *));
     RP_scan_init();
 
     if (use_perf)log_start_perf(perf_fn);
     auto starttime = std::chrono::system_clock::now();
 
-    for (int i = 0; i < LEAF_WIDTH; i++) {
+    for (int i = 0; i < REACH_T; i++) {
         cpu_set_t cpu;
         CPU_ZERO(&cpu);
 
@@ -707,10 +713,17 @@ void ralloc_reachability_scan(masstree::masstree *tree) {
         pthread_attr_init(&attr);
         pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpu);
 
-        pthread_create(threads + i, &attr, ralloc_reachability_scan_thread, root->value(i));
+        if (i == LEAF_WIDTH) {
+            pthread_create(threads + i, &attr, ralloc_reachability_scan_thread, root->leftmost());
+        } else if (i == LEAF_WIDTH + 1) {
+            pthread_create(threads + i, &attr, ralloc_reachability_scan_thread, root->next_());
+        } else {
+            pthread_create(threads + i, &attr, ralloc_reachability_scan_thread, root->value(i));
+        }
+
     }
 
-    for (int i = 0; i < LEAF_WIDTH; i++) {
+    for (int i = 0; i < REACH_T; i++) {
         pthread_join(threads[i], (void **) (ptr_lists + i));
     }
 
@@ -733,7 +746,7 @@ void ralloc_reachability_scan(masstree::masstree *tree) {
 
     RP_recover_xiaoxiang_insert(root);
 
-    for (int i = 0; i < LEAF_WIDTH; i++) {
+    for (int i = 0; i < REACH_T; i++) {
         struct ralloc_ptr_list *curr = ptr_lists[i];
 
         while (curr != NULL) {
