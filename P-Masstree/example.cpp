@@ -646,6 +646,7 @@ void *ralloc_reachability_scan_thread(void *raw) {
                 to_visit_next[to_visit_next_size] = (masstree::leafnode *) curr->leftmost();
                 to_visit_next[to_visit_next_size] = NULL; // todo
                 to_visit_next[to_visit_next_size + 1] = (masstree::leafnode *) curr->next_();
+                to_visit_next[to_visit_next_size + 1] = NULL; // todo
                 to_visit_next_size += 2;
 
             } else {
