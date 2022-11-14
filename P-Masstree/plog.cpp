@@ -368,8 +368,8 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) 
     log_stop_perf();
     log_print_pmem_bandwidth("rebuild.perf", duration.count() / 1000000.0, NULL);
 
-    printf("... rebuild complete, recovered %lu keys throughput %.2f ops/us...\n",
-           total_recovered, (total_recovered * 1.0) / duration.count());
+    printf("... rebuild complete, recovered %lu keys throughput %.2f ops/us %.2f sec...\n",
+           total_recovered, (total_recovered * 1.0) / duration.count(), duration.count() / 1000000.0);
 
     printf("time slides:\n");
     printf("read: %.2fs\n", (double) total_time_read / (double) num_threads / 2000000000.0);
