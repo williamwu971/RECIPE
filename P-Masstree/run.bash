@@ -101,8 +101,8 @@ index_location=("dram")
 
 #value_location=("ralloc" "log" "obj")
 #value_location=("obj" "log" "ralloc")
-#value_location=("ralloc")
-value_location=("log")
+value_location=("ralloc")
+#value_location=("log")
 #value_location=("obj")
 #value_location=("ralloc" "log" "log-best")
 
