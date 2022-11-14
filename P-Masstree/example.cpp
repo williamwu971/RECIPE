@@ -447,6 +447,9 @@ static inline uint64_t masstree_getsum(void *value) {
 pthread_mutex_t ralloc_recover_stats_lock = PTHREAD_MUTEX_INITIALIZER;
 uint64_t ralloc_recovered = 0;
 uint64_t ralloc_abandoned = 0;
+uint64_t ralloc_total_time_tree = 0;
+uint64_t ralloc_total_time_read = 0;
+uint64_t ralloc_total_time_meta = 0;
 
 struct ralloc_ptr_list {
     void *ptr;
@@ -470,23 +473,42 @@ void *ralloc_recover_scan_thread(void *raw) {
     uint64_t valid = 0;
     uint64_t invalid = 0;
 
+    uint64_t time_tree = 0;
+    uint64_t time_read = 0;
+    uint64_t time_meta = 0;
+
     struct ralloc_ptr_list *ptrs = NULL;
 
     while (1) {
+
+        uint64_t a, b;
 
         struct RP_scan_pack pack = RP_scan_next();
         if (pack.curr == NULL)break;
         if (pack.block_size < (uint32_t) total_size) throw;
 
         while (pack.curr < pack.end) {
-            if (masstree_checksum(pack.curr, SUM_LOG, 0, iter, 0) != NULL) {
+
+            rdtscll(a)
+            void *res = masstree_checksum(pack.curr, SUM_LOG, 0, iter, 0);
+            rdtscll(b)
+            time_read += b - a;
+
+            if (res != NULL) {
                 valid++;
 
                 // record pointer
+                rdtscll(a)
                 ralloc_ptr_list_add(&ptrs, pack.curr);
+                rdtscll(b)
+                time_meta += b - a;
 
+                rdtscll(a)
                 uint64_t key = ((uint64_t *) pack.curr)[1];
                 void *returned = tree->put_and_return(key, pack.curr, 1, 0, t);
+                rdtscll(b)
+                time_tree += b - a;
+
 
                 if (returned != NULL) {
                     puts("detected replacing keys");
@@ -504,6 +526,9 @@ void *ralloc_recover_scan_thread(void *raw) {
     pthread_mutex_lock(&ralloc_recover_stats_lock);
     ralloc_recovered += valid;
     ralloc_abandoned += invalid;
+    ralloc_total_time_meta += time_meta;
+    ralloc_total_time_read += time_read;
+    ralloc_total_time_tree += time_tree;
     pthread_mutex_unlock(&ralloc_recover_stats_lock);
 
     return ptrs;
@@ -560,6 +585,10 @@ void ralloc_recover_scan(masstree::masstree *tree) {
     // push pointers to ralloc's list single threaded
     starttime = std::chrono::system_clock::now();
 
+    uint64_t meta_here = 0;
+
+    uint64_t a, b;
+    rdtscll(a)
     for (int i = 0; i < num_thread; i++) {
         struct ralloc_ptr_list *curr = ptr_lists[i];
 
@@ -572,6 +601,8 @@ void ralloc_recover_scan(masstree::masstree *tree) {
             curr = next;
         }
     }
+    rdtscll(b)
+    meta_here += b - a;
 
     duration = std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now() - starttime);
@@ -583,7 +614,10 @@ void ralloc_recover_scan(masstree::masstree *tree) {
     }
 
     starttime = std::chrono::system_clock::now();
+    rdtscll(a)
     RP_recover_xiaoxiang_go();
+    rdtscll(b)
+    meta_here += b - a;
     duration = std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now() - starttime);
 
@@ -594,6 +628,12 @@ void ralloc_recover_scan(masstree::masstree *tree) {
     }
 
     printf("recovered: %lu abandoned: %lu\n", ralloc_recovered, ralloc_abandoned);
+
+    printf("time slides:\n");
+    printf("read: %.2fs\n", (double) ralloc_total_time_read / (double) num_thread / 2000000000.0);
+    printf("tree: %.2fs\n", (double) ralloc_total_time_tree / (double) num_thread / 2000000000.0);
+    printf("meta: %.2fs\n", (double) ralloc_total_time_meta / (double) num_thread / 2000000000.0
+                            + (double) meta_here / 2000000000.0);
 
 }
 

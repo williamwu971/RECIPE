@@ -235,10 +235,11 @@ struct log_rebuild_args {
 };
 
 pthread_mutex_t total_recover_lock = PTHREAD_MUTEX_INITIALIZER;
-uint64_t total_recovered = 0;
-uint64_t total_time_tree = 0;
-uint64_t total_time_read = 0;
-uint64_t total_time_meta = 0;
+uint64_t log_total_recovered = 0;
+uint64_t log_total_ops = 0;
+uint64_t log_total_time_tree = 0;
+uint64_t log_total_time_read = 0;
+uint64_t log_total_time_meta = 0;
 
 
 void *log_rebuild_thread(void *arg) {
@@ -248,6 +249,7 @@ void *log_rebuild_thread(void *arg) {
     auto t = tree->getThreadInfo();
 
     uint64_t recovered = 0;
+    uint64_t total_ops = 0;
 
     uint64_t time_tree = 0;
     uint64_t time_read = 0;
@@ -299,6 +301,7 @@ void *log_rebuild_thread(void *arg) {
             } else if (!lc->is_delete) {
                 recovered++;
             }
+            total_ops++;
 
             rdtscll(b)
             time_meta += b - a;
@@ -308,10 +311,11 @@ void *log_rebuild_thread(void *arg) {
 
 
     pthread_mutex_lock(&total_recover_lock);
-    total_recovered += recovered;
-    total_time_tree += time_tree;
-    total_time_read += time_read;
-    total_time_meta += time_meta;
+    log_total_recovered += recovered;
+    log_total_time_tree += time_tree;
+    log_total_time_read += time_read;
+    log_total_time_meta += time_meta;
+    log_total_ops += total_ops;
     pthread_mutex_unlock(&total_recover_lock);
 
     return NULL;
@@ -368,13 +372,14 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) 
     log_stop_perf();
     log_print_pmem_bandwidth("rebuild.perf", duration.count() / 1000000.0, NULL);
 
-    printf("... rebuild complete, recovered %lu keys throughput %.2f ops/us %.2f sec...\n",
-           total_recovered, (total_recovered * 1.0) / duration.count(), duration.count() / 1000000.0);
+    printf("... rebuild complete, recovered %lu/%lu keys throughput %.2f ops/us %.2f sec...\n",
+           log_total_recovered, log_total_ops, (log_total_recovered * 1.0) / duration.count(),
+           duration.count() / 1000000.0);
 
     printf("time slides:\n");
-    printf("read: %.2fs\n", (double) total_time_read / (double) num_threads / 2000000000.0);
-    printf("tree: %.2fs\n", (double) total_time_tree / (double) num_threads / 2000000000.0);
-    printf("meta: %.2fs\n", (double) total_time_meta / (double) num_threads / 2000000000.0);
+    printf("read: %.2fs\n", (double) log_total_time_read / (double) num_threads / 2000000000.0);
+    printf("tree: %.2fs\n", (double) log_total_time_tree / (double) num_threads / 2000000000.0);
+    printf("meta: %.2fs\n", (double) log_total_time_meta / (double) num_threads / 2000000000.0);
 
 
     // sequentially reconstruct metadata
