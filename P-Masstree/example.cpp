@@ -453,6 +453,15 @@ struct ralloc_ptr_list {
     struct ralloc_ptr_list *next;
 };
 
+void ralloc_ptr_list_add(struct ralloc_ptr_list **head, void *ptr) {
+
+    struct ralloc_ptr_list *new_node = (struct ralloc_ptr_list *) malloc(sizeof(struct ralloc_ptr_list));
+
+    new_node->ptr = ptr;
+    new_node->next = *head;
+    *head = new_node;
+}
+
 void *ralloc_recover_scan_thread(void *raw) {
 
     masstree::masstree *tree = (masstree::masstree *) raw;
@@ -474,10 +483,7 @@ void *ralloc_recover_scan_thread(void *raw) {
                 valid++;
 
                 // record pointer
-                struct ralloc_ptr_list *new_ptr = (struct ralloc_ptr_list *) malloc(sizeof(struct ralloc_ptr_list));
-                new_ptr->ptr = pack.curr;
-                new_ptr->next = ptrs;
-                ptrs = new_ptr;
+                ralloc_ptr_list_add(&ptrs, pack.curr);
 
                 uint64_t key = ((uint64_t *) pack.curr)[1];
                 void *returned = tree->put_and_return(key, pack.curr, 1, 0, t);
@@ -510,9 +516,9 @@ void ralloc_recover_scan(masstree::masstree *tree) {
     sprintf(perf_fn, "%s-%s.perf", prefix == NULL ? "" : prefix, section_name);
     printf("\n");
 
-    pthread_t *threads = (pthread_t *) malloc(num_thread * sizeof(pthread_t));
-    struct ralloc_ptr_list **ptr_lists = (struct ralloc_ptr_list **) malloc(
-            num_thread * sizeof(struct ralloc_ptr_list *));
+    pthread_t *threads = (pthread_t *) calloc(num_thread, sizeof(pthread_t));
+    struct ralloc_ptr_list **ptr_lists = (struct ralloc_ptr_list **)
+            calloc(num_thread, sizeof(struct ralloc_ptr_list *));
     RP_scan_init();
 
     if (use_perf)log_start_perf(perf_fn);
@@ -592,15 +598,6 @@ void ralloc_recover_scan(masstree::masstree *tree) {
 }
 
 #define REACH_T (LEAF_WIDTH+2)
-
-void ralloc_ptr_list_add(struct ralloc_ptr_list **head, void *ptr) {
-
-    struct ralloc_ptr_list *new_node = (struct ralloc_ptr_list *) malloc(sizeof(struct ralloc_ptr_list));
-
-    new_node->ptr = ptr;
-    new_node->next = *head;
-    *head = new_node;
-}
 
 void *ralloc_reachability_scan_thread(void *raw) {
 
@@ -696,9 +693,9 @@ void ralloc_reachability_scan(masstree::masstree *tree) {
     sprintf(perf_fn, "%s-%s.perf", prefix == NULL ? "" : prefix, section_name);
     printf("\n");
 
-    pthread_t *threads = (pthread_t *) malloc(REACH_T * sizeof(pthread_t));
-    struct ralloc_ptr_list **ptr_lists = (struct ralloc_ptr_list **) malloc(
-            REACH_T * sizeof(struct ralloc_ptr_list *));
+    pthread_t *threads = (pthread_t *) calloc(REACH_T, sizeof(pthread_t));
+    struct ralloc_ptr_list **ptr_lists = (struct ralloc_ptr_list **)
+            calloc(REACH_T, sizeof(struct ralloc_ptr_list *));
     RP_scan_init();
 
     if (use_perf)log_start_perf(perf_fn);
@@ -719,14 +716,16 @@ void ralloc_reachability_scan(masstree::masstree *tree) {
             pthread_create(threads + i, &attr, ralloc_reachability_scan_thread, root->leftmost());
         } else if (i == LEAF_WIDTH + 1) {
 //            pthread_create(threads + i, &attr, ralloc_reachability_scan_thread, root->next_());
-        } else {
+        } else if (i < LEAF_WIDTH) {
             pthread_create(threads + i, &attr, ralloc_reachability_scan_thread, root->value(i));
         }
 
     }
 
     for (int i = 0; i < REACH_T; i++) {
-        pthread_join(threads[i], (void **) (ptr_lists + i));
+        if (threads[i] != 0) {
+            pthread_join(threads[i], (void **) (ptr_lists + i));
+        }
     }
 
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
