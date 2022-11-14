@@ -234,6 +234,13 @@ struct log_rebuild_args {
     int step;
 };
 
+pthread_mutex_t total_recover_lock = PTHREAD_MUTEX_INITIALIZER;
+uint64_t total_recovered = 0;
+uint64_t total_time_tree = 0;
+uint64_t total_time_read = 0;
+uint64_t total_time_meta = 0;
+
+
 void *log_rebuild_thread(void *arg) {
 
     struct log_rebuild_args *args = (struct log_rebuild_args *) arg;
@@ -241,6 +248,13 @@ void *log_rebuild_thread(void *arg) {
     auto t = tree->getThreadInfo();
 
     uint64_t recovered = 0;
+
+    uint64_t time_tree = 0;
+    uint64_t time_read = 0;
+    uint64_t time_meta = 0;
+
+
+    uint64_t a, b;
 
     for (int i = args->id; i < log_list.num_log; i += args->step) {
 
@@ -251,6 +265,8 @@ void *log_rebuild_thread(void *arg) {
 
             struct log_cell *lc = (struct log_cell *) current_log->curr;
 
+            rdtscll(a)
+
             // if field of the struct is zero, then abort the entire log
             uint64_t total_size = sizeof(struct log_cell) + lc->value_size;
             if (current_log->curr + total_size > end || lc->value_size == 0) break; //  prevent overflow
@@ -259,14 +275,19 @@ void *log_rebuild_thread(void *arg) {
                 break;
             }
 
-            current_log->available -= total_size;
-            current_log->curr += total_size;
+            rdtscll(b)
+            time_read += b - a;
 
-            if (lc->is_delete) continue;
-
+            rdtscll(a)
             struct log_cell *res = (struct log_cell *)
                     tree->put_and_return(lc->key, lc, 1, 1, t);
+            rdtscll(b)
+            time_tree += b - a;
 
+            rdtscll(a)
+
+            current_log->available -= total_size;
+            current_log->curr += total_size;
             // insert success and created a new key-value
             // replaced a value, should free some space in other log
             if (res != NULL) {
@@ -279,10 +300,21 @@ void *log_rebuild_thread(void *arg) {
                 recovered++;
             }
 
+            rdtscll(b)
+            time_meta += b - a;
+
         }
     }
 
-    return (void *) recovered;
+
+    pthread_mutex_lock(&total_recover_lock);
+    total_recovered += recovered;
+    total_time_tree += time_tree;
+    total_time_read += time_read;
+    total_time_meta += time_meta;
+    pthread_mutex_unlock(&total_recover_lock);
+
+    return NULL;
 }
 
 void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) {
@@ -303,8 +335,6 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) 
 
     pthread_t *rebuild_threads = (pthread_t *) malloc(sizeof(pthread_t) * num_threads);
     struct log_rebuild_args *args = (struct log_rebuild_args *) malloc(sizeof(struct log_rebuild_args) * num_threads);
-
-    uint64_t recovered = 0;
 
     log_start_perf("rebuild.perf");
 
@@ -329,9 +359,7 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) 
         pthread_create(rebuild_threads + i, &attr, log_rebuild_thread, args + i);
     }
     for (int i = 0; i < num_threads; i++) {
-        uint64_t local;
-        pthread_join(rebuild_threads[i], (void **) &local);
-        recovered += local;
+        pthread_join(rebuild_threads[i], NULL);
     }
 
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
@@ -341,7 +369,12 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) 
     log_print_pmem_bandwidth("rebuild.perf", duration.count() / 1000000.0, NULL);
 
     printf("... rebuild complete, recovered %lu keys throughput %.2f ops/us...\n",
-           recovered, (recovered * 1.0) / duration.count());
+           total_recovered, (total_recovered * 1.0) / duration.count());
+
+    printf("time slides:\n");
+    printf("read: %.2fs\n", (double) total_time_read / (double) num_threads / 2000000000.0);
+    printf("tree: %.2fs\n", (double) total_time_tree / (double) num_threads / 2000000000.0);
+    printf("meta: %.2fs\n", (double) total_time_meta / (double) num_threads / 2000000000.0);
 
 
     // sequentially reconstruct metadata
