@@ -95,8 +95,8 @@ total_sizes=(256)
 #total_sizes=($(seq 2048 -24 40))
 
 #index_location=("dram" "ralloc" "obj")
-index_location=("dram")
-#index_location=("ralloc")
+#index_location=("dram")
+index_location=("ralloc")
 #index_location=("dram" "ralloc")
 
 #value_location=("ralloc" "log" "obj")
