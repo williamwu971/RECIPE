@@ -712,13 +712,22 @@ void ralloc_reachability_scan(masstree::masstree *tree) {
         pthread_attr_init(&attr);
         pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpu);
 
+        void *curr_arg = NULL;
+
         if (i == LEAF_WIDTH) {
-            pthread_create(threads + i, &attr, ralloc_reachability_scan_thread, root->leftmost());
+            curr_arg = root->leftmost();
         } else if (i == LEAF_WIDTH + 1) {
-//            pthread_create(threads + i, &attr, ralloc_reachability_scan_thread, root->next_());
+            continue;
         } else if (i < LEAF_WIDTH) {
-            pthread_create(threads + i, &attr, ralloc_reachability_scan_thread, root->value(i));
+            curr_arg = root->value(i);
         }
+
+        if (curr_arg == NULL) {
+            printf("index %d is NULL\n", i);
+            continue;
+        }
+
+        pthread_create(threads + i, &attr, ralloc_reachability_scan_thread, curr_arg);
 
     }
 
