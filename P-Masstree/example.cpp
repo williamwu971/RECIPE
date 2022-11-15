@@ -922,8 +922,6 @@ static inline void masstree_obj_update(masstree::masstree *tree,
                                        void *tplate) {
 
 
-    struct masstree_obj *mo = NULL;
-
     TX_BEGIN(pop) {
 
                     PMEMoid
@@ -936,31 +934,28 @@ static inline void masstree_obj_update(masstree::masstree *tree,
                     if (!masstree_checksum(tplate, SUM_WRITE, u_value, iter, value_offset)) throw;
 
                     pmemobj_tx_add_range(ht_oid, 0, total_size);
-                    mo = (struct masstree_obj *) pmemobj_direct(ht_oid);
+                    struct masstree_obj *mo = (struct masstree_obj *) pmemobj_direct(ht_oid);
                     memcpy(mo, tplate, total_size);
+
+                    struct masstree_obj *old_obj = (struct masstree_obj *)
+                            tree->put_and_return(u_key, mo, !no_allow_prev_null, 0, t);
+
+
+                    if (no_allow_prev_null || old_obj != NULL) {
+
+
+                        pmemobj_tx_add_range(old_obj->ht_oid, sizeof(struct masstree_obj) + memset_size,
+                                             sizeof(uint64_t));
+                        if (!masstree_checksum(old_obj, SUM_INVALID, u_value, iter, value_offset)) throw;
+                        pmemobj_tx_free(old_obj->ht_oid);
+
+                    }
 
                 }
                     TX_ONABORT {
                     throw;
                 }
     TX_END
-
-    struct masstree_obj *old_obj = (struct masstree_obj *)
-            tree->put_and_return(u_key, mo, !no_allow_prev_null, 0, t);
-
-    if (no_allow_prev_null || old_obj != NULL) {
-        TX_BEGIN(pop) {
-
-                        pmemobj_tx_add_range(old_obj->ht_oid, sizeof(struct masstree_obj) + memset_size,
-                                             sizeof(uint64_t));
-                        if (!masstree_checksum(old_obj, SUM_INVALID, u_value, iter, value_offset)) throw;
-                        pmemobj_tx_free(old_obj->ht_oid);
-                    }
-                        TX_ONABORT {
-                        throw;
-                    }
-        TX_END
-    }
 }
 
 static inline void masstree_obj_delete(
