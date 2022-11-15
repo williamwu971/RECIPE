@@ -70,12 +70,9 @@ cd build || exit
 use_perf="yes"
 record_latency="yes"
 
-#workload=16000000
-#workload=140000000
-#workload=430000000 # todo: do not change this
-workload=43000000
-#workload=1900
-#workload=100000000
+
+workload=430000000 # todo: do not change this
+#workload=43000000
 
 key_order="random"
 #key_order="seq"
@@ -94,14 +91,14 @@ total_sizes=(256)
 #total_sizes=($(seq 40 24 1024))
 #total_sizes=($(seq 2048 -24 40))
 
-#index_location=("dram" "ralloc" "obj")
+index_location=("dram" "ralloc" "obj")
 #index_location=("dram")
-index_location=("ralloc")
+#index_location=("ralloc")
 #index_location=("dram" "ralloc")
 
 #value_location=("ralloc" "log" "obj")
-#value_location=("obj" "log" "ralloc")
-value_location=("ralloc")
+value_location=("obj" "log" "ralloc")
+#value_location=("ralloc")
 #value_location=("log")
 #value_location=("obj")
 #value_location=("ralloc" "log" "log-best")
@@ -118,11 +115,8 @@ num_of_gc=(8)
 pmdk_no_flush=("0")
 #pmdk_no_flush=("1")
 
-ycsbs=("N")
-#ycsbs=("a" "b" "c" "e")
-#ycsbs=("e" "c" "b" "a")
-#ycsbs=("au" "bu" "cu" "eu" "az" "bz" "cz" "ez")
-#ycsbs=("eu" "ez")
+#ycsbs=("N")
+ycsbs=("au" "bu" "cu" "eu" "az" "bz" "cz" "ez")
 
 #persist=("flush" "non-temporal")
 persist=("flush")
