@@ -1562,12 +1562,6 @@ int main(int argc, char **argv) {
         }
     }
 
-    if (tree == NULL) {
-        puts("\t creating new tree");
-        tree = new masstree::masstree();
-    }
-
-
     if (require_obj_init) {
 
         puts("\tbegin preparing Obj");
@@ -1588,6 +1582,11 @@ int main(int argc, char **argv) {
         }
 
         masstree::obj_init(pop);
+    }
+
+    if (tree == NULL) {
+        puts("\t creating new tree");
+        tree = new masstree::masstree();
     }
 
 //    tbb::task_scheduler_init init(num_thread);
