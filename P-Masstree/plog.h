@@ -62,6 +62,18 @@
 #define rdtscll(val) __asm__ __volatile__("rdtsc" : "=A" (val))
 #endif
 
+
+#include <x86intrin.h>
+
+inline
+uint64_t readTSC(int front, int back) {
+    if (front)_mm_lfence();  // optionally wait for earlier insns to retire before reading the clock
+    uint64_t tsc = __rdtsc();
+    if (back)_mm_lfence();  // optionally block later instructions until rdtsc retires
+    return tsc;
+}
+
+
 #define INODE_FN "/pmem0/masstree_log_inodes"
 #define LOG_FN "/pmem0/masstree_log_logs"
 #define META_FN "/pmem0/masstree_log_metas"

@@ -267,7 +267,8 @@ void *log_rebuild_thread(void *arg) {
 
             struct log_cell *lc = (struct log_cell *) current_log->curr;
 
-            rdtscll(a)
+
+            a = readTSC(1, 1);
 
             // if field of the struct is zero, then abort the entire log
             uint64_t total_size = sizeof(struct log_cell) + lc->value_size;
@@ -277,7 +278,7 @@ void *log_rebuild_thread(void *arg) {
                 break;
             }
 
-            rdtscll(b)
+            b = readTSC(1, 1);
             time_read += b - a;
 
             rdtscll(a)
@@ -294,7 +295,7 @@ void *log_rebuild_thread(void *arg) {
             // replaced a value, should free some space in other log
             if (res != NULL) {
 
-                uint64_t idx = (uint64_t) ((char *) res - big_map) / LOG_SIZE;
+                uint64_t idx = (uint64_t)((char *) res - big_map) / LOG_SIZE;
                 struct log *target_log = log_meta + idx;
                 target_log->freed.fetch_add(sizeof(struct log_cell) + res->value_size);
 
