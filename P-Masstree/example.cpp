@@ -23,8 +23,6 @@ int num_of_gc = 0;
 int show_log_usage = 1;
 int record_latency = 0;
 int display_throughput = 1;
-int use_obj = 0;
-int use_ralloc = 0;
 int use_log = 0;
 int total_size = 0;
 int memset_size = 0;
@@ -875,8 +873,10 @@ static inline void masstree_ralloc_delete(
                                                            NULL, t);
 
     RP_free(returned);
-    pmem_persist(returned, sizeof(void *));
 
+    if (ralloc_extra) {
+        pmem_persist(returned, sizeof(void *));
+    }
 
 }
 
@@ -1366,7 +1366,6 @@ int main(int argc, char **argv) {
 
             if (strcasestr(argv[ac], "ralloc")) {
                 require_RP_init = 1;
-                use_ralloc = 1;
                 base_size = sizeof(uint64_t) * 2;
 
                 if (which_memalign == posix_memalign) {
@@ -1400,7 +1399,6 @@ int main(int argc, char **argv) {
                 printf("interfere=%d ", interfere);
 
             } else if (strcasestr(argv[ac], "obj")) {
-                use_obj = 1;
                 require_obj_init = 1;
                 base_size = sizeof(struct masstree_obj) + sizeof(uint64_t);
                 printf("value=obj ");
