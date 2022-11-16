@@ -87,24 +87,6 @@ inline int RP_memalign(void **memptr, size_t alignment, size_t size) {
 
 //static constexpr uint64_t CACHE_LINE_SIZE = 64;
 
-static inline void clflush(char *data, int len, bool front, bool back) {
-    volatile char *ptr = (char *) ((unsigned long) data & ~(CACHE_LINE_SIZE - 1));
-    if (front)
-        asm volatile("sfence":: :"memory");
-    for (; ptr < data + len; ptr += CACHE_LINE_SIZE) {
-#ifdef CLFLUSH
-        asm volatile("clflush %0" : "+m" (*(volatile char *)ptr));
-#elif CLFLUSH_OPT
-        asm volatile(".byte 0x66; clflush %0" : "+m" (*(volatile char *) (ptr)));
-#elif CLWB
-        //        asm volatile(".byte 0x66; xsaveopt %0" : "+m" (*(volatile char *) (ptr)));
-                FLUSH(ptr);
-#endif
-    }
-    if (back)
-        asm volatile("sfence":: :"memory");
-}
-
 void *memcpy_then_persist(void *pmemdest, const void *src, size_t len) {
     memcpy(pmemdest, src, len);
     pmem_persist(pmemdest, len);
