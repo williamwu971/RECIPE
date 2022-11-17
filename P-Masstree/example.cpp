@@ -594,12 +594,10 @@ void ralloc_reachability_scan(masstree::masstree *tree) {
 
         void *curr_arg = NULL;
 
-        if (i == LEAF_WIDTH) {
-            curr_arg = root->leftmost();
-        } else if (i == LEAF_WIDTH + 1) {
-            continue;
-        } else if (i < LEAF_WIDTH) {
+        if (i < LEAF_WIDTH) {
             curr_arg = root->value(i);
+        } else {
+            curr_arg = root->leftmost();
         }
 
         if (curr_arg == NULL) {
@@ -1090,7 +1088,9 @@ void *section_delete(void *arg) {
 
 void masstree_shuffle(uint64_t *array, uint64_t size) {
 
-    printf("shuffling array of size %lu\n", size);
+    printf("shuffling array of size %lu ... ", size);
+    fflush(stdout);
+
     srand(time(NULL));
 
     for (uint64_t i = 0; i < size - 1; i++) {
@@ -1099,6 +1099,8 @@ void masstree_shuffle(uint64_t *array, uint64_t size) {
         array[j] = array[i];
         array[i] = t;
     }
+    printf("done! \n");
+    fflush(stdout);
 }
 
 void run(
