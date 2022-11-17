@@ -68,8 +68,6 @@ cd build || exit
 #rm -f ./*.rdtsc ./*.png ./*.csv ./max_latencies.txt
 
 use_perf="yes"
-record_latency="yes"
-
 
 workload=430000000 # todo: do not change this
 #workload=43000000
@@ -93,15 +91,15 @@ total_sizes=(256)
 
 #index_location=("dram" "ralloc" "obj")
 #index_location=("dram")
-#index_location=("ralloc")
-index_location=("obj")
+index_location=("ralloc")
+#index_location=("obj")
 #index_location=("dram" "ralloc")
 
 #value_location=("ralloc" "log" "obj")
 #value_location=("obj" "log" "ralloc")
-#value_location=("ralloc")
+value_location=("ralloc")
 #value_location=("log")
-value_location=("obj")
+#value_location=("obj")
 #value_location=("ralloc" "log" "log-best")
 
 #num_threads=(1 3 5 7 9 11 13 15)
@@ -116,8 +114,8 @@ num_of_gc=(8)
 pmdk_no_flush=("0")
 #pmdk_no_flush=("1")
 
-#ycsbs=("N")
-ycsbs=("au" "bu" "cu" "eu" "az" "bz" "cz" "ez")
+ycsbs=("N")
+#ycsbs=("au" "bu" "cu" "eu" "az" "bz" "cz" "ez")
 
 #persist=("flush" "non-temporal")
 persist=("flush")
@@ -212,7 +210,7 @@ for s in "${extra_sizes[@]}"; do
                   #      /home/blepers/linux/tools/perf/perf record -g ./example "$workload" "$n" index="$i" value="$v" key="$key_order"
                   PMEM_NO_FLUSH="$f" ./example "$workload" "$n" extra_size="$s" total_size="$t" \
                     index="$i" value="$v" key="$key_order" perf="$use_perf" \
-                    gc="$g" ycsb="$y" latency="$record_latency" persist="$p" \
+                    gc="$g" ycsb="$y" persist="$p" \
                     prefix="$i"-"$v"-"$n"-"$g"-NF"$f"-"$s"b-"$t"B-"$y"-"$p" || exit
 
                   #      mv out.png out_"$i"_"$v".png
