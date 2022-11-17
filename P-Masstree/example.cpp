@@ -410,17 +410,7 @@ void ralloc_recover_scan(masstree::masstree *tree) {
     auto starttime = std::chrono::system_clock::now();
 
     for (int i = 0; i < num_thread; i++) {
-        cpu_set_t cpu;
-        CPU_ZERO(&cpu);
-
-        // reserving CPU 0
-        CPU_SET(i + 1, &cpu);
-
-        pthread_attr_t attr;
-        pthread_attr_init(&attr);
-        pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpu);
-
-        pthread_create(threads + i, &attr, ralloc_recover_scan_thread, tree);
+        pthread_create(threads + i, ordered_attrs + i, ralloc_recover_scan_thread, tree);
     }
 
     for (int i = 0; i < num_thread; i++) {
@@ -602,15 +592,6 @@ void ralloc_reachability_scan(masstree::masstree *tree) {
     auto starttime = std::chrono::system_clock::now();
 
     for (int i = 0; i < REACH_T; i++) {
-        cpu_set_t cpu;
-        CPU_ZERO(&cpu);
-
-        // reserving CPU 0
-        CPU_SET(i + 1, &cpu);
-
-        pthread_attr_t attr;
-        pthread_attr_init(&attr);
-        pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpu);
 
         void *curr_arg = NULL;
 
@@ -627,7 +608,7 @@ void ralloc_reachability_scan(masstree::masstree *tree) {
             continue;
         }
 
-        pthread_create(threads + i, &attr, ralloc_reachability_scan_thread, curr_arg);
+        pthread_create(threads + i, ordered_attrs + i, ralloc_reachability_scan_thread, curr_arg);
 
     }
 
@@ -1123,7 +1104,6 @@ void masstree_shuffle(uint64_t *array, uint64_t size) {
 void run(
         const char *section_name,
         FILE *throughput_file,
-        pthread_attr_t *attrs,
         struct section_arg *section_args,
         u_int64_t *latencies,
         void *(*routine)(void *)) {
@@ -1140,7 +1120,7 @@ void run(
     auto starttime = std::chrono::system_clock::now();
 
     for (int i = 0; i < num_thread; i++) {
-        pthread_create(threads + i, attrs + i, routine, section_args + i);
+        pthread_create(threads + i, ordered_attrs + i, routine, section_args + i);
     }
     for (int i = 0; i < num_thread; i++) {
         pthread_join(threads[i], NULL);
@@ -1180,10 +1160,26 @@ void run(
 
 int main(int argc, char **argv) {
 
+    // init thread attributes
     cpu_set_t fcpu;
     CPU_ZERO(&fcpu);
     CPU_SET(0, &fcpu);
     pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &fcpu);
+
+    int numberOfProcessors = sysconf(_SC_NPROCESSORS_ONLN);
+    ordered_attrs = (pthread_attr_t *) calloc(numberOfProcessors, sizeof(pthread_attr_t));
+    for (int i = 0; i < numberOfProcessors; i++) {
+
+        cpu_set_t cpu;
+        CPU_ZERO(&cpu);
+
+        // reserving CPU 0
+        CPU_SET(i + 1, &cpu);
+
+        pthread_attr_init(ordered_attrs + i);
+        pthread_attr_setaffinity_np(ordered_attrs + i, sizeof(cpu_set_t), &cpu);
+    }
+
 
     // control variables
     int require_RP_init = 0;
@@ -1442,23 +1438,13 @@ int main(int argc, char **argv) {
     FILE *throughput_file = fopen("perf.csv", "a");
     u_int64_t *latencies = NULL;
 
-    pthread_attr_t *attrs = (pthread_attr_t *) calloc(num_thread, sizeof(pthread_attr_t));
-    cpu_set_t *cpus = (cpu_set_t *) calloc(num_thread, sizeof(cpu_set_t));
     struct section_arg *section_args = (struct section_arg *) calloc(num_thread, sizeof(struct section_arg));
 
     uint64_t n_per_thread = num_key / num_thread;
     uint64_t n_remainder = num_key % num_thread;
-    int numberOfProcessors = sysconf(_SC_NPROCESSORS_ONLN);
-    printf("\tNumber of processors: %d\n", numberOfProcessors);
 
 
     for (int i = 0; i < num_thread; i++) {
-
-        CPU_ZERO(cpus + i);
-        CPU_SET(i + 1, cpus + i); // reserving CPU 0
-
-        pthread_attr_init(attrs + i);
-        pthread_attr_setaffinity_np(attrs + i, sizeof(cpu_set_t), cpus + i);
 
         if (i == 0) {
             section_args[i].start = 0;
@@ -1537,9 +1523,9 @@ int main(int argc, char **argv) {
          */
         if (wl != NULL) {
             puts("\t\t\t *** YCSB workload ***");
-//            run("ycsb_load", throughput_file, attrs, section_args, latencies, section_ycsb_load);
-            run("ycsb_load", throughput_file, attrs, section_args, latencies, section_insert);
-            run("ycsb_run", throughput_file, attrs, section_args, latencies, section_ycsb_run);
+//            run("ycsb_load", throughput_file, section_args, latencies, section_ycsb_load);
+            run("ycsb_load", throughput_file, section_args, latencies, section_insert);
+            run("ycsb_run", throughput_file, section_args, latencies, section_ycsb_run);
             goto end;
         }
     }
@@ -1549,7 +1535,7 @@ int main(int argc, char **argv) {
          * section INSERT
          */
         if (shuffle_keys) masstree_shuffle(keys, num_key);
-        run("insert", throughput_file, attrs, section_args, latencies, section_insert);
+        run("insert", throughput_file, section_args, latencies, section_insert);
     }
 
 //    printf("count RP_MALLOC %lu\n", RP_lock_count);
@@ -1559,7 +1545,7 @@ int main(int argc, char **argv) {
          * section UPDATE
          */
         if (shuffle_keys) masstree_shuffle(keys, num_key);
-        run("update", throughput_file, attrs, section_args, latencies, section_update);
+        run("update", throughput_file, section_args, latencies, section_update);
     }
 
 
@@ -1569,7 +1555,7 @@ int main(int argc, char **argv) {
          * section LOOKUP
          */
         if (shuffle_keys) masstree_shuffle(keys, num_key);
-        run("lookup", throughput_file, attrs, section_args, latencies, section_lookup);
+        run("lookup", throughput_file, section_args, latencies, section_lookup);
     }
 
 
@@ -1584,7 +1570,7 @@ int main(int argc, char **argv) {
          */
         throw;
         if (shuffle_keys) masstree_shuffle(keys, num_key);
-        run("delete", throughput_file, attrs, section_args, latencies, section_delete);
+        run("delete", throughput_file, section_args, latencies, section_delete);
     }
 
 
