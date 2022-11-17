@@ -22,7 +22,6 @@ int use_perf = 0;
 int num_of_gc = 0;
 int show_log_usage = 1;
 int record_latency = 0;
-int display_throughput = 1;
 int use_log = 0;
 int total_size = 0;
 int memset_size = 0;
@@ -555,11 +554,11 @@ void ralloc_recover_scan(masstree::masstree *tree) {
         log_print_pmem_bandwidth(perf_fn, duration.count() / 1000000.0, NULL);
     }
 
-    if (display_throughput) {
-        printf("Throughput: %s,%ld,%.2f ops/us %.2f sec\n",
-               section_name, ralloc_recovered, (ralloc_recovered * 1.0) / duration.count(),
-               duration.count() / 1000000.0);
-    }
+
+    printf("Throughput: %s,%ld,%.2f ops/us %.2f sec\n",
+           section_name, ralloc_recovered, (ralloc_recovered * 1.0) / duration.count(),
+           duration.count() / 1000000.0);
+
 
 
     // push pointers to ralloc's list single threaded
@@ -587,11 +586,11 @@ void ralloc_recover_scan(masstree::masstree *tree) {
     duration = std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now() - starttime);
 
-    if (display_throughput) {
-        printf("Throughput: %s,%ld,%.2f ops/us %.2f sec\n",
-               "set-insert", ralloc_recovered, (ralloc_recovered * 1.0) / duration.count(),
-               duration.count() / 1000000.0);
-    }
+
+    printf("Throughput: %s,%ld,%.2f ops/us %.2f sec\n",
+           "set-insert", ralloc_recovered, (ralloc_recovered * 1.0) / duration.count(),
+           duration.count() / 1000000.0);
+
 
     starttime = std::chrono::system_clock::now();
     rdtscll(a)
@@ -601,11 +600,11 @@ void ralloc_recover_scan(masstree::masstree *tree) {
     duration = std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now() - starttime);
 
-    if (display_throughput) {
-        printf("Throughput: %s,%ld,%.2f ops/us %.2f sec\n",
-               "ralloc-build", ralloc_recovered, (ralloc_recovered * 1.0) / duration.count(),
-               duration.count() / 1000000.0);
-    }
+
+    printf("Throughput: %s,%ld,%.2f ops/us %.2f sec\n",
+           "ralloc-build", ralloc_recovered, (ralloc_recovered * 1.0) / duration.count(),
+           duration.count() / 1000000.0);
+
 
     printf("recovered: %lu abandoned: %lu\n", ralloc_recovered, ralloc_abandoned);
 
@@ -765,11 +764,11 @@ void ralloc_reachability_scan(masstree::masstree *tree) {
         log_print_pmem_bandwidth(perf_fn, duration.count() / 1000000.0, NULL);
     }
 
-    if (display_throughput) {
-        printf("Throughput: %s,%ld,%.2f ops/us %.2f sec\n",
-               section_name, ralloc_recovered, (ralloc_recovered * 1.0) / duration.count(),
-               duration.count() / 1000000.0);
-    }
+
+    printf("Throughput: %s,%ld,%.2f ops/us %.2f sec\n",
+           section_name, ralloc_recovered, (ralloc_recovered * 1.0) / duration.count(),
+           duration.count() / 1000000.0);
+
 
     // push pointers to ralloc's list single threaded
     starttime = std::chrono::system_clock::now();
@@ -792,22 +791,22 @@ void ralloc_reachability_scan(masstree::masstree *tree) {
     duration = std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now() - starttime);
 
-    if (display_throughput) {
-        printf("Throughput: %s,%ld,%.2f ops/us %.2f sec\n",
-               "set-insert", ralloc_recovered, (ralloc_recovered * 1.0) / duration.count(),
-               duration.count() / 1000000.0);
-    }
+
+    printf("Throughput: %s,%ld,%.2f ops/us %.2f sec\n",
+           "set-insert", ralloc_recovered, (ralloc_recovered * 1.0) / duration.count(),
+           duration.count() / 1000000.0);
+
 
     starttime = std::chrono::system_clock::now();
     RP_recover_xiaoxiang_go();
     duration = std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now() - starttime);
 
-    if (display_throughput) {
-        printf("Throughput: %s,%ld,%.2f ops/us %.2f sec\n",
-               "ralloc-build", ralloc_recovered, (ralloc_recovered * 1.0) / duration.count(),
-               duration.count() / 1000000.0);
-    }
+
+    printf("Throughput: %s,%ld,%.2f ops/us %.2f sec\n",
+           "ralloc-build", ralloc_recovered, (ralloc_recovered * 1.0) / duration.count(),
+           duration.count() / 1000000.0);
+
 
     printf("recovered: %lu abandoned: %lu\n", ralloc_recovered, ralloc_abandoned);
 
@@ -1281,9 +1280,9 @@ void run(
         log_print_pmem_bandwidth(perf_fn, duration.count() / 1000000.0, throughput_file);
     }
 
-    if (display_throughput)
-        printf("Throughput: %s,%ld,%.2f ops/us %.2f sec\n",
-               section_name, n, (n * 1.0) / duration.count(), duration.count() / 1000000.0);
+
+    printf("Throughput: %s,%ld,%.2f ops/us %.2f sec\n",
+           section_name, n, (n * 1.0) / duration.count(), duration.count() / 1000000.0);
 
     sprintf(perf_fn, "%s-%s.rdtsc", prefix, section_name);
 
