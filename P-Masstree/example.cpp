@@ -305,6 +305,7 @@ static inline uint64_t masstree_getsum(void *value) {
 }
 
 pthread_mutex_t ralloc_recover_stats_lock = PTHREAD_MUTEX_INITIALIZER;
+uint64_t ralloc_leafs = 0;
 uint64_t ralloc_recovered = 0;
 uint64_t ralloc_abandoned = 0;
 uint64_t ralloc_total_time_tree = 0;
@@ -510,6 +511,7 @@ void *ralloc_reachability_scan_thread(void *raw) {
 
     struct ralloc_ptr_list *pointers = NULL;
     uint64_t recovered_values = 0;
+    uint64_t recovered_leafs = 0;
 
     struct ralloc_ptr_list *to_visit = NULL;
     ralloc_ptr_list_add(&to_visit, raw);
@@ -520,6 +522,7 @@ void *ralloc_reachability_scan_thread(void *raw) {
         if (curr == NULL) break;
 
         ralloc_ptr_list_add(&pointers, curr);
+        recovered_leafs++;
 
         if (curr->level() != 0) {
 
@@ -560,6 +563,7 @@ void *ralloc_reachability_scan_thread(void *raw) {
 
     pthread_mutex_lock(&ralloc_recover_stats_lock);
     ralloc_recovered += recovered_values;
+    ralloc_leafs += recovered_leafs;
 //    ralloc_abandoned += invalid;
     pthread_mutex_unlock(&ralloc_recover_stats_lock);
 
@@ -666,7 +670,7 @@ void ralloc_reachability_scan(masstree::masstree *tree) {
            duration.count() / 1000000.0);
 
 
-    printf("recovered: %lu abandoned: %lu\n", ralloc_recovered, ralloc_abandoned);
+    printf("recovered: %lu leafs: %lu abandoned: %lu\n", ralloc_recovered, ralloc_leafs, ralloc_abandoned);
 
 }
 
