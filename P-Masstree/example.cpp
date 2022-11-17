@@ -652,6 +652,7 @@ void ralloc_reachability_scan(masstree::masstree *tree) {
     printf("Throughput: %s,%ld,%.2f ops/us %.2f sec\n",
            "set-insert", ralloc_recovered, (ralloc_recovered * 1.0) / duration.count(),
            duration.count() / 1000000.0);
+    puts("");
 
 
     starttime = std::chrono::system_clock::now();
@@ -659,7 +660,7 @@ void ralloc_reachability_scan(masstree::masstree *tree) {
     duration = std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now() - starttime);
 
-
+    puts("");
     printf("Throughput: %s,%ld,%.2f ops/us %.2f sec\n",
            "ralloc-build", ralloc_recovered, (ralloc_recovered * 1.0) / duration.count(),
            duration.count() / 1000000.0);
