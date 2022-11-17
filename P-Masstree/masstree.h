@@ -26,7 +26,9 @@ struct masstree_put_to_pack {
 namespace masstree {
 
     void obj_init(PMEMobjpool *new_pop);
+
     int obj_memalign(void **memptr, size_t alignment, size_t size);
+
     void obj_free(void *ptr);
 
 #define LEAF_WIDTH          15
@@ -106,7 +108,7 @@ namespace masstree {
 
         // todo: new, for gc
         void *put_and_return(
-                uint64_t key, void *value, int create,int check_version, MASS::ThreadInfo &threadEpocheInfo
+                uint64_t key, void *value, int create, int check_version, MASS::ThreadInfo &threadEpocheInfo
         );
 
         // todo: lock and unlock the node (write lock)
@@ -127,7 +129,7 @@ namespace masstree {
 
         void *get(uint64_t key, MASS::ThreadInfo &threadEpocheInfo);
 
-        int get_leaf(uint64_t key, void** buffer,MASS::ThreadInfo &threadEpocheInfo);
+        int get_leaf(uint64_t key, void **buffer, MASS::ThreadInfo &threadEpocheInfo);
 
         void *get(char *key, MASS::ThreadInfo &threadEpocheInfo);
 
@@ -401,6 +403,10 @@ namespace masstree {
         kv entry[LEAF_WIDTH];                                   // 240bytes
 
     public:
+
+        // xiaoxiang, recovery
+        std::atomic<bool> visited{false};
+
         leafnode(uint32_t level);
 
         leafnode(void *left, uint64_t key, void *right, uint32_t level);

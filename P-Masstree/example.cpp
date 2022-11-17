@@ -325,6 +325,18 @@ void ralloc_ptr_list_add(struct ralloc_ptr_list **head, void *ptr) {
     *head = new_node;
 }
 
+void *ralloc_ptr_list_pop(struct ralloc_ptr_list **head) {
+
+
+    struct ralloc_ptr_list *old_head = *head;
+
+    *head = old_head->next;
+    void *value = old_head->ptr;
+
+    free(old_head);
+    return value;
+}
+
 void *ralloc_recover_scan_thread(void *raw) {
 
     masstree::masstree *tree = (masstree::masstree *) raw;
@@ -495,72 +507,62 @@ void *ralloc_reachability_scan_thread(void *raw) {
         return NULL;
     }
 
-    struct ralloc_ptr_list *list = NULL;
-    masstree::leafnode **to_visit = (masstree::leafnode **) calloc(1, sizeof(masstree::leafnode *));
-    to_visit[0] = (masstree::leafnode *) raw;
-    int to_visit_size = 1;
+    struct ralloc_ptr_list *pointers = NULL;
+    uint64_t recovered_values = 0;
 
-    int recovered_values = 0;
+    struct ralloc_ptr_list *to_visit = NULL;
+    ralloc_ptr_list_add(&to_visit, raw);
 
-    while (to_visit_size) {
+    while (1) {
 
-        masstree::leafnode **to_visit_next = NULL;
-        int to_visit_next_size = 0;
+        masstree::leafnode *curr = (masstree::leafnode *) ralloc_ptr_list_pop(&to_visit);
+        if (curr == NULL) break;
 
-        for (int i = 0; i < to_visit_size; i++) {
+        ralloc_ptr_list_add(&pointers, curr);
 
-            masstree::leafnode *curr = to_visit[i];
+        if (curr->level() != 0) {
 
-            if (curr == NULL) {
-                continue;
+            masstree::leafnode *target;
+
+            for (int kv_idx = 0; kv_idx < REACH_T; kv_idx++) {
+
+                if (kv_idx < LEAF_WIDTH) {
+                    target = (masstree::leafnode *) curr->value(kv_idx);
+                } else {
+                    target = curr->leftmost();
+                }
+
+                if (target == NULL)continue;
+
+                bool visited = target->visited.load();
+                if (!visited && target->visited.compare_exchange_strong(visited, true)) {
+                    ralloc_ptr_list_add(&to_visit, target);
+                }
+
             }
 
-            ralloc_ptr_list_add(&list, curr);
 
-            if (curr->level() != 0) {
+        } else {
+            for (int kv_idx = 0; kv_idx < LEAF_WIDTH; kv_idx++) {
 
-                to_visit_next = (masstree::leafnode **) realloc(to_visit_next,
-                                                                (to_visit_next_size + REACH_T) *
-                                                                sizeof(masstree::leafnode *));
-                for (int kv_idx = 0; kv_idx < LEAF_WIDTH; kv_idx++) {
-                    to_visit_next[to_visit_next_size + kv_idx] = (masstree::leafnode *) curr->value(kv_idx);
+                void *v = curr->value(kv_idx);
+
+                if (v != NULL) {
+                    ralloc_ptr_list_add(&pointers, v);
+                    recovered_values++;
                 }
 
-                to_visit_next_size += LEAF_WIDTH;
-
-                to_visit_next[to_visit_next_size++] = (masstree::leafnode *) curr->leftmost();
-
-            } else {
-                for (int kv_idx = 0; kv_idx < LEAF_WIDTH; kv_idx++) {
-
-                    void *v = curr->value(kv_idx);
-
-                    if (v != NULL) {
-                        ralloc_ptr_list_add(&list, v);
-                        recovered_values++;
-                    }
-
-                }
             }
         }
-
-        free(to_visit);
-
-        to_visit_size = to_visit_next_size;
-        to_visit = to_visit_next;
     }
 
-    if (to_visit != NULL) {
-        printf("weird, should be NULL here, %p %d", to_visit, to_visit_size);
-        free(to_visit);
-    }
 
     pthread_mutex_lock(&ralloc_recover_stats_lock);
     ralloc_recovered += recovered_values;
 //    ralloc_abandoned += invalid;
     pthread_mutex_unlock(&ralloc_recover_stats_lock);
 
-    return list;
+    return pointers;
 }
 
 
