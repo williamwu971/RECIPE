@@ -329,6 +329,7 @@ void *ralloc_ptr_list_pop(struct ralloc_ptr_list **head) {
 
 
     struct ralloc_ptr_list *old_head = *head;
+    if (old_head == NULL)return NULL;
 
     *head = old_head->next;
     void *value = old_head->ptr;
