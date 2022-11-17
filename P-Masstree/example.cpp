@@ -65,7 +65,7 @@ inline int RP_memalign(void **memptr, size_t alignment, size_t size) {
     // todo: this can be removed
     // leaf is allocated one in a while so should be okay
     uint64_t casted = (uint64_t) (*memptr);
-    if (casted % alignment != 0) {
+    if (unlikely(casted % alignment != 0)) {
         throw;
     }
 
@@ -341,7 +341,7 @@ void *ralloc_recover_scan_thread(void *raw) {
 
     while (1) {
 
-        uint64_t a, b;
+        declearTSC
 
         struct RP_scan_pack pack = RP_scan_next();
         if (pack.curr == NULL)break;
@@ -349,25 +349,23 @@ void *ralloc_recover_scan_thread(void *raw) {
 
         while (pack.curr < pack.end) {
 
-            a = readTSC(1, 1);
+            startTSC
             void *res = masstree_checksum(pack.curr, SUM_LOG, 0, iter, 0);
-            rdtscll(b)
-            time_read += b - a;
+            stopTSC(time_read)
 
             if (res != NULL) {
                 valid++;
 
                 // record pointer
-                rdtscll(a)
+                startTSC
                 ralloc_ptr_list_add(&ptrs, pack.curr);
-                rdtscll(b)
-                time_meta += b - a;
+                stopTSC(time_meta)
 
-                rdtscll(a)
+
+                startTSC
                 uint64_t key = ((uint64_t *) pack.curr)[1];
                 void *returned = tree->put_and_return(key, pack.curr, 1, 0, t);
-                rdtscll(b)
-                time_tree += b - a;
+                stopTSC(time_tree)
 
 
                 if (returned != NULL) {
@@ -399,7 +397,6 @@ void ralloc_recover_scan(masstree::masstree *tree) {
     const char *section_name = "ralloc_recover_scan";
     char perf_fn[256];
     sprintf(perf_fn, "%s-%s.perf", prefix == NULL ? "" : prefix, section_name);
-    printf("\n");
 
     pthread_t *threads = (pthread_t *) calloc(num_thread, sizeof(pthread_t));
     struct ralloc_ptr_list **ptr_lists = (struct ralloc_ptr_list **)
@@ -581,7 +578,6 @@ void ralloc_reachability_scan(masstree::masstree *tree) {
     const char *section_name = "ralloc_reachability_scan";
     char perf_fn[256];
     sprintf(perf_fn, "%s-%s.perf", prefix == NULL ? "" : prefix, section_name);
-    printf("\n");
 
     pthread_t *threads = (pthread_t *) calloc(REACH_T, sizeof(pthread_t));
     struct ralloc_ptr_list **ptr_lists = (struct ralloc_ptr_list **)
@@ -1110,7 +1106,6 @@ void run(
 
     char perf_fn[256];
     sprintf(perf_fn, "%s-%s.perf", prefix == NULL ? "" : prefix, section_name);
-    printf("\n");
 
     pthread_t *threads = (pthread_t *) calloc(num_thread, sizeof(pthread_t));
 
@@ -1156,6 +1151,8 @@ void run(
                 (num_key * 1.0) / duration.count(),
                 (num_key * 1.0) / duration_with_gc.count());
     }
+
+    puts("");
 }
 
 int main(int argc, char **argv) {
