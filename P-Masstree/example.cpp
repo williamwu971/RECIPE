@@ -14,24 +14,17 @@ int (*which_memalign)(void **memptr, size_t alignment, size_t size) = posix_mema
 
 void (*which_memfree)(void *ptr) =free;
 
-int require_RP_init = 0;
-int require_log_init = 0;
-int require_obj_init = 0;
-int shuffle_keys = 0;
+
 int use_perf = 0;
-int num_of_gc = 0;
-int show_log_usage = 1;
-int record_latency = 0;
 int use_log = 0;
 int total_size = 0;
 int memset_size = 0;
 int base_size = 0;
-int goto_lookup = 0;
 char *prefix = NULL;
-int interfere = 1;
 uint64_t iter;
-uint64_t PMEM_POOL_SIZE = 0;
 uint64_t value_offset = 0;
+uint64_t num_key;
+int num_thread;
 
 struct functions {
     static inline void (*update_func)(masstree::masstree *, MASS::ThreadInfo, uint64_t, uint64_t, int, void *) = NULL;
@@ -47,13 +40,11 @@ struct functions fs;
 
 void *(*cpy_persist)(void *, const void *, size_t) =pmem_memcpy_persist;
 
-uint64_t n;
-int num_thread;
+
 PMEMobjpool *pop = NULL;
 
 POBJ_LAYOUT_BEGIN(masstree);
-POBJ_LAYOUT_TOID(masstree,
-                 struct masstree_obj)
+POBJ_LAYOUT_TOID(masstree, struct masstree_obj)
 
 POBJ_LAYOUT_END(masstree)
 
@@ -233,22 +224,22 @@ void bap_ycsb_load() {
         zipfian = 1;
     }
 
-    init_zipf_generator(0, n - 1);
+    init_zipf_generator(0, num_key - 1);
     long (*rand_next)(void) = zipfian ? zipf_next : uniform_next;
 
 
-    ycsb_init_keys.reserve(n);
-    ycsb_keys.reserve(n);
-    ycsb_ranges.reserve(n);
-    ycsb_ops.reserve(n);
+    ycsb_init_keys.reserve(num_key);
+    ycsb_keys.reserve(num_key);
+    ycsb_ranges.reserve(num_key);
+    ycsb_ops.reserve(num_key);
 
-    memset(&ycsb_init_keys[0], 0x00, n * sizeof(uint64_t));
-    memset(&ycsb_keys[0], 0x00, n * sizeof(uint64_t));
-    memset(&ycsb_ranges[0], 0x00, n * sizeof(int));
-    memset(&ycsb_ops[0], 0x00, n * sizeof(int));
+    memset(&ycsb_init_keys[0], 0x00, num_key * sizeof(uint64_t));
+    memset(&ycsb_keys[0], 0x00, num_key * sizeof(uint64_t));
+    memset(&ycsb_ranges[0], 0x00, num_key * sizeof(int));
+    memset(&ycsb_ops[0], 0x00, num_key * sizeof(int));
 
     uint64_t count = 0;
-    while ((count < n)) {
+    while ((count < num_key)) {
 
         uint64_t key = rand_next();
         ycsb_init_keys.push_back(key);
@@ -264,7 +255,7 @@ void bap_ycsb_load() {
     uint64_t count_OP_SCAN = 0;
 
     count = 0;
-    while ((count < n)) {
+    while ((count < num_key)) {
 
         long key = rand_next();
         int op_type = random_get_put(test);
@@ -299,114 +290,6 @@ void bap_ycsb_load() {
     printf("READ  : %lu %5.2f \n", count_OP_READ, (double) count_OP_READ / (double) count * 100.0f);
     printf("SCAN  : %lu %5.2f \n", count_OP_SCAN, (double) count_OP_SCAN / (double) count * 100.0f);
 
-}
-
-void ycsb_load() {
-
-
-    std::string init_file;
-    std::string txn_file;
-
-
-    if (strcmp(wl, "a") == 0) {
-        init_file = "../../index-microbench/workloads/loada_unif_int.dat";
-        txn_file = "../../index-microbench/workloads/txnsa_unif_int.dat";
-    } else if (strcmp(wl, "b") == 0) {
-        init_file = "../../index-microbench/workloads/loadb_unif_int.dat";
-        txn_file = "../../index-microbench/workloads/txnsb_unif_int.dat";
-    } else if (strcmp(wl, "c") == 0) {
-        init_file = "../../index-microbench/workloads/loadc_unif_int.dat";
-        txn_file = "../../index-microbench/workloads/txnsc_unif_int.dat";
-    } else if (strcmp(wl, "d") == 0) {
-        init_file = "../../index-microbench/workloads/loadd_unif_int.dat";
-        txn_file = "../../index-microbench/workloads/txnsd_unif_int.dat";
-    } else if (strcmp(wl, "e") == 0) {
-        init_file = "../../index-microbench/workloads/loade_unif_int.dat";
-        txn_file = "../../index-microbench/workloads/txnse_unif_int.dat";
-    }
-
-
-    std::ifstream infile_load(init_file);
-
-    std::string op;
-    uint64_t key;
-    int range;
-
-    std::string insert("INSERT");
-    std::string update("UPDATE");
-    std::string read("READ");
-    std::string scan("SCAN");
-
-    ycsb_init_keys.reserve(n);
-    ycsb_keys.reserve(n);
-    ycsb_ranges.reserve(n);
-    ycsb_ops.reserve(n);
-
-    memset(&ycsb_init_keys[0], 0x00, n * sizeof(uint64_t));
-    memset(&ycsb_keys[0], 0x00, n * sizeof(uint64_t));
-    memset(&ycsb_ranges[0], 0x00, n * sizeof(int));
-    memset(&ycsb_ops[0], 0x00, n * sizeof(int));
-
-    uint64_t count = 0;
-    while ((count < n) && infile_load.good()) {
-        infile_load >> op >> key;
-        if (op.compare(insert) != 0) {
-            std::cout << "READING LOAD FILE FAIL!\n";
-            return;
-        }
-        ycsb_init_keys.push_back(key);
-        count++;
-    }
-
-    fprintf(stderr, "Loaded %lu keys\n", count);
-
-    std::ifstream infile_txn(txn_file);
-
-
-    uint64_t count_OP_INSERT = 0;
-    uint64_t count_OP_UPDATE = 0;
-    uint64_t count_OP_READ = 0;
-    uint64_t count_OP_SCAN = 0;
-
-    count = 0;
-    while ((count < n) && infile_txn.good()) {
-        infile_txn >> op >> key;
-        if (op.compare(insert) == 0) {
-            ycsb_ops.push_back(OP_INSERT);
-            ycsb_keys.push_back(key);
-            ycsb_ranges.push_back(1);
-            count_OP_INSERT++;
-        } else if (op.compare(update) == 0) {
-            ycsb_ops.push_back(OP_UPDATE);
-            ycsb_keys.push_back(key);
-            ycsb_ranges.push_back(1);
-            count_OP_UPDATE++;
-        } else if (op.compare(read) == 0) {
-            ycsb_ops.push_back(OP_READ);
-            ycsb_keys.push_back(key);
-            ycsb_ranges.push_back(1);
-            count_OP_READ++;
-        } else if (op.compare(scan) == 0) {
-            infile_txn >> range;
-            ycsb_ops.push_back(OP_SCAN);
-            ycsb_keys.push_back(key);
-            ycsb_ranges.push_back(range);
-            count_OP_SCAN++;
-        } else {
-            std::cout << "UNRECOGNIZED CMD!\n";
-            return;
-        }
-        count++;
-    }
-
-    printf("\nINSERT: %lu %5.2f \n", count_OP_INSERT, (double) count_OP_INSERT / (double) count * 100.0f);
-    printf("UPDATE: %lu %5.2f \n", count_OP_UPDATE, (double) count_OP_UPDATE / (double) count * 100.0f);
-    printf("READ  : %lu %5.2f \n", count_OP_READ, (double) count_OP_READ / (double) count * 100.0f);
-    printf("SCAN  : %lu %5.2f \n", count_OP_SCAN, (double) count_OP_SCAN / (double) count * 100.0f);
-
-    std::atomic<int> range_complete, range_incomplete;
-    range_complete.store(0);
-    range_incomplete.store(0);
 }
 
 //#define TAILER (0xdeadbeef)
@@ -1268,12 +1151,12 @@ void run(
 
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now() - starttime);
-    if (throughput_file != NULL)log_debug_print(throughput_file, require_log_init);
+    if (throughput_file != NULL)log_debug_print(throughput_file, use_log);
 
     log_wait_all_gc();
     auto duration_with_gc = std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now() - starttime);
-    if (throughput_file != NULL)log_debug_print(throughput_file, require_log_init);
+    if (throughput_file != NULL)log_debug_print(throughput_file, use_log);
 
     if (use_perf) {
         log_stop_perf();
@@ -1282,20 +1165,19 @@ void run(
 
 
     printf("Throughput: %s,%ld,%.2f ops/us %.2f sec\n",
-           section_name, n, (n * 1.0) / duration.count(), duration.count() / 1000000.0);
+           section_name, num_key, (num_key * 1.0) / duration.count(), duration.count() / 1000000.0);
 
     sprintf(perf_fn, "%s-%s.rdtsc", prefix, section_name);
 
-    if (record_latency) {
-        dump_latencies(perf_fn, latencies,
-                       section_args[0].end > 1000000 ? 1000000 : section_args[0].end);
-    }
+
+    dump_latencies(perf_fn, latencies,
+                   section_args[0].end > 1000000 ? 1000000 : section_args[0].end);
 
 
     if (throughput_file != NULL) {
         fprintf(throughput_file, "%.2f,%.2f,",
-                (n * 1.0) / duration.count(),
-                (n * 1.0) / duration_with_gc.count());
+                (num_key * 1.0) / duration.count(),
+                (num_key * 1.0) / duration_with_gc.count());
     }
 }
 
@@ -1305,6 +1187,15 @@ int main(int argc, char **argv) {
     CPU_ZERO(&fcpu);
     CPU_SET(0, &fcpu);
     pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &fcpu);
+
+    // control variables
+    int require_RP_init = 0;
+    int require_obj_init = 0;
+    int shuffle_keys = 0;
+    int num_of_gc = 0;
+    uint64_t PMEM_POOL_SIZE = 0;
+    int goto_lookup = 0; //
+    int interfere = 1; //
 
     if (argc < 3) {
         printf("usage: %s [n] [nthreads]\nn: number of keys (integer)\nnthreads: number of threads (integer)\n",
@@ -1317,8 +1208,8 @@ int main(int argc, char **argv) {
     for (int ac = 0; ac < argc; ac++) {
 
         if (ac == 1) {
-            n = std::atoll(argv[1]);
-            printf("n:%lu ", n);
+            num_key = std::atoll(argv[1]);
+            printf("n:%lu ", num_key);
 
         } else if (ac == 2) {
             num_thread = atoi(argv[2]);
@@ -1360,7 +1251,6 @@ int main(int argc, char **argv) {
                 fs.delete_func = masstree_ralloc_delete;
 
             } else if (strcasestr(argv[ac], "log")) {
-                require_log_init = 1;
                 use_log = 1;
                 base_size = sizeof(struct log_cell) + sizeof(uint64_t) * 2;
                 printf("value=log ");
@@ -1415,18 +1305,9 @@ int main(int argc, char **argv) {
 
             }
         } else if (strcasestr(argv[ac], "gc=")) {
-            if (require_log_init)num_of_gc = atoi(strcasestr(argv[ac], "=") + 1);
+            if (use_log)num_of_gc = atoi(strcasestr(argv[ac], "=") + 1);
             printf("gc=%d ", num_of_gc);
 
-        } else if (strcasestr(argv[ac], "latency=")) {
-            if (strcasestr(argv[ac], "yes")) {
-                record_latency = 1;
-                printf("latency=yes ");
-
-            } else {
-                printf("latency=no ");
-
-            }
         } else if (strcasestr(argv[ac], "extra_size=")) {
             memset_size = atoi(strcasestr(argv[ac], "=") + 1);
             printf("memset_size=%d ", memset_size);
@@ -1481,17 +1362,17 @@ int main(int argc, char **argv) {
     puts("");
 
     puts("\tbegin generating keys");
-    uint64_t *keys = new uint64_t[n];
-    uint64_t *rands = new uint64_t[n];
+    uint64_t *keys = new uint64_t[num_key];
+    uint64_t *rands = new uint64_t[num_key];
 
 
     // Generate keys
-    for (uint64_t i = 0; i < n; i++) {
+    for (uint64_t i = 0; i < num_key; i++) {
         rands[i] = rand();
     }
 
     // Generate keys
-    for (uint64_t i = 0; i < n; i++) {
+    for (uint64_t i = 0; i < num_key; i++) {
         keys[i] = i + 1;
     }
 
@@ -1508,7 +1389,7 @@ int main(int argc, char **argv) {
 //#endif
 
 
-    PMEM_POOL_SIZE = total_size * n * 3;
+    PMEM_POOL_SIZE = total_size * num_key * 3;
     uint64_t size_round = 4ULL * 1024ULL * 1024ULL * 1024ULL;
     while (size_round < PMEM_POOL_SIZE) {
         size_round += 4ULL * 1024ULL * 1024ULL * 1024ULL;
@@ -1580,8 +1461,8 @@ int main(int argc, char **argv) {
     cpu_set_t *cpus = (cpu_set_t *) calloc(num_thread, sizeof(cpu_set_t));
     struct section_arg *section_args = (struct section_arg *) calloc(num_thread, sizeof(struct section_arg));
 
-    uint64_t n_per_thread = n / num_thread;
-    uint64_t n_remainder = n % num_thread;
+    uint64_t n_per_thread = num_key / num_thread;
+    uint64_t n_remainder = num_key % num_thread;
     int numberOfProcessors = sysconf(_SC_NPROCESSORS_ONLN);
     printf("\tNumber of processors: %d\n", numberOfProcessors);
 
@@ -1623,7 +1504,7 @@ int main(int argc, char **argv) {
 
     }
 
-    if (require_log_init) {
+    if (use_log) {
 
         puts("\tbegin preparing Log");
 
@@ -1682,7 +1563,7 @@ int main(int argc, char **argv) {
         /**
          * section INSERT
          */
-        if (shuffle_keys) masstree_shuffle(keys, n);
+        if (shuffle_keys) masstree_shuffle(keys, num_key);
         run("insert", throughput_file, attrs, section_args, latencies, section_insert);
     }
 
@@ -1692,7 +1573,7 @@ int main(int argc, char **argv) {
         /**
          * section UPDATE
          */
-        if (shuffle_keys) masstree_shuffle(keys, n);
+        if (shuffle_keys) masstree_shuffle(keys, num_key);
         run("update", throughput_file, attrs, section_args, latencies, section_update);
     }
 
@@ -1702,7 +1583,7 @@ int main(int argc, char **argv) {
         /**
          * section LOOKUP
          */
-        if (shuffle_keys) masstree_shuffle(keys, n);
+        if (shuffle_keys) masstree_shuffle(keys, num_key);
         run("lookup", throughput_file, attrs, section_args, latencies, section_lookup);
     }
 
@@ -1717,7 +1598,7 @@ int main(int argc, char **argv) {
          * section DELETE
          */
         throw;
-        if (shuffle_keys) masstree_shuffle(keys, n);
+        if (shuffle_keys) masstree_shuffle(keys, num_key);
         run("delete", throughput_file, attrs, section_args, latencies, section_delete);
     }
 
