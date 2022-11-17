@@ -434,8 +434,9 @@ void ralloc_recover_scan(masstree::masstree *tree) {
 
     uint64_t meta_here = 0;
 
-    uint64_t a, b;
-    rdtscll(a)
+    declearTSC
+    startTSC
+
     for (int i = 0; i < num_thread; i++) {
         struct ralloc_ptr_list *curr = ptr_lists[i];
 
@@ -448,8 +449,8 @@ void ralloc_recover_scan(masstree::masstree *tree) {
             curr = next;
         }
     }
-    rdtscll(b)
-    meta_here += b - a;
+
+    stopTSC(meta_here)
 
     duration = std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now() - starttime);
@@ -461,10 +462,9 @@ void ralloc_recover_scan(masstree::masstree *tree) {
 
 
     starttime = std::chrono::system_clock::now();
-    rdtscll(a)
+    startTSC
     RP_recover_xiaoxiang_go();
-    rdtscll(b)
-    meta_here += b - a;
+    stopTSC(meta_here)
     duration = std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now() - starttime);
 
@@ -482,9 +482,11 @@ void ralloc_recover_scan(masstree::masstree *tree) {
     printf("meta: %.2fs\n", (double) ralloc_total_time_meta / (double) num_thread / 2000000000.0
                             + (double) meta_here / 2000000000.0);
 
+    puts("");
+
 }
 
-#define REACH_T (LEAF_WIDTH+2)
+#define REACH_T (LEAF_WIDTH+1)
 
 void *ralloc_reachability_scan_thread(void *raw) {
 
@@ -515,7 +517,6 @@ void *ralloc_reachability_scan_thread(void *raw) {
 
             ralloc_ptr_list_add(&list, curr);
 
-
             if (curr->level() != 0) {
 
                 to_visit_next = (masstree::leafnode **) realloc(to_visit_next,
@@ -527,16 +528,11 @@ void *ralloc_reachability_scan_thread(void *raw) {
 
                 to_visit_next_size += LEAF_WIDTH;
 
-                to_visit_next[to_visit_next_size] = (masstree::leafnode *) curr->leftmost();
-//                to_visit_next[to_visit_next_size] = NULL; // todo
-                to_visit_next[to_visit_next_size + 1] = (masstree::leafnode *) curr->next_();
-                to_visit_next[to_visit_next_size + 1] = NULL; // todo
-                to_visit_next_size += 2;
+                to_visit_next[to_visit_next_size++] = (masstree::leafnode *) curr->leftmost();
 
             } else {
                 for (int kv_idx = 0; kv_idx < LEAF_WIDTH; kv_idx++) {
 
-//                    uint64_t k = curr->key(kv_idx);
                     void *v = curr->value(kv_idx);
 
                     if (v != NULL) {
