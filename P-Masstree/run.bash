@@ -69,8 +69,8 @@ cd build || exit
 
 use_perf="yes"
 
-workload=430000000 # todo: do not change this
-#workload=43000000
+#workload=430000000 # todo: do not change this
+workload=43000000
 
 key_order="random"
 #key_order="seq"
