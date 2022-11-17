@@ -7,9 +7,6 @@
 //#include "tbb/tbb.h"
 #include "plog.cpp"
 
-//#define PMEM_POOL_SIZE (4*1024*1024*1024ULL)
-//#define FOOTER 0xdeadbeef
-
 int (*which_memalign)(void **memptr, size_t alignment, size_t size) = posix_memalign;
 
 void (*which_memfree)(void *ptr) =free;
@@ -25,6 +22,7 @@ uint64_t iter;
 uint64_t value_offset = 0;
 uint64_t num_key;
 int num_thread;
+pthread_attr_t *ordered_attrs = NULL;
 
 struct functions {
     static inline void (*update_func)(masstree::masstree *, MASS::ThreadInfo, uint64_t, uint64_t, int, void *) = NULL;
@@ -60,13 +58,12 @@ using namespace std;
 #include "ralloc.hpp"
 #include "pfence_util.h"
 
-//#define RP_malloc RP_counted_malloc
-
 inline int RP_memalign(void **memptr, size_t alignment, size_t size) {
 
     *memptr = RP_malloc(size + (alignment - size % alignment));
 
     // todo: this can be removed
+    // leaf is allocated one in a while so should be okay
     uint64_t casted = (uint64_t) (*memptr);
     if (casted % alignment != 0) {
         throw;
@@ -75,8 +72,6 @@ inline int RP_memalign(void **memptr, size_t alignment, size_t size) {
     return 0;
 }
 
-//static constexpr uint64_t CACHE_LINE_SIZE = 64;
-
 void *memcpy_then_persist(void *pmemdest, const void *src, size_t len) {
     memcpy(pmemdest, src, len);
     pmem_persist(pmemdest, len);
@@ -84,6 +79,10 @@ void *memcpy_then_persist(void *pmemdest, const void *src, size_t len) {
 }
 
 void dump_latencies(const char *fn, u_int64_t *numbers, uint64_t length) {
+
+    // prevent over-recording
+    if (length > 1000000)length = 1000000;
+
     FILE *latency_file = fopen(fn, "w");
     for (uint64_t idx = 0; idx < length; idx++) {
         fprintf(latency_file, "%lu\n", numbers[idx]);
@@ -224,6 +223,7 @@ void bap_ycsb_load() {
         zipfian = 1;
     }
 
+    seed = time(NULL);
     init_zipf_generator(0, num_key - 1);
     long (*rand_next)(void) = zipfian ? zipf_next : uniform_next;
 
@@ -292,8 +292,6 @@ void bap_ycsb_load() {
 
 }
 
-//#define TAILER (0xdeadbeef)
-
 static inline uint64_t masstree_getsum(void *value) {
 
     uint64_t *numbers = (uint64_t *) value;
@@ -351,7 +349,7 @@ void *ralloc_recover_scan_thread(void *raw) {
 
         while (pack.curr < pack.end) {
 
-            rdtscll(a)
+            a = readTSC(1, 1);
             void *res = masstree_checksum(pack.curr, SUM_LOG, 0, iter, 0);
             rdtscll(b)
             time_read += b - a;
@@ -1170,8 +1168,7 @@ void run(
     sprintf(perf_fn, "%s-%s.rdtsc", prefix, section_name);
 
 
-    dump_latencies(perf_fn, latencies,
-                   section_args[0].end > 1000000 ? 1000000 : section_args[0].end);
+    dump_latencies(perf_fn, latencies, section_args[0].end);
 
 
     if (throughput_file != NULL) {
@@ -1357,7 +1354,7 @@ int main(int argc, char **argv) {
 
 
     iter = total_size / sizeof(uint64_t) - 1;
-    printf("total_size=%d ", total_size);
+    printf("total_size=%d %lu uint64_t", total_size, iter);
 
     puts("");
 
@@ -1375,18 +1372,6 @@ int main(int argc, char **argv) {
     for (uint64_t i = 0; i < num_key; i++) {
         keys[i] = i + 1;
     }
-
-    // (TP dropped) shuffle the array
-
-//#ifdef CLFLUSH
-//    puts("\tdetected CLFLUSH");
-//#elif CLFLUSH_OPT
-//    puts("\tdetected CLFLUSH_OPT");
-//#elif CLWB
-//    puts("\tdetected CLWB");
-//#else
-//    puts("\tno available cache line write back found")
-//#endif
 
 
     PMEM_POOL_SIZE = total_size * num_key * 3;
