@@ -7,3 +7,4 @@ pfence_util.h
 *.txt
 *.out
 *.stat
+*.rdtimes

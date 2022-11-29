@@ -758,11 +758,12 @@ static inline void masstree_ralloc_update(masstree::masstree *tree,
         RP_free(returned);
         stopTSC(timing->free_time)
 
-        startTSC
         if (ralloc_extra) {
+            startTSC
             pmem_persist(returned, sizeof(void *));
+            stopTSC(timing->free_persist_time)
         }
-        stopTSC(timing->free_persist_time)
+
     }
 }
 
@@ -784,13 +785,12 @@ static inline void masstree_ralloc_delete(
     RP_free(returned);
     stopTSC(timing->free_time)
 
-    startTSC
+
     if (ralloc_extra) {
+        startTSC
         pmem_persist(returned, sizeof(void *));
+        stopTSC(timing->free_persist_time)
     }
-    stopTSC(timing->free_persist_time)
-
-
 }
 
 static inline void masstree_log_update(masstree::masstree *tree,
@@ -825,11 +825,12 @@ static inline void masstree_log_update(masstree::masstree *tree,
     stopTSC(timing->tree_time)
 
 
-    startTSC
     if (no_allow_prev_null || returned != NULL) {
+        startTSC
         log_free(returned);
+        stopTSC(timing->free_time)
     }
-    stopTSC(timing->free_time)
+
 }
 
 static inline void masstree_log_delete(

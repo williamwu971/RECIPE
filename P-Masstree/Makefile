@@ -15,6 +15,9 @@ download:
 	#scp 'xiaoxiang@labos2.cs.usyd.edu.au:/mnt/sdb/xiaoxiang/RECIPE/P-Masstree/build/*.stat' .
 	#scp 'xiaoxiang@labos2.cs.usyd.edu.au:/mnt/sdb/xiaoxiang/RECIPE/P-Masstree/build/max_latencies.txt' .
 
+rdtimes:
+	mkdir rdtimes || true
+	scp 'xiaoxiang@labos2.cs.usyd.edu.au:/mnt/sdb/xiaoxiang/RECIPE/P-Masstree/build/*.rdtimes' ./rdtimes/
 
 everything:
 	scp 'xiaoxiang@labos2.cs.usyd.edu.au:/mnt/sdb/xiaoxiang/RECIPE/P-Masstree/build/*.{png,csv,out,stat,txt}' .
