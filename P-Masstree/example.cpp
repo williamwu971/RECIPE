@@ -12,7 +12,6 @@ int (*which_memalign)(void **memptr, size_t alignment, size_t size) = posix_mema
 void (*which_memfree)(void *ptr) =free;
 
 
-int use_perf = 0;
 int use_log = 0;
 int total_size = 0;
 int memset_size = 0;
@@ -468,7 +467,7 @@ void ralloc_recover_scan(masstree::masstree *tree) {
             calloc(num_thread, sizeof(struct ralloc_ptr_list *));
     RP_scan_init();
 
-    if (use_perf)log_start_perf(perf_fn);
+    log_start_perf(perf_fn);
     auto starttime = std::chrono::system_clock::now();
 
     for (int i = 0; i < num_thread; i++) {
@@ -482,10 +481,9 @@ void ralloc_recover_scan(masstree::masstree *tree) {
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now() - starttime);
 
-    if (use_perf) {
-        log_stop_perf();
-        log_print_pmem_bandwidth(perf_fn, duration.count() / 1000000.0, NULL);
-    }
+
+    log_stop_perf();
+    log_print_pmem_bandwidth(perf_fn, duration.count() / 1000000.0, NULL);
 
 
     printf("Throughput: %s,%ld,%.2f ops/us %.2f sec\n",
@@ -638,7 +636,7 @@ void ralloc_reachability_scan(masstree::masstree *tree) {
             calloc(REACH_T, sizeof(struct ralloc_ptr_list *));
     RP_scan_init();
 
-    if (use_perf)log_start_perf(perf_fn);
+    log_start_perf(perf_fn);
     auto starttime = std::chrono::system_clock::now();
 
     for (int i = 0; i < REACH_T; i++) {
@@ -669,10 +667,9 @@ void ralloc_reachability_scan(masstree::masstree *tree) {
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now() - starttime);
 
-    if (use_perf) {
-        log_stop_perf();
-        log_print_pmem_bandwidth(perf_fn, duration.count() / 1000000.0, NULL);
-    }
+
+    log_stop_perf();
+    log_print_pmem_bandwidth(perf_fn, duration.count() / 1000000.0, NULL);
 
 
     printf("Throughput: %s,%ld,%.2f ops/us %.2f sec\n",
@@ -1277,7 +1274,7 @@ void run(
 
     pthread_t *threads = (pthread_t *) calloc(num_thread, sizeof(pthread_t));
 
-    if (use_perf)log_start_perf(perf_fn);
+    log_start_perf(perf_fn);
 
     // Build tree
     auto starttime = std::chrono::system_clock::now();
@@ -1316,10 +1313,9 @@ void run(
             std::chrono::system_clock::now() - starttime);
     if (throughput_file != NULL)log_debug_print(throughput_file, use_log);
 
-    if (use_perf) {
-        log_stop_perf();
-        log_print_pmem_bandwidth(perf_fn, duration.count() / 1000000.0, throughput_file);
-    }
+
+    log_stop_perf();
+    log_print_pmem_bandwidth(perf_fn, duration.count() / 1000000.0, throughput_file);
 
 
     printf("Throughput: %s,%ld,%.2f ops/us %.2f sec\n",
@@ -1469,15 +1465,6 @@ int main(int argc, char **argv) {
 
             } else {
                 printf("key=seq ");
-
-            }
-        } else if (strcasestr(argv[ac], "perf=")) {
-            if (strcasestr(argv[ac], "y")) {
-                use_perf = 1;
-                printf("perf=y ");
-
-            } else {
-                printf("perf=n ");
 
             }
         } else if (strcasestr(argv[ac], "gc=")) {
