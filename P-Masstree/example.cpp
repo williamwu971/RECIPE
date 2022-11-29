@@ -1738,7 +1738,7 @@ int main(int argc, char **argv) {
         /**
          * section DELETE
          */
-        throw;
+//        throw;
         if (shuffle_keys) masstree_shuffle(keys, num_key);
         run("delete", throughput_file, section_args, latencies, section_delete);
     }
