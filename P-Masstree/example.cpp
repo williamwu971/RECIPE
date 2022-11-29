@@ -24,14 +24,29 @@ uint64_t num_key;
 int num_thread;
 pthread_attr_t *ordered_attrs = NULL;
 
+struct rdtimes {
+    uint64_t tree_time;
+    uint64_t alloc_time;
+    uint64_t free_time;
+    uint64_t free_persist_time;
+    uint64_t value_write_time;
+    uint64_t value_read_time;
+    uint64_t sum_time;
+    uint64_t scan_memset_time;
+};
+
 struct functions {
-    static inline void (*update_func)(masstree::masstree *, MASS::ThreadInfo, uint64_t, uint64_t, int, void *) = NULL;
+    static inline void
+    (*update_func)(masstree::masstree *, MASS::ThreadInfo, uint64_t, uint64_t, int, void *, struct rdtimes *) = NULL;
 
-    static inline void (*delete_func)(masstree::masstree *, MASS::ThreadInfo, uint64_t) = NULL;
+    static inline void
+    (*delete_func)(masstree::masstree *, MASS::ThreadInfo, uint64_t, struct rdtimes *) = NULL;
 
-    static inline void (*lookup_func)(masstree::masstree *, MASS::ThreadInfo, uint64_t, uint64_t, int) = NULL;
+    static inline void
+    (*lookup_func)(masstree::masstree *, MASS::ThreadInfo, uint64_t, uint64_t, int, struct rdtimes *) = NULL;
 
-    static inline void (*scan_func)(masstree::masstree *, MASS::ThreadInfo, uint64_t, int) = NULL;
+    static inline void
+    (*scan_func)(masstree::masstree *, MASS::ThreadInfo, uint64_t, int, struct rdtimes *) = NULL;
 };
 
 struct functions fs;
@@ -88,6 +103,42 @@ void dump_latencies(const char *fn, u_int64_t *numbers, uint64_t length) {
         fprintf(latency_file, "%lu\n", numbers[idx]);
     }
     fclose(latency_file);
+}
+
+void dump_rdtimes(const char *fn, struct rdtimes timing, int num_threads) {
+
+    double tree_time;
+    double alloc_time;
+    double free_time;
+    double free_persist_time;
+    double value_write_time;
+    double value_read_time;
+    double sum_time;
+    double scan_memset_time;
+
+    // todo: freq is fixed here
+    tree_time = (double) timing.tree_time / (double) num_threads / (double) 2000000000.0;
+    alloc_time = (double) timing.alloc_time / (double) num_threads / (double) 2000000000.0;
+    free_time = (double) timing.free_time / (double) num_threads / (double) 2000000000.0;
+    free_persist_time = (double) timing.free_persist_time / (double) num_threads / (double) 2000000000.0;
+    value_write_time = (double) timing.value_write_time / (double) num_threads / (double) 2000000000.0;
+    value_read_time = (double) timing.value_read_time / (double) num_threads / (double) 2000000000.0;
+    sum_time = (double) timing.sum_time / (double) num_threads / (double) 2000000000.0;
+    scan_memset_time = (double) timing.scan_memset_time / (double) num_threads / (double) 2000000000.0;
+
+    FILE *rdtimes_file = fopen(fn, "w");
+    fprintf(rdtimes_file, "tree_time");
+
+    fprintf(rdtimes_file, "tree_time,%.2f,\n", tree_time);
+    fprintf(rdtimes_file, "alloc_time,%.2f,\n", alloc_time);
+    fprintf(rdtimes_file, "free_time,%.2f,\n", free_time);
+    fprintf(rdtimes_file, "free_persist_time,%.2f,\n", free_persist_time);
+    fprintf(rdtimes_file, "value_write_time,%.2f,\n", value_write_time);
+    fprintf(rdtimes_file, "value_read_time,%.2f,\n", value_read_time);
+    fprintf(rdtimes_file, "sum_time,%.2f,\n", sum_time);
+    fprintf(rdtimes_file, "scan_memset_time,%.2f,\n", scan_memset_time);
+
+    fclose(rdtimes_file);
 }
 
 struct section_arg {
@@ -679,45 +730,69 @@ static inline void masstree_ralloc_update(masstree::masstree *tree,
                                           uint64_t u_key,
                                           uint64_t u_value,
                                           int no_allow_prev_null,
-                                          void *tplate) {
+                                          void *tplate,
+                                          struct rdtimes *timing) {
+
+    declearTSC
+
+    startTSC
     *((uint64_t *) tplate) = u_value;
     if (ralloc_extra) {
         ((uint64_t *) tplate)[1] = u_key;
     }
     if (!masstree_checksum(tplate, SUM_WRITE, u_value, iter, value_offset)) throw;
+    stopTSC(timing->sum_time)
 
-
+    startTSC
     void *value = RP_malloc(total_size);
+    stopTSC(timing->alloc_time)
 
+    startTSC
     cpy_persist(value, tplate, total_size);
+    stopTSC(timing->value_write_time)
 
+    startTSC
     uint64_t *returned = (uint64_t *) tree->put_and_return(u_key, value, !no_allow_prev_null, 0, t);
+    stopTSC(timing->tree_time)
 
     if (no_allow_prev_null || returned != NULL) {
 
-
+        startTSC
         RP_free(returned);
+        stopTSC(timing->free_time)
+
+        startTSC
         if (ralloc_extra) {
             pmem_persist(returned, sizeof(void *));
         }
+        stopTSC(timing->free_persist_time)
     }
 }
 
 static inline void masstree_ralloc_delete(
         masstree::masstree *tree,
         MASS::ThreadInfo t,
-        uint64_t d_key
+        uint64_t d_key,
+        struct rdtimes *timing
 ) {
 
+    declearTSC
 
-    uint64_t *returned = (uint64_t *) tree->del_and_return(d_key, 0, 0,
-                                                           NULL, t);
+    startTSC
+    uint64_t *returned = (uint64_t *) tree->del_and_return(d_key, 0, 0, NULL, t);
+    stopTSC(timing->tree_time)
 
+
+    startTSC
     RP_free(returned);
+    stopTSC(timing->free_time)
 
+    startTSC
     if (ralloc_extra) {
         pmem_persist(returned, sizeof(void *));
     }
+    stopTSC(timing->free_persist_time)
+
 
 }
 
@@ -726,69 +801,113 @@ static inline void masstree_log_update(masstree::masstree *tree,
                                        uint64_t u_key,
                                        uint64_t u_value,
                                        int no_allow_prev_null,
-                                       void *tplate) {
+                                       void *tplate,
+                                       struct rdtimes *timing) {
 
+    declearTSC
 
+    startTSC
     struct log_cell *lc = (struct log_cell *) tplate;
     lc->key = u_key;
     rdtscll(lc->version)
     *((uint64_t *) (lc + 1)) = u_value;
     if (!masstree_checksum(tplate, SUM_WRITE, u_value, iter, value_offset)) throw;
+    stopTSC(timing->sum_time)
 
+    startTSC
     char *raw = (char *) log_malloc(total_size);
+    stopTSC(timing->alloc_time)
+
+    startTSC
     cpy_persist(raw, tplate, total_size);
+    stopTSC(timing->value_write_time)
 
+
+    startTSC
     void *returned = tree->put_and_return(u_key, raw, !no_allow_prev_null, 0, t);
+    stopTSC(timing->tree_time)
 
+
+    startTSC
     if (no_allow_prev_null || returned != NULL) {
         log_free(returned);
     }
+    stopTSC(timing->free_time)
 }
 
 static inline void masstree_log_delete(
         masstree::masstree *tree,
         MASS::ThreadInfo t,
-        uint64_t d_key
+        uint64_t d_key,
+        struct rdtimes *timing
 ) {
 
-    log_free(tree->del_and_return(d_key, 0, 0, log_get_tombstone, t));
+    declearTSC
+
+    startTSC
+    void *target = tree->del_and_return(d_key, 0, 0, log_get_tombstone, t);
+    stopTSC(timing->tree_time)
+
+    startTSC
+    log_free(target);
+    stopTSC(timing->free_time)
 
 }
 
-static inline void masstree_obj_update(masstree::masstree *tree,
-                                       MASS::ThreadInfo t,
-                                       uint64_t u_key,
-                                       uint64_t u_value,
-                                       int no_allow_prev_null,
-                                       void *tplate) {
+static inline void masstree_obj_update(
+        masstree::masstree *tree,
+        MASS::ThreadInfo t,
+        uint64_t u_key,
+        uint64_t u_value,
+        int no_allow_prev_null,
+        void *tplate,
+        struct rdtimes *timing
+) {
 
 
     TX_BEGIN(pop) {
 
+                    declearTSC
+
+                    startTSC
                     PMEMoid
                             ht_oid = pmemobj_tx_alloc(total_size, TOID_TYPE_NUM(
                             struct masstree_obj));
+                    stopTSC(timing->alloc_time)
 
+                    startTSC
                     struct masstree_obj *o = (struct masstree_obj *) tplate;
                     o->data = u_value;
                     o->ht_oid = ht_oid;
                     if (!masstree_checksum(tplate, SUM_WRITE, u_value, iter, value_offset)) throw;
+                    stopTSC(timing->sum_time)
 
+                    startTSC
                     pmemobj_tx_add_range(ht_oid, 0, total_size);
                     struct masstree_obj *mo = (struct masstree_obj *) pmemobj_direct(ht_oid);
                     memcpy(mo, tplate, total_size);
+                    stopTSC(timing->value_write_time)
 
+
+                    startTSC
                     struct masstree_obj *old_obj = (struct masstree_obj *)
                             tree->put_and_return(u_key, mo, !no_allow_prev_null, 0, t);
+                    stopTSC(timing->tree_time)
 
 
                     if (no_allow_prev_null || old_obj != NULL) {
 
+                        //todo: possibly here can use same trick as Ralloc
 
+                        startTSC
                         pmemobj_tx_add_range(old_obj->ht_oid, sizeof(struct masstree_obj) + memset_size,
                                              sizeof(uint64_t));
                         if (!masstree_checksum(old_obj, SUM_INVALID, u_value, iter, value_offset)) throw;
+                        stopTSC(timing->free_persist_time)
+
+                        startTSC
                         pmemobj_tx_free(old_obj->ht_oid);
+                        stopTSC(timing->free_time)
 
                     }
 
@@ -802,20 +921,31 @@ static inline void masstree_obj_update(masstree::masstree *tree,
 static inline void masstree_obj_delete(
         masstree::masstree *tree,
         MASS::ThreadInfo t,
-        uint64_t d_key
+        uint64_t d_key,
+        struct rdtimes *timing
 ) {
 
+    declearTSC
+
+    startTSC
     struct masstree_obj *old_obj = (struct masstree_obj *)
             tree->del_and_return(d_key, 0, 0,
                                  NULL, t);
+    stopTSC(timing->tree_time)
 
 
     TX_BEGIN(pop) {
 
+                    startTSC
                     pmemobj_tx_add_range(old_obj->ht_oid, sizeof(struct masstree_obj) + memset_size,
                                          sizeof(uint64_t));
                     if (!masstree_checksum(old_obj, SUM_INVALID, d_key, iter, value_offset))throw;
+                    stopTSC(timing->free_persist_time)
+
+
+                    startTSC
                     pmemobj_tx_free(old_obj->ht_oid);
+                    stopTSC(timing->free_time)
                 }
                     TX_ONABORT {
                     throw;
@@ -831,9 +961,16 @@ static inline void masstree_universal_lookup(
         MASS::ThreadInfo t,
         uint64_t g_key,
         uint64_t g_value,
-        int check_value
+        int check_value,
+        struct rdtimes *timing
 ) {
+
+    declearTSC
+
+    startTSC
     void *raw = tree->get(g_key, t);
+    stopTSC(timing->tree_time)
+
     if (raw != NULL || check_value) {
 
         if (raw == NULL) {
@@ -841,12 +978,13 @@ static inline void masstree_universal_lookup(
             throw;
         }
 
-
+        startTSC
         if (!masstree_checksum(raw, SUM_CHECK, g_value, iter, value_offset)) {
 
             printf("error key %lu value %lu pointer %p\n", g_key, g_value, raw);
             throw;
         }
+        stopTSC(timing->value_read_time)
     }
 }
 
@@ -855,18 +993,26 @@ static inline void masstree_ycsb_lookup(
         MASS::ThreadInfo t,
         uint64_t g_key,
         uint64_t g_value,
-        int check_value
+        int check_value,
+        struct rdtimes *timing
 ) {
 
     (void) g_value;
     (void) check_value;
+    declearTSC
 
+    startTSC
     void *raw = tree->get(g_key, t);
+    stopTSC(timing->tree_time)
+
     if (raw != NULL) {
+
+        startTSC
         if (masstree_getsum(raw) == 0) {
             printf("ycsb lookup sum 0\n");
             throw;
         }
+        stopTSC(timing->value_read_time)
     }
 }
 
@@ -874,13 +1020,23 @@ static inline void masstree_ycsb_scan(
         masstree::masstree *tree,
         MASS::ThreadInfo t,
         uint64_t s_min,
-        int s_num
+        int s_num,
+        struct rdtimes *timing
 ) {
 
+    declearTSC
+
+    startTSC
     uint64_t buf[200];
     memset(buf, 0, sizeof(uint64_t) * 200);
+    stopTSC(timing->scan_memset_time)
 
+
+    startTSC
     int ret = tree->scan(s_min, s_num, buf, t);
+    stopTSC(timing->tree_time)
+
+    startTSC
     for (int ret_idx = 0; ret_idx < ret; ret_idx++) {
 
         void *raw = (void *) buf[ret_idx];
@@ -892,6 +1048,7 @@ static inline void masstree_ycsb_scan(
             }
         }
     }
+    stopTSC(timing->value_read_time)
 }
 
 
@@ -918,18 +1075,19 @@ void *section_ycsb_run(void *arg) {
 
     auto t = tree->getThreadInfo();
 
+    struct rdtimes *timing = (struct rdtimes *) calloc(1, sizeof(struct rdtimes));
     u_int64_t rdt;
 
     for (uint64_t i = start; i < end; i++) {
 
         if (ycsb_ops[i] == OP_INSERT || ycsb_ops[i] == OP_UPDATE) {
-            fs.update_func(tree, t, ycsb_keys[i], ycsb_keys[i], 0, tplate);
+            fs.update_func(tree, t, ycsb_keys[i], ycsb_keys[i], 0, tplate, timing);
         } else if (ycsb_ops[i] == OP_READ) {
-            fs.lookup_func(tree, t, ycsb_keys[i], ycsb_keys[i], 0);
+            fs.lookup_func(tree, t, ycsb_keys[i], ycsb_keys[i], 0, timing);
         } else if (ycsb_ops[i] == OP_SCAN) {
-            fs.scan_func(tree, t, ycsb_keys[i], ycsb_ranges[i]);
+            fs.scan_func(tree, t, ycsb_keys[i], ycsb_ranges[i], timing);
         } else if (ycsb_ops[i] == OP_DELETE) {
-            fs.delete_func(tree, t, ycsb_keys[i]);
+            fs.delete_func(tree, t, ycsb_keys[i], timing);
         }
 
         rdtscll(rdt)
@@ -940,7 +1098,7 @@ void *section_ycsb_run(void *arg) {
     }
 
 
-    return NULL;
+    return timing;
 }
 
 void *section_insert(void *arg) {
@@ -971,11 +1129,12 @@ void *section_insert(void *arg) {
 
     auto t = tree->getThreadInfo();
 
+    struct rdtimes *timing = (struct rdtimes *) calloc(1, sizeof(struct rdtimes));
     u_int64_t rdt;
 
     for (uint64_t i = start; i < end; i++) {
 
-        fs.update_func(tree, t, keys[i], rands[i], 0, tplate);
+        fs.update_func(tree, t, keys[i], rands[i], 0, tplate, timing);
         rdtscll(rdt)
 
         if (start == 0) {
@@ -984,7 +1143,7 @@ void *section_insert(void *arg) {
     }
 
 
-    return NULL;
+    return timing;
 }
 
 void *section_update(void *arg) {
@@ -1011,11 +1170,12 @@ void *section_update(void *arg) {
 
     auto t = tree->getThreadInfo();
 
+    struct rdtimes *timing = (struct rdtimes *) calloc(1, sizeof(struct rdtimes));
     u_int64_t rdt;
 
     for (uint64_t i = start; i < end; i++) {
 
-        fs.update_func(tree, t, keys[i], keys[i], 1, tplate);
+        fs.update_func(tree, t, keys[i], keys[i], 1, tplate, timing);
         rdtscll(rdt)
 
         if (start == 0) {
@@ -1024,7 +1184,7 @@ void *section_update(void *arg) {
     }
 
 
-    return NULL;
+    return timing;
 }
 
 void *section_lookup(void *arg) {
@@ -1041,11 +1201,12 @@ void *section_lookup(void *arg) {
 
     auto t = tree->getThreadInfo();
 
+    struct rdtimes *timing = (struct rdtimes *) calloc(1, sizeof(struct rdtimes));
     u_int64_t rdt;
 
     for (uint64_t i = start; i < end; i++) {
 
-        fs.lookup_func(tree, t, keys[i], keys[i], 1);
+        fs.lookup_func(tree, t, keys[i], keys[i], 1, timing);
         rdtscll(rdt)
 
         if (start == 0) {
@@ -1054,7 +1215,7 @@ void *section_lookup(void *arg) {
     }
 
 
-    return NULL;
+    return timing;
 }
 
 void *section_delete(void *arg) {
@@ -1070,11 +1231,12 @@ void *section_delete(void *arg) {
 
     auto t = tree->getThreadInfo();
 
+    struct rdtimes *timing = (struct rdtimes *) calloc(1, sizeof(struct rdtimes));
     u_int64_t rdt;
 
     for (uint64_t i = start; i < end; i++) {
 
-        fs.delete_func(tree, t, keys[i]);
+        fs.delete_func(tree, t, keys[i], timing);
         rdtscll(rdt)
 
         if (start == 0) {
@@ -1083,7 +1245,7 @@ void *section_delete(void *arg) {
     }
 
 
-    return NULL;
+    return timing;
 }
 
 void masstree_shuffle(uint64_t *array, uint64_t size) {
@@ -1123,8 +1285,25 @@ void run(
     for (int i = 0; i < num_thread; i++) {
         pthread_create(threads + i, ordered_attrs + i, routine, section_args + i);
     }
+
+    struct rdtimes total_timing;
+    memset(&total_timing, 0, sizeof(struct rdtimes));
+
     for (int i = 0; i < num_thread; i++) {
-        pthread_join(threads[i], NULL);
+        struct rdtimes *local_timing;
+        pthread_join(threads[i], (void **) &local_timing);
+
+        total_timing.tree_time += local_timing->tree_time;
+        total_timing.alloc_time += local_timing->alloc_time;
+        total_timing.free_time += local_timing->free_time;
+        total_timing.free_persist_time += local_timing->free_persist_time;
+        total_timing.value_write_time += local_timing->value_write_time;
+        total_timing.value_read_time += local_timing->value_read_time;
+        total_timing.sum_time += local_timing->sum_time;
+        total_timing.scan_memset_time += local_timing->scan_memset_time;
+
+
+        free(local_timing);
     }
 
 
@@ -1147,9 +1326,10 @@ void run(
            section_name, num_key, (num_key * 1.0) / duration.count(), duration.count() / 1000000.0);
 
     sprintf(perf_fn, "%s-%s.rdtsc", prefix, section_name);
-
-
     dump_latencies(perf_fn, latencies, section_args[0].end);
+
+    sprintf(perf_fn, "%s-%s.rdtimes", prefix, section_name);
+    dump_rdtimes(perf_fn, total_timing, num_thread);
 
 
     if (throughput_file != NULL) {
