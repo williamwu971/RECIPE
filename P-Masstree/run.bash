@@ -113,8 +113,8 @@ num_of_gc=(8)
 pmdk_no_flush=("0")
 #pmdk_no_flush=("1")
 
-ycsbs=("N")
-#ycsbs=("au" "bu" "cu" "eu" "az" "bz" "cz" "ez")
+#ycsbs=("N")
+ycsbs=("au" "bu" "cu" "eu" "az" "bz" "cz" "ez")
 
 #persist=("flush" "non-temporal")
 persist=("flush")
