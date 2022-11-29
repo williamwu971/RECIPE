@@ -126,7 +126,6 @@ void dump_rdtimes(const char *fn, struct rdtimes timing, int num_threads) {
     scan_memset_time = (double) timing.scan_memset_time / (double) num_threads / (double) 2000000000.0;
 
     FILE *rdtimes_file = fopen(fn, "w");
-    fprintf(rdtimes_file, "tree_time");
 
     fprintf(rdtimes_file, "tree_time,%.2f,\n", tree_time);
     fprintf(rdtimes_file, "alloc_time,%.2f,\n", alloc_time);
