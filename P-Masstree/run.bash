@@ -67,8 +67,8 @@ done
 cd build || exit
 #rm -f ./*.rdtsc ./*.png ./*.csv ./max_latencies.txt
 
-workload=430000000
-#workload=43000000
+#workload=430000000
+workload=43000000
 
 key_order="random"
 #key_order="seq"
@@ -95,10 +95,10 @@ index_location=("dram")
 
 #value_location=("ralloc" "log" "log-best" "obj")
 #value_location=("obj" "log" "ralloc")
-value_location=("ralloc")
+#value_location=("ralloc")
 #value_location=("log")
 #value_location=("obj")
-#value_location=("log-best")
+value_location=("log-best")
 #value_location=("ralloc" "log" "log-best")
 
 #num_threads=(1 3 5 7 9 11 13 15)
