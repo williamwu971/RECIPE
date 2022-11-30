@@ -109,9 +109,9 @@ num_threads=(19) # todo: do not change this
 #num_of_gc=(8 0)
 num_of_gc=(8)
 
-#pmdk_no_flush=("0" "1")
+pmdk_no_flush=("0" "1")
 #pmdk_no_flush=("0")
-pmdk_no_flush=("1")
+#pmdk_no_flush=("1")
 
 ycsbs=("N")
 #ycsbs=("au" "bu" "cu" "eu" "az" "bz" "cz" "ez")
@@ -210,7 +210,7 @@ for s in "${extra_sizes[@]}"; do
                   PMEM_NO_FLUSH="$f" ./example "$workload" "$n" extra_size="$s" total_size="$t" \
                     index="$i" value="$v" key="$key_order" \
                     gc="$g" ycsb="$y" persist="$p" \
-                    prefix="$i"-"$v"-"$n"-"$g"-NF"$f"-"$s"b-"$t"B-"$y"-"$p" || exit
+                    prefix="$i"-"$v"-"$n"-"$g"-NF"$f"-"$s"b-"$t"B-"$y"-"$p"-"$workload"n || exit
 
                   #      mv out.png out_"$i"_"$v".png
                   #      ./example 100 "$n" index="$i" value="$v"
@@ -231,19 +231,17 @@ for s in "${extra_sizes[@]}"; do
   done
 done
 
-if [ "$record_latency" = "yes" ]; then
-  for filename in *.rdtsc; do
-    #              python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$filename" --ylim 100000000 --xlim "$workload" || exit
-    if [ ! -f graph-"$filename".png ]; then
-      python3 ../simple_graph.py --r "$filename" --fn graph-"$filename" --y "ops/ms" --x "time(ms)" --xlim 300 --ylim 1900 &
-    fi
-    #              python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$filename"|| exit
-  done
+for filename in *.rdtsc; do
+  #              python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$filename" --ylim 100000000 --xlim "$workload" || exit
+  if [ ! -f graph-"$filename".png ]; then
+    python3 ../simple_graph.py --r "$filename" --fn graph-"$filename" --y "ops/ms" --x "time(ms)" --xlim 300 --ylim 1900 &
+  fi
+  #              python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$filename"|| exit
+done
 
-  while pgrep -i -f simple_graph >/dev/null; do
-    sleep 1
-  done
-fi
+while pgrep -i -f simple_graph >/dev/null; do
+  sleep 1
+done
 
 echo 1 >/proc/sys/kernel/nmi_watchdog
 
