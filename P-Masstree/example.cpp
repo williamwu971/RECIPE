@@ -1668,7 +1668,7 @@ int main(int argc, char **argv) {
             if (interfere) {
                 start_cpu = 1;
                 end_cpu = 1 + num_thread;
-                end_cpu = 1 + num_of_gc;
+                end_cpu = 1 + num_of_gc; // todo: delete to make update faster
             } else {
                 start_cpu = 1 + num_thread;
                 end_cpu = start_cpu + num_of_gc;
