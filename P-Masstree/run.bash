@@ -52,7 +52,7 @@ for var in "$@"; do
     rm ./*.png
     rm max_latencies.txt
     for filename in *.rdtsc; do
-      python3 ../simple_graph.py --r "$filename" --fn graph-"$filename" --y "ops/ms" --x "time(ms)" --xlim 4000 --ylim 750 &
+      python3 ../simple_graph.py --r "$filename" --fn graph-"$filename" --y "ops/ms" --x "time(ms)" --xlim 4000 --ylim 1000 &
     done
 
     while pgrep -i -f simple_graph >/dev/null; do
@@ -229,7 +229,7 @@ done
 for filename in *.rdtsc; do
   #              python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$filename" --ylim 100000000 --xlim "$workload" || exit
   if [ ! -f graph-"$filename".png ]; then
-    python3 ../simple_graph.py --r "$filename" --fn graph-"$filename" --y "ops/ms" --x "time(ms)" --xlim 4000 --ylim 750 &
+    python3 ../simple_graph.py --r "$filename" --fn graph-"$filename" --y "ops/ms" --x "time(ms)" --xlim 4000 --ylim 1000 &
   fi
   #              python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$filename"|| exit
 done
