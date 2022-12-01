@@ -47,7 +47,7 @@ with open(args.r, "r") as data_file:
             max_latency_location = len(final_data)
 
         # count latencies greater than scheduler interval
-        if diff > 2000000000:
+        if diff > 200000000:
             greater_sched_sum += diff
             greater_sched_count += 1
 
