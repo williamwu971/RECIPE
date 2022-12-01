@@ -33,6 +33,7 @@ with open(args.r, "r") as data_file:
     last_time = data_read[0]
     nb_requests = 0
     max_latency = 0
+    max_latency_location = 0
     count = 0
 
     for time in data_read:
@@ -41,6 +42,7 @@ with open(args.r, "r") as data_file:
 
         if diff > max_latency:
             max_latency = diff
+            max_latency_location = len(final_data)
 
         if diff > 2000000:
             last_time = time
@@ -65,7 +67,7 @@ with open(args.r, "r") as data_file:
     # print(len(final_data))
 
     with open("max_latencies.txt", "a") as late_file:
-        print("{} max:{}".format(args.fn, max_latency), file=late_file)  # hack
+        print("{},{},{}".format(args.fn, max_latency, max_latency_location), file=late_file)  # hack
 
 # temp_title = ' '.join(args.t)
 # plt.title(temp_title, fontsize=40)
