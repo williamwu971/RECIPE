@@ -76,7 +76,7 @@ with open(args.r, "r") as data_file:
     if greater_sched_count == 0:
         greater_sched_count += 1
 
-    with open("max_latencies.txt", "a") as late_file:
+    with open("max_latencies.csv", "a") as late_file:
         print("{},max,{},{},sched,{},{}".format(args.fn, max_latency, max_latency_location,
                                                 greater_sched_sum / greater_sched_count, greater_sched_count),
               file=late_file)  # hack
