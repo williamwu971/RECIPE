@@ -12,7 +12,7 @@ struct log_list_pack log_list;
 
 // every thread hold its own log
 struct log *log_meta;
-__thread struct log *thread_log = NULL;
+__thread struct log *thread_log = nullptr;
 
 
 struct garbage_queue gq;
@@ -40,7 +40,7 @@ void log_list_init(int num_log, int *list_area) {
     }
     log_list.list[i] = -1;
 
-    pthread_mutex_init(&log_list.list_lock, NULL);
+    pthread_mutex_init(&log_list.list_lock, nullptr);
 }
 
 void log_list_push(int log_index) {
@@ -77,18 +77,18 @@ int log_list_occupied() {
 
 void log_gq_init() {
 
-    pthread_mutex_init(&gq.lock, NULL);
-    pthread_cond_init(&gq.cond, NULL);
-    gq.head = NULL;
+    pthread_mutex_init(&gq.lock, nullptr);
+    pthread_cond_init(&gq.cond, nullptr);
+    gq.head = nullptr;
     gq.num = 0;
 
     gq.gc_stopped = 0;
-    gq.gc_ids = NULL;
+    gq.gc_ids = nullptr;
     gq.num_gcs = 0;
 }
 
 void log_gq_add(uint64_t idx) {
-    struct garbage_queue_node *node = (struct garbage_queue_node *) malloc(sizeof(struct garbage_queue_node));
+    auto node = (struct garbage_queue_node *) malloc(sizeof(struct garbage_queue_node));
     node->index = idx;
 
     pthread_mutex_lock(&gq.lock);
@@ -127,14 +127,14 @@ int log_gq_get(struct garbage_queue_node **place) {
     *place = gq.head;
     struct garbage_queue_node *queue = gq.head;
 
-    if (queue == NULL) {
+    if (queue == nullptr) {
         pthread_mutex_unlock(&gq.lock);
         return 1;
     }
 
     for (int tmp = 1; tmp < NUM_LOG_PER_COLLECTION; tmp++) {
 
-        if (queue->next == NULL) {
+        if (queue->next == nullptr) {
             break;
         } else {
             queue = queue->next;
@@ -143,11 +143,11 @@ int log_gq_get(struct garbage_queue_node **place) {
     }
 
     struct garbage_queue_node *new_head = queue->next;
-    queue->next = NULL;
+    queue->next = nullptr;
     gq.head = new_head;
     gq.num--;
 
-    if (gq.head != NULL) pthread_cond_signal(&gq.cond);
+    if (gq.head != nullptr) pthread_cond_signal(&gq.cond);
 
     pthread_mutex_unlock(&gq.lock);
     return 1;
@@ -185,7 +185,7 @@ void log_end_gc() {
 
 void log_wait_all_gc() {
 
-    while (1) {
+    while (true) {
         pthread_cond_broadcast(&gq.cond);
         pthread_mutex_lock(&gq.lock);
         if (gq.num == 0) {
@@ -205,7 +205,7 @@ void log_join_all_gc() {
     pthread_cond_broadcast(&gq.cond);
 
     for (int i = 0; i < gq.num_gcs; i++) {
-        pthread_join(gq.gc_ids[i], NULL);
+        pthread_join(gq.gc_ids[i], nullptr);
     }
 
 }
@@ -244,7 +244,7 @@ uint64_t log_total_time_meta = 0;
 
 void *log_rebuild_thread(void *arg) {
 
-    struct log_rebuild_args *args = (struct log_rebuild_args *) arg;
+    auto args = (struct log_rebuild_args *) arg;
     masstree::masstree *tree = args->tree;
     auto t = tree->getThreadInfo();
 
@@ -265,7 +265,7 @@ void *log_rebuild_thread(void *arg) {
 
         while (current_log->curr < end) {
 
-            struct log_cell *lc = (struct log_cell *) current_log->curr;
+            auto lc = (struct log_cell *) current_log->curr;
 
 
             a = readTSC(1, 1);
@@ -282,8 +282,7 @@ void *log_rebuild_thread(void *arg) {
             time_read += b - a;
 
             rdtscll(a)
-            struct log_cell *res = (struct log_cell *)
-                    tree->put_and_return(lc->key, lc, 1, 1, t);
+            auto res = (struct log_cell *) tree->put_and_return(lc->key, lc, 1, 1, t);
             rdtscll(b)
             time_tree += b - a;
 
@@ -293,9 +292,9 @@ void *log_rebuild_thread(void *arg) {
             current_log->curr += total_size;
             // insert success and created a new key-value
             // replaced a value, should free some space in other log
-            if (res != NULL) {
+            if (res != nullptr) {
 
-                uint64_t idx = (uint64_t)((char *) res - big_map) / LOG_SIZE;
+                uint64_t idx = (uint64_t) ((char *) res - big_map) / LOG_SIZE;
                 struct log *target_log = log_meta + idx;
                 target_log->freed.fetch_add(sizeof(struct log_cell) + res->value_size);
 
@@ -319,7 +318,7 @@ void *log_rebuild_thread(void *arg) {
     log_total_ops += total_ops;
     pthread_mutex_unlock(&total_recover_lock);
 
-    return NULL;
+    return nullptr;
 }
 
 void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) {
@@ -338,8 +337,8 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) 
 
     printf("\n... rebuilding tree using %d threads ...\n", num_threads);
 
-    pthread_t *rebuild_threads = (pthread_t *) malloc(sizeof(pthread_t) * num_threads);
-    struct log_rebuild_args *args = (struct log_rebuild_args *) malloc(sizeof(struct log_rebuild_args) * num_threads);
+    auto rebuild_threads = (pthread_t *) malloc(sizeof(pthread_t) * num_threads);
+    auto args = (struct log_rebuild_args *) malloc(sizeof(struct log_rebuild_args) * num_threads);
 
     log_start_perf("rebuild.perf");
 
@@ -364,18 +363,18 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) 
         pthread_create(rebuild_threads + i, &attr, log_rebuild_thread, args + i);
     }
     for (int i = 0; i < num_threads; i++) {
-        pthread_join(rebuild_threads[i], NULL);
+        pthread_join(rebuild_threads[i], nullptr);
     }
 
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now() - starttime);
 
     log_stop_perf();
-    log_print_pmem_bandwidth("rebuild.perf", duration.count() / 1000000.0, NULL);
+    log_print_pmem_bandwidth("rebuild.perf", (double) duration.count() / 1000000.0, nullptr);
 
     printf("... rebuild complete, recovered %lu/%lu keys throughput %.2f ops/us %.2f sec...\n",
-           log_total_recovered, log_total_ops, (log_total_recovered * 1.0) / duration.count(),
-           duration.count() / 1000000.0);
+           log_total_recovered, log_total_ops, ((double) log_total_recovered * 1.0) / (double) duration.count(),
+           (double) duration.count() / 1000000.0);
 
     printf("time slides:\n");
     printf("read: %.2fs\n", (double) log_total_time_read / (double) num_threads / 2000000000.0);
@@ -402,9 +401,9 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) 
 
 
 uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
-                 void **result, int *pre_set, int alignment) {
+                 void **result, const int *pre_set, int alignment) {
 
-    void *map = NULL;
+    void *map;
     size_t mapped_len = file_size;
     int is_pmem = 1;
 
@@ -419,20 +418,17 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
                                 PMEM_FILE_CREATE | PMEM_FILE_EXCL, 00666,
                                 &mapped_len, &is_pmem);
 
-            if (mapped_len != file_size) {
-                die("map length check mapped:%zu expecting:%zu", mapped_len, file_size);
-            }
         }
 
     } else {
 
-//        map = mmap(NULL, file_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS, -1, 0);
+//        map = mmap(nullptr, file_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS, -1, 0);
         map = malloc(file_size);
 
     }
 
 
-    if (map == NULL || map == MAP_FAILED || !is_pmem) {
+    if (map == nullptr || map == MAP_FAILED || !is_pmem) {
         die("map error map:%p is_pmem:%d", map, is_pmem);
     }
 
@@ -441,7 +437,7 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
     }
 
 
-    if (pre_set != NULL) {
+    if (pre_set != nullptr) {
 
         printf("\n");
 
@@ -454,17 +450,17 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
         auto starttime = std::chrono::system_clock::now();
 
         for (size_t i = 0; i < mapped_len; i += PAGE_SIZE) {
-            ((char *) map)[i] = value;
+            ((char *) map)[i] = (char) value;
         }
 
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
                 std::chrono::system_clock::now() - starttime);
 
         log_stop_perf();
-        log_print_pmem_bandwidth("fault.perf", duration.count() / 1000000.0, NULL);
+        log_print_pmem_bandwidth("fault.perf", (double) duration.count() / 1000000.0, nullptr);
 
 
-        printf("pre-faulted %p %-30s %7.2fs\n", map, fn, duration.count() / 1000000.0);
+        printf("pre-faulted %p %-30s %7.2fs\n", map, fn, (double) duration.count() / 1000000.0);
 
     }
 
@@ -476,7 +472,7 @@ void log_recover(masstree::masstree *tree, int num_threads) {
 
     log_structs_size_check();
 
-    uint64_t mapped_len = log_map(1, LOG_FN, 0, (void **) &big_map, NULL, LOG_SIZE);
+    uint64_t mapped_len = log_map(1, LOG_FN, 0, (void **) &big_map, nullptr, LOG_SIZE);
     uint64_t num_logs = mapped_len / LOG_SIZE;
 
     int preset = 0;
@@ -486,7 +482,7 @@ void log_recover(masstree::masstree *tree, int num_threads) {
     log_map(0, META_FN, sizeof(struct log) * num_logs, (void **) &log_meta, pptr, sizeof(struct log));
 
     // inodes
-    log_list_init(num_logs, inodes);
+    log_list_init((int) num_logs, inodes);
 
     // reconstruct tree
     log_tree_rebuild(tree, num_threads, 1);
@@ -518,10 +514,10 @@ void log_init(uint64_t pool_size) {
 
 
     // inodes
-    log_list_init(num_logs, inodes);
+    log_list_init((int) num_logs, inodes);
 
     // usage
-    log_tree_rebuild(NULL, 0, 0);
+    log_tree_rebuild(nullptr, 0, 0);
 
 
     // gc
@@ -542,7 +538,7 @@ char *log_acquire(int write_thread_log) {
     if (write_thread_log) {
 
         // retire and mark the old log for collection
-        if (thread_log != NULL) {
+        if (thread_log != nullptr) {
 
             if (thread_log->freed.load() > LOG_MERGE_THRESHOLD) {
                 log_gq_add(thread_log->index);
@@ -576,8 +572,8 @@ void *log_malloc(size_t size) {
 
 
     // the "freed" space should be strictly increasing
-    while (unlikely(thread_log == NULL || thread_log->available < size)) {
-        if (log_acquire(1) == NULL)die("cannot acquire new log");
+    while (unlikely(thread_log == nullptr || thread_log->available < size)) {
+        if (log_acquire(1) == nullptr)die("cannot acquire new log");
     }
 
     // write and decrease size
@@ -603,7 +599,7 @@ int log_memalign(void **memptr, size_t alignment, size_t size) {
 void *log_get_tombstone(uint64_t key) {
 
 
-    struct log_cell *lc = (struct log_cell *) malloc(sizeof(struct log_cell) + sizeof(uint64_t));
+    auto lc = (struct log_cell *) malloc(sizeof(struct log_cell) + sizeof(uint64_t));
 
     rdtscll(lc->version)
     lc->value_size = sizeof(uint64_t);
@@ -628,7 +624,7 @@ void log_free(void *ptr) {
     char *char_ptr = (char *) ptr;
 
     // commit a dummy log to represent that this entry has been freed
-    struct log_cell *lc = (struct log_cell *) ptr;
+    auto lc = (struct log_cell *) ptr;
 
 
     // locate the log and its metadata
@@ -653,16 +649,16 @@ void log_free(void *ptr) {
 
 void *log_garbage_collection(void *arg) {
 
-    masstree::masstree *tree = (masstree::masstree *) arg;
+    auto tree = (masstree::masstree *) arg;
     auto t = tree->getThreadInfo();
 
-    while (1) {
+    while (true) {
 
         struct garbage_queue_node *queue;
 
         if (!log_gq_get(&queue)) break;
 
-        while (queue != NULL) {
+        while (queue != nullptr) {
 
             struct log *target_log = log_meta + queue->index;
             char *current_ptr = target_log->base;
@@ -672,16 +668,16 @@ void *log_garbage_collection(void *arg) {
             while (current_ptr < end_ptr) {
 
                 // read and advance the pointer
-                struct log_cell *old_lc = (struct log_cell *) current_ptr;
+                auto old_lc = (struct log_cell *) current_ptr;
                 uint64_t total_size = sizeof(struct log_cell) + old_lc->value_size;
 
                 // lock the node
                 struct masstree_put_to_pack pack = tree->put_to_lock(old_lc->key, t);
-                if (pack.leafnode != NULL && pack.p != -1) {
+                if (pack.leafnode != nullptr && pack.p != -1) {
 
                     // now we have the lock
-                    masstree::leafnode *l = (masstree::leafnode *) pack.leafnode;
-                    struct log_cell *current_value_in_tree = (struct log_cell *) l->value(pack.p);
+                    auto l = (masstree::leafnode *) pack.leafnode;
+                    auto current_value_in_tree = (struct log_cell *) l->value(pack.p);
                     int ref = l->reference(pack.p);
 
                     // always compare version fist, regardless of entry type
@@ -700,7 +696,7 @@ void *log_garbage_collection(void *arg) {
 
                         if (old_lc->is_delete && ref == 1) {
                             tree->put_to_unlock(pack.leafnode);
-                            tree->del_and_return(old_lc->key, 1, old_lc->version, NULL, t);
+                            tree->del_and_return(old_lc->key, 1, old_lc->version, nullptr, t);
                         } else {
                             void *new_slot = log_malloc(total_size);
 
@@ -718,7 +714,7 @@ void *log_garbage_collection(void *arg) {
             }
 
 
-            log_release(queue->index);
+            log_release((int) queue->index);
 
 
             struct garbage_queue_node *next = queue->next;
@@ -732,13 +728,13 @@ void *log_garbage_collection(void *arg) {
 
 
     }
-    return NULL;
+    return nullptr;
 }
 
 
 int log_start_perf(const char *perf_fn) {
 
-    int cores = sysconf(_SC_NPROCESSORS_ONLN);
+    int cores = (int) sysconf(_SC_NPROCESSORS_ONLN);
     int res = 1;
 
     char command[4096];
@@ -811,7 +807,7 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed, FILE *f) {
 
     int scanned_channel;
 
-    while (1) {
+    while (true) {
 
         scanned_channel = 0;
 
@@ -823,7 +819,7 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed, FILE *f) {
 
         char buffer[256];
         int is_first_line = 1;
-        while (fgets(buffer, 256, file) != NULL) {
+        while (fgets(buffer, 256, file) != nullptr) {
 
             if (is_first_line) {
                 is_first_line = 0;
@@ -886,7 +882,7 @@ void log_print_pmem_bandwidth(const char *perf_fn, double elapsed, FILE *f) {
     printf("\n");
 
 
-    if (f != NULL) {
+    if (f != nullptr) {
         fprintf(f, "%.2f,%.2f,%.2f,%.2f,", read_gb, read_bw, write_gb, write_bw);
         fprintf(f, "%.2f,%.2f,%.2f,%.2f,", dram_read_gb, dram_read_bw, dram_write_gb, dram_write_bw);
     }

@@ -2,19 +2,19 @@
 #define PLOG_H_
 
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <fcntl.h>
 #include <sys/mman.h>
-#include <assert.h>
+#include <cassert>
 #include <pthread.h>
 #include <iostream>
 #include <chrono>
 #include <random>
 //#include "tbb/tbb.h"
 #include "masstree.h"
-#include <errno.h>
-#include <string.h>
-#include <stddef.h>
+#include <cerrno>
+#include <cstring>
+#include <cstddef>
 #include <cstdint>
 //#include <stdatomic.h>
 #include <atomic>
@@ -102,8 +102,8 @@ static inline uint64_t *masstree_checksum(void *value,
                                           uint64_t iteration,
                                           uint64_t offset) {
 
-    uint64_t *numbers = (uint64_t *) value;
-    uint64_t *check_result = (uint64_t *) 1;
+    auto numbers = (uint64_t *) value;
+    auto check_result = (uint64_t *) 1;
 
     if (check == SUM_INVALID) {
         numbers += iteration;
@@ -118,7 +118,7 @@ static inline uint64_t *masstree_checksum(void *value,
     for (uint64_t i = 0; i < iteration; i++) {
         sum += numbers[0];
         if (check == SUM_CHECK && i == offset && numbers[0] != v) {
-            check_result = 0;
+            check_result = nullptr;
             printf("value incorrect, offset %lu expecting %lu got %lu\n", offset, v, numbers[0]);
         }
         numbers++;
@@ -126,12 +126,12 @@ static inline uint64_t *masstree_checksum(void *value,
 
     if (check == SUM_CHECK) {
         if (numbers[0] != sum || sum == 0) {
-            check_result = 0;
+            check_result = nullptr;
             printf("sum incorrect, expecting %lu got %lu\n", sum, numbers[0]);
         }
     } else if (check == SUM_LOG) {
         if (numbers[0] != sum || sum == 0) {
-            check_result = 0;
+            check_result = nullptr;
         }
     } else if (check == SUM_WRITE) {
         numbers[0] = sum;
