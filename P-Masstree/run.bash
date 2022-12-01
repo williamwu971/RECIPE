@@ -51,7 +51,7 @@ for var in "$@"; do
     cd build || exit
     rm ./*.png
     for filename in *.rdtsc; do
-      python3 ../simple_graph.py --r "$filename" --fn graph-"$filename" --y "ops/ms" --x "time(ms)" --xlim 1000 --ylim 1900 &
+      python3 ../simple_graph.py --r "$filename" --fn graph-"$filename" --y "ops/ms" --x "time(ms)" --xlim 3000 --ylim 1900 &
     done
 
     while pgrep -i -f simple_graph >/dev/null; do
@@ -228,7 +228,7 @@ done
 for filename in *.rdtsc; do
   #              python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$filename" --ylim 100000000 --xlim "$workload" || exit
   if [ ! -f graph-"$filename".png ]; then
-    python3 ../simple_graph.py --r "$filename" --fn graph-"$filename" --y "ops/ms" --x "time(ms)" --xlim 1000 --ylim 1900 &
+    python3 ../simple_graph.py --r "$filename" --fn graph-"$filename" --y "ops/ms" --x "time(ms)" --xlim 3000 --ylim 1900 &
   fi
   #              python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$filename"|| exit
 done
