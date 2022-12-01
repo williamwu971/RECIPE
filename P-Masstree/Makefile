@@ -1,4 +1,4 @@
-.PHONY: rdtimes
+.PHONY: rdtimes stat
 
 push:
 	git commit -am "-AUTO- `date`" || true
@@ -28,6 +28,18 @@ rdtimes:
 	mv *update.rdtimes rdtimes/update
 	mv *lookup.rdtimes rdtimes/lookup
 	mv *delete.rdtimes rdtimes/delete
+
+stat:
+	mkdir stat || true
+	mkdir stat/insert || true
+	mkdir stat/update || true
+	mkdir stat/lookup || true
+	mkdir stat/delete || true
+	scp 'xiaoxiang@labos2.cs.usyd.edu.au:/mnt/sdb/xiaoxiang/RECIPE/P-Masstree/build/*.stat' .
+	mv *insert.perf.stat stat/insert
+	mv *update.perf.stat stat/update
+	mv *lookup.perf.stat stat/lookup
+	mv *delete.perf.stat stat/delete
 
 everything:
 	scp 'xiaoxiang@labos2.cs.usyd.edu.au:/mnt/sdb/xiaoxiang/RECIPE/P-Masstree/build/*.{png,csv,out,stat,txt}' .
