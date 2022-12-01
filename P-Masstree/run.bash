@@ -49,10 +49,9 @@ for var in "$@"; do
 
   if [ "$var" = "graph" ]; then
     cd build || exit
+    rm ./*.png
     for filename in *.rdtsc; do
-      if [ ! -f graph-"$filename".png ]; then
-        python3 ../simple_graph.py --r "$filename" --fn graph-"$filename" --y "ops/ms" --x "time(ms)" --xlim 300 --ylim 1900 &
-      fi
+      python3 ../simple_graph.py --r "$filename" --fn graph-"$filename" --y "ops/ms" --x "time(ms)" --xlim 300 --ylim 1900 &
     done
 
     while pgrep -i -f simple_graph >/dev/null; do
