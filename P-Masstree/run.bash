@@ -50,6 +50,7 @@ for var in "$@"; do
   if [ "$var" = "graph" ]; then
     cd build || exit
     rm ./*.png
+    rm max_latencies.txt
     for filename in *.rdtsc; do
       python3 ../simple_graph.py --r "$filename" --fn graph-"$filename" --y "ops/ms" --x "time(ms)" --xlim 4000 --ylim 1900 &
     done
