@@ -5,8 +5,8 @@ push:
 	git push || true
 
 download:
-	mkdir pngs || true
-	mkdir stats || true
+#	mkdir pngs || true
+#	mkdir stats || true
 	#scp 'xiaoxiang@labos2.cs.usyd.edu.au:/mnt/sda/xiaoxiang/RECIPE/P-Masstree/build/log_debug_print_*.txt' .
 	#scp 'xiaoxiang@labos2.cs.usyd.edu.au:/mnt/sdb/xiaoxiang/RECIPE/P-Masstree/build/*.png' .
 #	scp 'xiaoxiang@labos2.cs.usyd.edu.au:/mnt/sdb/xiaoxiang/RECIPE/P-Masstree/*.perf' .
