@@ -1668,6 +1668,7 @@ int main(int argc, char **argv) {
             if (interfere) {
                 start_cpu = 1;
                 end_cpu = 1 + num_thread;
+                end_cpu = 1 + num_of_gc;
             } else {
                 start_cpu = 1 + num_thread;
                 end_cpu = start_cpu + num_of_gc;
