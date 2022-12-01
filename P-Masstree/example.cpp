@@ -95,7 +95,7 @@ void *memcpy_then_persist(void *pmemdest, const void *src, size_t len) {
 void dump_latencies(const char *fn, u_int64_t *numbers, uint64_t length) {
 
     // prevent over-recording
-    if (length > 1000000)length = 1000000;
+    if (length > 2000000)length = 2000000;
 
     FILE *latency_file = fopen(fn, "w");
     for (uint64_t idx = 0; idx < length; idx++) {
