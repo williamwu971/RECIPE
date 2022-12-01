@@ -1070,7 +1070,6 @@ void *section_ycsb_run(void *arg) {
     auto t = tree->getThreadInfo();
 
     auto timing = (struct rdtimes *) calloc(1, sizeof(struct rdtimes));
-    u_int64_t rdt;
 
     for (uint64_t i = start; i < end; i++) {
 
@@ -1084,10 +1083,8 @@ void *section_ycsb_run(void *arg) {
             fs.delete_func(tree, t, ycsb_keys[i], timing);
         }
 
-        rdtscll(rdt)
-
         if (start == 0) {
-            latencies[i] = rdt;
+            latencies[i] = readTSC(1, 1);
         }
     }
 
@@ -1124,15 +1121,13 @@ void *section_insert(void *arg) {
     auto t = tree->getThreadInfo();
 
     auto timing = (struct rdtimes *) calloc(1, sizeof(struct rdtimes));
-    u_int64_t rdt;
 
     for (uint64_t i = start; i < end; i++) {
 
         fs.update_func(tree, t, keys[i], rands[i], 0, tplate, timing);
-        rdtscll(rdt)
 
         if (start == 0) {
-            latencies[i] = rdt;
+            latencies[i] = readTSC(1, 1);
         }
     }
 
@@ -1165,15 +1160,13 @@ void *section_update(void *arg) {
     auto t = tree->getThreadInfo();
 
     auto timing = (struct rdtimes *) calloc(1, sizeof(struct rdtimes));
-    u_int64_t rdt;
 
     for (uint64_t i = start; i < end; i++) {
 
         fs.update_func(tree, t, keys[i], keys[i], 1, tplate, timing);
-        rdtscll(rdt)
 
         if (start == 0) {
-            latencies[i] = rdt;
+            latencies[i] = readTSC(1, 1);
         }
     }
 
@@ -1196,15 +1189,13 @@ void *section_lookup(void *arg) {
     auto t = tree->getThreadInfo();
 
     auto timing = (struct rdtimes *) calloc(1, sizeof(struct rdtimes));
-    u_int64_t rdt;
 
     for (uint64_t i = start; i < end; i++) {
 
         fs.lookup_func(tree, t, keys[i], keys[i], 1, timing);
-        rdtscll(rdt)
 
         if (start == 0) {
-            latencies[i] = rdt;
+            latencies[i] = readTSC(1, 1);
         }
     }
 
@@ -1226,15 +1217,13 @@ void *section_delete(void *arg) {
     auto t = tree->getThreadInfo();
 
     auto timing = (struct rdtimes *) calloc(1, sizeof(struct rdtimes));
-    u_int64_t rdt;
 
     for (uint64_t i = start; i < end; i++) {
 
         fs.delete_func(tree, t, keys[i], timing);
-        rdtscll(rdt)
 
         if (start == 0) {
-            latencies[i] = rdt;
+            latencies[i] = readTSC(1, 1);
         }
     }
 
