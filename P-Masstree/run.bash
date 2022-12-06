@@ -67,8 +67,8 @@ done
 cd build || exit
 #rm -f ./*.rdtsc ./*.png ./*.csv ./max_latencies.txt
 
-#workload=430000000
-workload=43000000
+workload=430000000
+#workload=43000000
 
 key_order="random"
 #key_order="seq"
