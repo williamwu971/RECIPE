@@ -1374,14 +1374,20 @@ int main(int argc, char **argv) {
             num_thread = (int) strtol(argv[2], nullptr, 10);
             printf("num_thread:%d ", num_thread);
 
-        } else if (strcasestr(argv[ac], "index=")) {
-            if (strcasestr(argv[ac], "ralloc")) {
+        } else if (strcasestr(argv[ac], "iv=")) {
+
+            char *index_loc = strcasestr(argv[ac], "=") + 1;
+            char *value_loc = strcasestr(argv[ac], "+");
+            value_loc[0] = '\0';
+            value_loc++;
+
+            if (strcasestr(index_loc, "ralloc")) {
                 which_memalign = RP_memalign;
                 which_memfree = RP_free;
                 require_RP_init = 1;
                 printf("index=ralloc ");
 
-            } else if (strcasestr(argv[ac], "obj")) {
+            } else if (strcasestr(index_loc, "obj")) {
                 which_memalign = masstree::obj_memalign;
                 which_memfree = masstree::obj_free;
                 require_obj_init = 1;
@@ -1391,11 +1397,11 @@ int main(int argc, char **argv) {
                 printf("index=dram ");
 
             }
-        } else if (strcasestr(argv[ac], "value=")) {
+
 
             fs.lookup_func = masstree_universal_lookup;
 
-            if (strcasestr(argv[ac], "ralloc")) {
+            if (strcasestr(value_loc, "ralloc")) {
                 require_RP_init = 1;
                 base_size = sizeof(uint64_t) * 2;
 
@@ -1409,7 +1415,7 @@ int main(int argc, char **argv) {
                 fs.update_func = masstree_ralloc_update;
                 fs.delete_func = masstree_ralloc_delete;
 
-            } else if (strcasestr(argv[ac], "log")) {
+            } else if (strcasestr(value_loc, "log")) {
                 use_log = 1;
                 base_size = sizeof(struct log_cell) + sizeof(uint64_t) * 2;
                 printf("value=log ");
@@ -1422,13 +1428,13 @@ int main(int argc, char **argv) {
                 fs.update_func = masstree_log_update;
                 fs.delete_func = masstree_log_delete;
 
-                if (strcasestr(argv[ac], "best")) {
+                if (strcasestr(value_loc, "best")) {
                     interfere = 0;
                 }
 
                 printf("interfere=%d ", interfere);
 
-            } else if (strcasestr(argv[ac], "obj")) {
+            } else if (strcasestr(value_loc, "obj")) {
                 require_obj_init = 1;
                 base_size = sizeof(struct masstree_obj) + sizeof(uint64_t);
                 printf("value=obj ");

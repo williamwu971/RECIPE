@@ -87,19 +87,7 @@ total_sizes=(256)
 #total_sizes=($(seq 40 24 1024))
 #total_sizes=($(seq 2048 -24 40))
 
-#index_location=("dram" "ralloc" "obj")
-index_location=("dram")
-#index_location=("ralloc")
-#index_location=("obj")
-#index_location=("dram" "ralloc")
-
-#value_location=("ralloc" "log" "log-best" "obj")
-#value_location=("obj" "log" "ralloc")
-#value_location=("ralloc")
-value_location=("log")
-#value_location=("obj")
-#value_location=("log-best")
-#value_location=("ralloc" "log" "log-best")
+ivs=("dram+ralloc" "dram+log" "dram+obj" "ralloc+ralloc" "obj+obj")
 
 num_threads=(19)
 num_of_gc=(8)
@@ -130,7 +118,7 @@ for fp in "${file_prefixes[@]}"; do
 
   if [ "${#ycsbs[@]}" -eq "1" ]; then
     {
-      printf "index,value,threads,gc,pmdk_no_flush,extra_sizes,total_sizes,ycsb,persist,"
+      printf "iv,threads,gc,pmdk_no_flush,extra_sizes,total_sizes,ycsb,persist,"
 
       printf "insert_log(gb),insert_gc_log(gb),"
       printf "insert_Pr(gb),insert_Prb(gb/s),insert_Pw(gb),insert_Pwb(gb/s),"
@@ -155,7 +143,7 @@ for fp in "${file_prefixes[@]}"; do
     } >>"$fp".csv
   else
     {
-      printf "index,value,threads,gc,pmdk_no_flush,extra_sizes,total_sizes,ycsb,persist,"
+      printf "iv,threads,gc,pmdk_no_flush,extra_sizes,total_sizes,ycsb,persist,"
 
       printf "load_log(gb),load_gc_log(gb),"
       printf "load_Pr(gb),load_Prb(gb/s),load_Pw(gb),load_Pwb(gb/s),"
@@ -176,47 +164,45 @@ echo 0 >/proc/sys/kernel/nmi_watchdog
 
 for s in "${extra_sizes[@]}"; do
   for t in "${total_sizes[@]}"; do
-    for i in "${index_location[@]}"; do
-      for v in "${value_location[@]}"; do
-        for n in "${num_threads[@]}"; do
-          for g in "${num_of_gc[@]}"; do
-            for f in "${pmdk_no_flush[@]}"; do
-              for y in "${ycsbs[@]}"; do
-                for p in "${persist[@]}"; do
+    for iv in "${ivs[@]}"; do
+      for n in "${num_threads[@]}"; do
+        for g in "${num_of_gc[@]}"; do
+          for f in "${pmdk_no_flush[@]}"; do
+            for y in "${ycsbs[@]}"; do
+              for p in "${persist[@]}"; do
 
-                  # backup perf files
-                  #        cd .. || exit
-                  #          for pfn in *.perf; do
-                  #            [ -f "$pfn" ] || break
-                  #            echo "backing up $pfn"
-                  #            mv "$pfn" "$pfn".old
-                  #          done
-                  #        cd - || exit
+                # backup perf files
+                #        cd .. || exit
+                #          for pfn in *.perf; do
+                #            [ -f "$pfn" ] || break
+                #            echo "backing up $pfn"
+                #            mv "$pfn" "$pfn".old
+                #          done
+                #        cd - || exit
 
-                  # the first three columns
-                  printf '%s,%s,%s,%s,%s,%s,%s,%s,%s,' "$i" "$v" "$n" "$g" "$f" "$s" "$t" "$y" "$p" >>perf.csv
+                # the first three columns
+                printf '%s,%s,%s,%s,%s,%s,%s,%s,' "$iv" "$n" "$g" "$f" "$s" "$t" "$y" "$p" >>perf.csv
 
-                  # drop system cache and clear pmem device
-                  echo 1 >/proc/sys/vm/drop_caches
-                  rm -rf /pmem0/masstree*
-                  killall -w perf >/dev/null 2>&1
-                  pkill -f pcm-memory >/dev/null 2>&1
-                  #      /home/blepers/linux/tools/perf/perf record -g ./example "$workload" "$n" index="$i" value="$v" key="$key_order"
-                  PMEM_NO_FLUSH="$f" ./example "$workload" "$n" extra_size="$s" total_size="$t" \
-                    index="$i" value="$v" key="$key_order" \
-                    gc="$g" ycsb="$y" persist="$p" \
-                    prefix="$i"-"$v"-"$n"-"$g"-NF"$f"-"$s"b-"$t"B-"$y"-"$p"-"$workload"n || exit
+                # drop system cache and clear pmem device
+                echo 1 >/proc/sys/vm/drop_caches
+                rm -rf /pmem0/masstree*
+                killall -w perf >/dev/null 2>&1
+                pkill -f pcm-memory >/dev/null 2>&1
+                #      /home/blepers/linux/tools/perf/perf record -g ./example "$workload" "$n" index="$i" value="$v" key="$key_order"
+                PMEM_NO_FLUSH="$f" ./example "$workload" "$n" extra_size="$s" total_size="$t" \
+                  iv="$iv" key="$key_order" \
+                  gc="$g" ycsb="$y" persist="$p" \
+                  prefix="$iv"-"$n"-"$g"-NF"$f"-"$s"b-"$t"B-"$y"-"$p"-"$workload"n || exit
 
-                  #      mv out.png out_"$i"_"$v".png
-                  #      ./example 100 "$n" index="$i" value="$v"
+                #      mv out.png out_"$i"_"$v".png
+                #      ./example 100 "$n" index="$i" value="$v"
 
-                  # this should result in two csv files insert.csv and lookup.csv
-                  # just append a new line to it
-                  for fp in "${file_prefixes[@]}"; do
-                    echo "" >>"$fp".csv
-                  done
-
+                # this should result in two csv files insert.csv and lookup.csv
+                # just append a new line to it
+                for fp in "${file_prefixes[@]}"; do
+                  echo "" >>"$fp".csv
                 done
+
               done
             done
           done
