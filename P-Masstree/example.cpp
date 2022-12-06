@@ -1517,6 +1517,7 @@ int main(int argc, char **argv) {
 
 
     // Generate keys
+    srand(time(nullptr));
     for (uint64_t i = 0; i < num_key; i++) {
         rands[i] = rand();
     }
@@ -1590,7 +1591,6 @@ int main(int argc, char **argv) {
     }
 
 //    tbb::task_scheduler_init init(num_thread);
-    srand(time(nullptr));
 
     FILE *throughput_file = fopen("perf.csv", "a");
     u_int64_t *latencies = nullptr;
