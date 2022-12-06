@@ -1615,9 +1615,14 @@ int main(int argc, char **argv) {
 //        printf("thread %d from %lu to %lu\n", i, section_args[i].start, section_args[i].end - 1);
 
         section_args[i].tree = tree;
-        section_args[i].keys = keys;
-        section_args[i].rands = rands;
-        if (wl != nullptr) section_args[i].rands = keys;
+
+        if (wl != nullptr) {
+            section_args[i].keys = ycsb_init_keys.data();
+            section_args[i].rands = ycsb_init_keys.data();
+        } else {
+            section_args[i].keys = keys;
+            section_args[i].rands = rands;
+        }
 
         if (i == 0) {
             latencies = (u_int64_t *) malloc(sizeof(u_int64_t) * section_args[i].end);
