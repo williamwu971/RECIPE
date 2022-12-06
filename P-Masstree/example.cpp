@@ -1350,7 +1350,6 @@ int main(int argc, char **argv) {
     // control variables
     int require_RP_init = 0;
     int require_obj_init = 0;
-    int shuffle_keys = 0;
     int num_of_gc = 0;
     uint64_t PMEM_POOL_SIZE = 0;
     int goto_lookup = 0; //
@@ -1450,15 +1449,6 @@ int main(int argc, char **argv) {
 
             } else {
                 die("what?");
-            }
-        } else if (strcasestr(argv[ac], "key=")) {
-            if (strcasestr(argv[ac], "rand")) {
-                shuffle_keys = 1;
-                printf("key=rand ");
-
-            } else {
-                printf("key=seq ");
-
             }
         } else if (strcasestr(argv[ac], "gc=")) {
             if (use_log)num_of_gc = (int) strtol(strcasestr(argv[ac], "=") + 1, nullptr, 10);
@@ -1698,7 +1688,7 @@ int main(int argc, char **argv) {
         /**
          * section INSERT
          */
-        if (shuffle_keys) masstree_shuffle(keys, num_key);
+        masstree_shuffle(keys, num_key);
         run("insert", throughput_file, section_args, latencies, section_insert);
     }
 
@@ -1708,7 +1698,7 @@ int main(int argc, char **argv) {
         /**
          * section UPDATE
          */
-        if (shuffle_keys) masstree_shuffle(keys, num_key);
+        masstree_shuffle(keys, num_key);
         run("update", throughput_file, section_args, latencies, section_update);
     }
 
@@ -1718,7 +1708,7 @@ int main(int argc, char **argv) {
         /**
          * section LOOKUP
          */
-        if (shuffle_keys) masstree_shuffle(keys, num_key);
+        masstree_shuffle(keys, num_key);
         run("lookup", throughput_file, section_args, latencies, section_lookup);
     }
 
@@ -1733,7 +1723,7 @@ int main(int argc, char **argv) {
          * section DELETE
          */
 //        throw;
-        if (shuffle_keys) masstree_shuffle(keys, num_key);
+        masstree_shuffle(keys, num_key);
         run("delete", throughput_file, section_args, latencies, section_delete);
     }
 

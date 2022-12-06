@@ -70,9 +70,6 @@ cd build || exit
 workload=430000000
 #workload=43000000
 
-key_order="random"
-#key_order="seq"
-
 extra_sizes=(0)
 #extra_sizes=(256)
 #extra_sizes=($(seq 0 8 240)) # the size of the value impact performance a lot
@@ -112,7 +109,7 @@ for fp in "${file_prefixes[@]}"; do
     "date"
   } >>"$fp".csv
 
-  echo "$fp,workload=$workload,key_order=$key_order" >>"$fp".csv
+  echo "$fp,workload=$workload" >>"$fp".csv
 
   # the header of csv file
 
@@ -190,8 +187,7 @@ for s in "${extra_sizes[@]}"; do
                 pkill -f pcm-memory >/dev/null 2>&1
                 #      /home/blepers/linux/tools/perf/perf record -g ./example "$workload" "$n" index="$i" value="$v" key="$key_order"
                 PMEM_NO_FLUSH="$f" ./example "$workload" "$n" extra_size="$s" total_size="$t" \
-                  iv="$iv" key="$key_order" \
-                  gc="$g" ycsb="$y" persist="$p" \
+                  iv="$iv" gc="$g" ycsb="$y" persist="$p" \
                   prefix="$iv"-"$n"-"$g"-NF"$f"-"$s"b-"$t"B-"$y"-"$p"-"$workload"n || exit
 
                 #      mv out.png out_"$i"_"$v".png
