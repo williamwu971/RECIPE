@@ -1,0 +1,39 @@
+reset
+
+
+set terminal pdf dashed size 7,5
+set out "conflicts.pdf"
+
+set grid ytic
+
+set ylabel "Number of detected conflicts" font "Helvetica,32" offset -8, 0
+set xlabel "Time (s)" font "Helvetica,32" offset 0, -1
+set lmargin 22
+set bmargin 5
+set rmargin 5
+set tmargin 2
+
+set style fill solid border -1
+set boxwidth 0.9
+#set xtic font "Helvetica,32"
+set ytic font "Helvetica,32"
+set key font "Helvetica,26"
+#set key at 7.1, 790 vertical maxrows 1
+set key top left
+#set linetype 1 lc rgb 'black'
+#set style histogram gap 1
+
+#set yrange [0:160]
+#set key autotitle columnhead
+#set logscale x
+#set xrange [130300:130550]
+#set yrange [0:100]
+set xrange [0:250]
+#set nokey
+unset colorbox
+
+plot  'analysis.big3' using ($1*250/30000000):($3) every 100 with line lt rgb "black" lw 2 ti "Linux", \
+      'analysis.big' using ($1*250/30000000):($3) every 100 with line lt 4 lw 2 ti "JC-static", \
+
+
+

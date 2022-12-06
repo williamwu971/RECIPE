@@ -1,0 +1,37 @@
+reset
+
+outname=system("echo $outname")
+
+set terminal pdf dashed size 7,4
+set out outname
+
+set grid ytic
+
+set ylabel "Throughput\n(KOps/s)" font "Helvetica,32" offset -8.4, 0
+set lmargin 20
+set tmargin 10
+set xlabel "Number of threads" font "Helvetica,32" offset 0,-1
+set bmargin 6
+
+set style fill solid border -1
+set boxwidth 0.9
+set xtic font "Helvetica,25" offset 0,-0.4
+set ytic font "Helvetica,32"
+set key font "Helvetica,30"
+#set key outside left top vertical maxrows 1
+set key out vertical maxrows 3 at 4,800
+#set key out center top horizontal maxrows 2 maxcols 3
+set linetype 1 lc rgb 'black'
+set style histogram errorbars gap 1
+#set style fill transparent solid 0.5 border
+
+set yrange [0:500]
+#set logscale y
+
+filename=system("echo $dataname")
+plot  filename using ($2/1000):($3/1000):($4/1000):xtic(1) with hist ti "Linux-MemMode" linetype -1 lw 1 fs solid 0.5, \
+      filename using ($5/1000):($6/1000):xtic(1) with hist ti " Hemem" linetype 1 lw 1 fs solid 0.75, \
+      NaN title " " with points lt rgb "white", \
+      filename using ($7/1000):($8/1000):xtic(1) with hist ti "JC-static" linetype 4 lw 1, \
+      filename using ($9/1000):($10/1000):xtic(1) with hist ti "JC-dyn" linetype 5 lw 1, \
+      filename using ($11/1000):($12/1000):xtic(1) with hist ti "JC-dyn-migr" linetype 5 lw 1 fs solid 0.75, \

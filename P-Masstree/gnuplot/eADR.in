@@ -1,0 +1,38 @@
+reset
+
+
+set terminal pdf dashed size 7,5
+set out "eADR.pdf"
+
+set grid ytic
+
+set ylabel "throughput(ops/us)" font "Helvetica,32" offset -8, 0
+set xlabel "Value Size (Bytes)" font "Helvetica,32" offset 0, -1
+set lmargin 22
+set bmargin 5
+set rmargin 5
+set tmargin 2
+
+set style fill solid border -1
+set boxwidth 0.9
+#set xtic font "Helvetica,32"
+set ytic font "Helvetica,32"
+set key font "Helvetica,26"
+#set key at 7.1, 790 vertical maxrows 1
+set key bottom left
+#set linetype 1 lc rgb 'black'
+#set style histogram gap 1
+
+set yrange [0:12]
+#set key autotitle columnhead
+#set logscale x
+set xrange [40:256]
+#set nokey
+unset colorbox
+
+plot  'eADR_results.txt' using 1:2 with line lt rgb "black" lw 2 ti "memcpy + flush", \
+    'eADR_results.txt' using 1:3 with linespoints lt rgb "black" lw 2 ti "memcpy", \
+
+
+
+
