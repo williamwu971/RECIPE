@@ -1377,7 +1377,7 @@ int main(int argc, char **argv) {
         } else if (strcasestr(argv[ac], "iv=")) {
 
             char *index_loc = strcasestr(argv[ac], "=") + 1;
-            char *value_loc = strcasestr(argv[ac], "+");
+            char *value_loc = strcasestr(argv[ac], "-");
             value_loc[0] = '\0';
             value_loc++;
 
