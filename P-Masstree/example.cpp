@@ -131,7 +131,7 @@ void *log_memcpy_then_persist(void *pmemdest, const void *src, size_t len) {
         if (new_len > 256) {
 
             uint64_t to_flush = new_len / 256 * 256;
-            printf("to_flush %lu\n", to_flush);
+//            printf("to_flush %lu\n", to_flush);
             alignment_check(log_memcpy_prev_ptr);
             pmem_persist(log_memcpy_prev_ptr, to_flush);
 
