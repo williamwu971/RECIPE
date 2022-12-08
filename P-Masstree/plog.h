@@ -84,6 +84,8 @@ uint64_t readTSC(int front, int back) {
 #define LOG_FN "/pmem0/masstree_log_logs"
 #define META_FN "/pmem0/masstree_log_metas"
 
+void *(*cpy_persist)(void *, const void *, size_t) =pmem_memcpy_persist;
+
 //enum {
 //    AVAILABLE,
 //    OCCUPIED,

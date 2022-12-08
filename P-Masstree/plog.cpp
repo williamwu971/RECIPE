@@ -613,7 +613,7 @@ void *log_get_tombstone(uint64_t key) {
     void *raw = log_malloc(sizeof(struct log_cell) + sizeof(uint64_t));
 //    struct log_cell *lc = (struct log_cell *) log_malloc(256);
 
-    pmem_memcpy_persist(raw, lc, sizeof(struct log_cell) + sizeof(uint64_t));
+    cpy_persist(raw, lc, sizeof(struct log_cell) + sizeof(uint64_t));
     free(lc);
 
     return raw;
@@ -701,7 +701,7 @@ void *log_garbage_collection(void *arg) {
                             void *new_slot = log_malloc(total_size);
 
                             // move entry to a new location
-                            pmem_memcpy_persist(new_slot, current_ptr, total_size);
+                            cpy_persist(new_slot, current_ptr, total_size);
 
                             l->assign_value(pack.p, new_slot);
                             tree->put_to_unlock(pack.leafnode);

@@ -50,8 +50,6 @@ struct functions {
 
 struct functions fs;
 
-void *(*cpy_persist)(void *, const void *, size_t) =pmem_memcpy_persist;
-
 
 PMEMobjpool *pop = nullptr;
 
