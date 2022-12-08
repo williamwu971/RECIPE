@@ -1526,11 +1526,13 @@ int main(int argc, char **argv) {
             strcpy(prefix, prefix_ptr);
         } else if (strcasestr(argv[ac], "persist=")) {
             if (strcasestr(argv[ac], "flush")) {
-                cpy_persist = memcpy_then_persist;
                 if (use_log) {
                     cpy_persist = log_memcpy_then_persist;
+                    printf("persist=log_flush ");
+                } else {
+                    cpy_persist = memcpy_then_persist;
+                    printf("persist=flush ");
                 }
-                printf("persist=flush ");
             } else {
                 printf("persist=non-temporal ");
             }
