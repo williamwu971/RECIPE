@@ -92,13 +92,21 @@ void *memcpy_then_persist(void *pmemdest, const void *src, size_t len) {
     return pmemdest;
 }
 
+void alignment_check(void *ptr) {
+    auto number = (uint64_t) ptr;
+    if (number % 256 != 0) {
+        throw;
+    }
+}
+
 __thread void *log_memcpy_prev_ptr = nullptr;
 __thread uint64_t log_memcpy_prev_size = 0;
 
 void *log_memcpy_then_persist(void *pmemdest, const void *src, size_t len) {
 
     memcpy(pmemdest, src, len);
-    if (len >= 256) {
+    if (len % 256 == 0) {
+        alignment_check(pmemdest);
         pmem_persist(pmemdest, len);
         return pmemdest;
     }
@@ -108,31 +116,41 @@ void *log_memcpy_then_persist(void *pmemdest, const void *src, size_t len) {
      * for small values only
      */
 
-
-    uint64_t new_len;
-
     if (log_memcpy_prev_ptr == nullptr) {
-        goto reset;
+        log_memcpy_prev_ptr = pmemdest;
     }
 
+    restart:
+    if (
+            ((char *) pmemdest)
+            ==
+            (((char *) log_memcpy_prev_ptr) + log_memcpy_prev_size)
+            ) {
 
-    new_len = (((char *) pmemdest) + len) - (char *) log_memcpy_prev_ptr;
+        uint64_t new_len = (((char *) pmemdest) + len) - (char *) log_memcpy_prev_ptr;
+        if (new_len > 256) {
 
-    if (pmemdest >= log_memcpy_prev_ptr && new_len <= 256) {
+            uint64_t to_flush = new_len / 256 * 256;
+            printf("to_flush %lu\n", to_flush);
+            alignment_check(log_memcpy_prev_ptr);
+            pmem_persist(log_memcpy_prev_ptr, to_flush);
 
-        if (new_len > log_memcpy_prev_size) {
+            log_memcpy_prev_ptr = (char *) log_memcpy_prev_ptr + to_flush;
+            log_memcpy_prev_size = new_len - to_flush;
+        } else {
             log_memcpy_prev_size = new_len;
         }
-        return pmemdest;
+
     } else {
-        printf("collected %lu before flush\n", log_memcpy_prev_size);
+        printf("persist due to vast location change %lu\n", log_memcpy_prev_size);
         pmem_persist(log_memcpy_prev_ptr, log_memcpy_prev_size);
+        log_memcpy_prev_ptr = pmemdest;
+        log_memcpy_prev_size = 0;
+        goto restart;
     }
 
-    reset:
-    log_memcpy_prev_ptr = pmemdest;
-    log_memcpy_prev_size = len;
     return pmemdest;
+
 }
 
 void dump_latencies(const char *fn, u_int64_t *numbers, uint64_t length) {
