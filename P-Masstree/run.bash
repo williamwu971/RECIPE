@@ -83,7 +83,7 @@ total_sizes=($(seq 40 24 1024))
 #total_sizes=($(seq 2048 -24 40))
 
 #ivs=("dram-ralloc" "dram-log" "dram-obj" "ralloc-ralloc" "obj-obj")
-ivs=("dram-ralloc" "dram-log")
+ivs=("dram-log" "dram-ralloc")
 
 num_threads=(19)
 num_of_gc=(8)
