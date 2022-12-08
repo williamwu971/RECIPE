@@ -89,8 +89,8 @@ ivs=("dram-ralloc" "dram-log" "dram-obj" "ralloc-ralloc" "obj-obj")
 num_threads=(19)
 num_of_gc=(8)
 
-pmdk_no_flush=("0" "1")
-#pmdk_no_flush=("0")
+#pmdk_no_flush=("0" "1")
+pmdk_no_flush=("0")
 #pmdk_no_flush=("1")
 
 ycsbs=("N")

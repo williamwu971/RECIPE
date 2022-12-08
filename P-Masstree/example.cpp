@@ -92,6 +92,48 @@ void *memcpy_then_persist(void *pmemdest, const void *src, size_t len) {
     return pmemdest;
 }
 
+__thread void *log_memcpy_prev_ptr = nullptr;
+__thread uint64_t log_memcpy_prev_size = 0;
+
+void *log_memcpy_then_persist(void *pmemdest, const void *src, size_t len) {
+
+    memcpy(pmemdest, src, len);
+    if (len >= 256) {
+        pmem_persist(pmemdest, len);
+        return pmemdest;
+    }
+
+    /**
+     * decide whether to persist or not
+     * for small values only
+     */
+
+
+    uint64_t new_len;
+
+    if (log_memcpy_prev_ptr == nullptr) {
+        goto reset;
+    }
+
+
+    new_len = (((char *) pmemdest) + len) - (char *) log_memcpy_prev_ptr;
+
+    if (pmemdest >= log_memcpy_prev_ptr && new_len <= 256) {
+
+        if (new_len > log_memcpy_prev_size) {
+            log_memcpy_prev_size = new_len;
+        }
+        return pmemdest;
+    } else {
+        pmem_persist(log_memcpy_prev_ptr, log_memcpy_prev_size);
+    }
+
+    reset:
+    log_memcpy_prev_ptr = pmemdest;
+    log_memcpy_prev_size = len;
+    return pmemdest;
+}
+
 void dump_latencies(const char *fn, u_int64_t *numbers, uint64_t length) {
 
     // prevent over-recording
@@ -1485,6 +1527,9 @@ int main(int argc, char **argv) {
         } else if (strcasestr(argv[ac], "persist=")) {
             if (strcasestr(argv[ac], "flush")) {
                 cpy_persist = memcpy_then_persist;
+                if (use_log) {
+                    cpy_persist = log_memcpy_then_persist;
+                }
                 printf("persist=flush ");
             } else {
                 printf("persist=non-temporal ");
