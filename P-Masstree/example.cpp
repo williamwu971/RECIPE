@@ -142,7 +142,7 @@ void *log_memcpy_then_persist(void *pmemdest, const void *src, size_t len) {
         }
 
     } else {
-        printf("persist due to vast location change %lu\n", log_memcpy_prev_size);
+//        printf("persist due to vast location change %lu\n", log_memcpy_prev_size);
         pmem_persist(log_memcpy_prev_ptr, log_memcpy_prev_size);
         log_memcpy_prev_ptr = pmemdest;
         log_memcpy_prev_size = 0;
