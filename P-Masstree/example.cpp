@@ -125,6 +125,7 @@ void *log_memcpy_then_persist(void *pmemdest, const void *src, size_t len) {
         }
         return pmemdest;
     } else {
+        printf("collected %lu before flush\n", log_memcpy_prev_size);
         pmem_persist(log_memcpy_prev_ptr, log_memcpy_prev_size);
     }
 
