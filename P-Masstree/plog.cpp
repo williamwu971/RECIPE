@@ -1,5 +1,6 @@
 #include "plog.h"
 
+extern void *(*cpy_persist)(void *, const void *, size_t);
 
 int inited = 0;
 
