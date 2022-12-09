@@ -1489,6 +1489,7 @@ int main(int argc, char **argv) {
 
                 if (strcasestr(value_loc, "best")) {
                     interfere = 0;
+                    printf("(B) ");
                 }
 
                 printf("interfere=%d ", interfere);
