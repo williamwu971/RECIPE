@@ -75,16 +75,17 @@ extra_sizes=(0)
 #extra_sizes=($(seq 0 8 240)) # the size of the value impact performance a lot
 #extra_sizes=($(seq 0 32 240))
 
-#total_sizes=(0)
+total_sizes=($(seq 40 8 256))
 #total_sizes=(64 256)
 #total_sizes=(256)
 #total_sizes=($(seq 40 24 256))
 #total_sizes=($(seq 40 24 1024))
-total_sizes=($(seq 48 16 1024))
+#total_sizes=($(seq 48 16 1024))
 #total_sizes=($(seq 2048 -24 40))
 
 #ivs=("dram-ralloc" "dram-log" "dram-obj" "ralloc-ralloc" "obj-obj")
-ivs=("dram-log_best" "dram-log" "dram-ralloc")
+#ivs=("dram-log_best" "dram-log" "dram-ralloc")
+ivs=("dram-log_best_256" "dram-log_256" "dram-log_best" "dram-log" "dram-ralloc")
 
 num_threads=(19)
 num_of_gc=(8)

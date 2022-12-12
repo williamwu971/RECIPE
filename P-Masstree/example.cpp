@@ -50,7 +50,7 @@ struct functions {
 
 struct functions fs;
 
-void *(*cpy_persist)(void *, const void *, size_t) =pmem_memcpy_persist;
+void *(*cpy_persist)(void *, const void *, size_t) = nullptr;
 
 PMEMobjpool *pop = nullptr;
 
@@ -1492,6 +1492,11 @@ int main(int argc, char **argv) {
                     printf("(B) ");
                 }
 
+                if (strcasestr(value_loc, "256")) {
+                    cpy_persist = log_memcpy_then_persist;
+                    printf("persist=log_256_flush ");
+                }
+
                 printf("interfere=%d ", interfere);
 
             } else if (strcasestr(value_loc, "obj")) {
@@ -1543,16 +1548,14 @@ int main(int argc, char **argv) {
             char *prefix_ptr = strcasestr(argv[ac], "=") + 1;
             prefix = (char *) malloc(sizeof(char) * (strlen(prefix_ptr) + 1));
             strcpy(prefix, prefix_ptr);
-        } else if (strcasestr(argv[ac], "persist=")) {
+        } else if (strcasestr(argv[ac], "persist=") && cpy_persist == nullptr) {
             if (strcasestr(argv[ac], "flush")) {
-                if (use_log) {
-                    cpy_persist = log_memcpy_then_persist;
-                    printf("persist=log_flush ");
-                } else {
-                    cpy_persist = memcpy_then_persist;
-                    printf("persist=flush ");
-                }
+
+                cpy_persist = memcpy_then_persist;
+                printf("persist=flush ");
+
             } else {
+                cpy_persist = pmem_memcpy_persist;
                 printf("persist=non-temporal ");
             }
         }
