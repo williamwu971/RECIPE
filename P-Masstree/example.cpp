@@ -93,7 +93,7 @@ void *memcpy_then_persist(void *pmemdest, const void *src, size_t len) {
 
 void alignment_check(void *ptr) {
     auto number = (uint64_t) ptr;
-    if (number % 256 != 0) {
+    if (unlikely(number % 256 != 0)) {
         throw;
     }
 }
@@ -1489,7 +1489,6 @@ int main(int argc, char **argv) {
 
                 if (strcasestr(value_loc, "best")) {
                     interfere = 0;
-                    printf("(B) ");
                 }
 
                 if (strcasestr(value_loc, "256")) {
