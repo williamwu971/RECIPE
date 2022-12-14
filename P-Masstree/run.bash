@@ -77,7 +77,7 @@ extra_sizes=(0)
 #extra_sizes=($(seq 0 32 240))
 
 #total_sizes=($(seq 40 8 256))
-total_sizes=($(seq 40 8 1024))
+total_sizes=($(seq 48 16 1024))
 #total_sizes=(64 256)
 #total_sizes=(256)
 #total_sizes=($(seq 40 24 256))
