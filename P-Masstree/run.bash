@@ -218,6 +218,10 @@ for s in "${extra_sizes[@]}"; do
   done
 done
 
+echo 1 >/proc/sys/kernel/nmi_watchdog
+
+exit
+
 for filename in *.rdtsc; do
   #              python3 ../simple_graph.py --r "$filename" --fn graph-"$i"-"$v"-"$n"-"$g"-NF"$f"-"$filename" --ylim 100000000 --xlim "$workload" || exit
   if [ ! -f graph-"$filename".png ]; then
@@ -229,8 +233,6 @@ done
 while pgrep -i -f simple_graph >/dev/null; do
   sleep 1
 done
-
-echo 1 >/proc/sys/kernel/nmi_watchdog
 
 # move perf files
 #for pfn in *.perf; do
