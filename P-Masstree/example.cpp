@@ -811,16 +811,14 @@ void masstree_ralloc_update(masstree::masstree *tree,
     auto returned = (uint64_t *) tree->put_and_return(u_key, value, !no_allow_prev_null, 0, t);
     stopTSC(timing->tree_time)
 
+    startTSC
     if (no_allow_prev_null || returned != nullptr) {
-
-        startTSC
         RP_free(returned);
         if (ralloc_extra) {
             pmem_persist(returned, sizeof(void *));
         }
-        stopTSC(timing->free_time)
-
     }
+    stopTSC(timing->free_time)
 }
 
 void masstree_ralloc_delete(
@@ -877,11 +875,11 @@ void masstree_log_update(masstree::masstree *tree,
     stopTSC(timing->tree_time)
 
 
+    startTSC
     if (no_allow_prev_null || returned != nullptr) {
-        startTSC
         log_free(returned);
-        stopTSC(timing->free_time)
     }
+    stopTSC(timing->free_time)
 
 }
 
