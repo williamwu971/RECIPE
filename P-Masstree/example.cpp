@@ -941,19 +941,18 @@ void masstree_obj_update(
                     auto old_obj = (struct masstree_obj *) tree->put_and_return(u_key, mo, !no_allow_prev_null, 0, t);
                     stopTSC(timing->tree_time)
 
-
+                    startTSC
                     if (no_allow_prev_null || old_obj != nullptr) {
 
                         //todo: possibly here can use same trick as Ralloc
 
-                        startTSC
+
                         pmemobj_tx_add_range(old_obj->ht_oid, sizeof(struct masstree_obj) + memset_size,
                                              sizeof(uint64_t));
                         if (!masstree_checksum(old_obj, SUM_INVALID, u_value, iter, value_offset)) throw;
                         pmemobj_tx_free(old_obj->ht_oid);
-                        stopTSC(timing->free_time)
-
                     }
+                    stopTSC(timing->free_time)
 
                 }
                     TX_ONABORT {
