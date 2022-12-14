@@ -67,15 +67,17 @@ done
 cd build || exit
 #rm -f ./*.rdtsc ./*.png ./*.csv ./max_latencies.txt
 
-workload=430000000
+#workload=430000000
 #workload=43000000
+workload=10000000
 
 extra_sizes=(0)
 #extra_sizes=(256)
 #extra_sizes=($(seq 0 8 240)) # the size of the value impact performance a lot
 #extra_sizes=($(seq 0 32 240))
 
-total_sizes=($(seq 40 8 256))
+#total_sizes=($(seq 40 8 256))
+total_sizes=($(seq 40 8 1024))
 #total_sizes=(64 256)
 #total_sizes=(256)
 #total_sizes=($(seq 40 24 256))
