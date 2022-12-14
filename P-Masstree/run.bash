@@ -64,6 +64,13 @@ for var in "$@"; do
 
 done
 
+if screen -ls | grep -q 'Attached'; then
+  echo "screen found"
+else
+  echo "screen not found"
+  exit
+fi
+
 cd build || exit
 #rm -f ./*.rdtsc ./*.png ./*.csv ./max_latencies.txt
 
