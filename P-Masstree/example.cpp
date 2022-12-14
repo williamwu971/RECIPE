@@ -815,13 +815,10 @@ void masstree_ralloc_update(masstree::masstree *tree,
 
         startTSC
         RP_free(returned);
-        stopTSC(timing->free_time)
-
         if (ralloc_extra) {
-            startTSC
             pmem_persist(returned, sizeof(void *));
-            stopTSC(timing->free_persist_time)
         }
+        stopTSC(timing->free_time)
 
     }
 }
@@ -842,14 +839,10 @@ void masstree_ralloc_delete(
 
     startTSC
     RP_free(returned);
-    stopTSC(timing->free_time)
-
-
     if (ralloc_extra) {
-        startTSC
         pmem_persist(returned, sizeof(void *));
-        stopTSC(timing->free_persist_time)
     }
+    stopTSC(timing->free_time)
 }
 
 void masstree_log_update(masstree::masstree *tree,
@@ -959,9 +952,6 @@ void masstree_obj_update(
                         pmemobj_tx_add_range(old_obj->ht_oid, sizeof(struct masstree_obj) + memset_size,
                                              sizeof(uint64_t));
                         if (!masstree_checksum(old_obj, SUM_INVALID, u_value, iter, value_offset)) throw;
-                        stopTSC(timing->free_persist_time)
-
-                        startTSC
                         pmemobj_tx_free(old_obj->ht_oid);
                         stopTSC(timing->free_time)
 
@@ -994,10 +984,6 @@ void masstree_obj_delete(
                     pmemobj_tx_add_range(old_obj->ht_oid, sizeof(struct masstree_obj) + memset_size,
                                          sizeof(uint64_t));
                     if (!masstree_checksum(old_obj, SUM_INVALID, d_key, iter, value_offset))throw;
-                    stopTSC(timing->free_persist_time)
-
-
-                    startTSC
                     pmemobj_tx_free(old_obj->ht_oid);
                     stopTSC(timing->free_time)
                 }
