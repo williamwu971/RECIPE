@@ -553,6 +553,7 @@ void log_ralloc_recover() {
     log_blks = (struct log_blk *) calloc(num_logs, sizeof(struct log_blk));
     for (uint64_t i = 0; i < num_logs; i++) {
         pthread_mutex_init(&log_blks[i].log_set_locks, nullptr);
+        log_blks[i].marked_blk = std::set<char *>();
     }
 
     // gc
