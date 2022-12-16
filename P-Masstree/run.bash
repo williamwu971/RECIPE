@@ -75,8 +75,8 @@ cd build || exit
 #rm -f ./*.rdtsc ./*.png ./*.csv ./max_latencies.txt
 
 #workload=430000000
-workload=43000000
-#workload=10000000
+#workload=43000000
+workload=10000000
 
 extra_sizes=(0)
 #extra_sizes=(256)
@@ -95,7 +95,7 @@ total_sizes=(256)
 #ivs=("dram-ralloc" "dram-log" "dram-obj" "ralloc-ralloc" "obj-obj")
 #ivs=("dram-log_best" "dram-log" "dram-ralloc")
 #ivs=("dram-log_best_256" "dram-log_256" "dram-log_best" "dram-log" "dram-ralloc")
-ivs=("ralloc-log")
+ivs=("dram-log")
 
 num_threads=(19)
 num_of_gc=(8)
