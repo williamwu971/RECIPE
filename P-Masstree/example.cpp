@@ -423,6 +423,9 @@ uint64_t ralloc_total_time_tree = 0;
 uint64_t ralloc_total_time_read = 0;
 uint64_t ralloc_total_time_meta = 0;
 
+uint64_t log_clam_time = 0;
+uint64_t log_free_calc_time = 0;
+
 struct ralloc_ptr_list {
     void *ptr;
     struct ralloc_ptr_list *next;
@@ -621,6 +624,8 @@ void *ralloc_reachability_scan_thread(void *raw) {
     struct ralloc_ptr_list *pointers = nullptr;
     uint64_t recovered_values = 0;
     uint64_t recovered_leafs = 0;
+    uint64_t log_here = 0;
+    declearTSC
 
     struct ralloc_ptr_list *to_visit = nullptr;
     ralloc_ptr_list_add(&to_visit, raw);
@@ -661,7 +666,14 @@ void *ralloc_reachability_scan_thread(void *raw) {
                 void *v = curr->value(kv_idx);
 
                 if (v != nullptr) {
-                    ralloc_ptr_list_add(&pointers, v);
+                    if (use_log) {
+                        startTSC
+                        log_rebuild_claim(v);
+                        stopTSC(log_here)
+                    } else {
+                        ralloc_ptr_list_add(&pointers, v);
+                    }
+
                     recovered_values++;
                 }
 
@@ -673,6 +685,7 @@ void *ralloc_reachability_scan_thread(void *raw) {
     pthread_mutex_lock(&ralloc_recover_stats_lock);
     ralloc_recovered += recovered_values;
     ralloc_leafs += recovered_leafs;
+    log_clam_time += log_here;
 //    ralloc_abandoned += invalid;
     pthread_mutex_unlock(&ralloc_recover_stats_lock);
 
@@ -730,11 +743,20 @@ void ralloc_reachability_scan(masstree::masstree *tree) {
     log_stop_perf();
     log_print_pmem_bandwidth(perf_fn, (double) duration.count() / 1000000.0, nullptr);
 
+    double log_claim_casted = (double) log_clam_time / (double) REACH_T / 2000000000.0;
 
     printf("Throughput: %s,%ld,%.2f ops/us %.2f sec\n",
            section_name, ralloc_recovered, ((double) ralloc_recovered * 1.0) / (double) duration.count(),
-           (double) duration.count() / 1000000.0);
+           (double) duration.count() / 1000000.0 - log_claim_casted);
 
+    declearTSC
+    startTSC
+    log_rebuild_compute_free();
+    stopTSC(log_free_calc_time)
+
+    double log_calc_casted = (double) log_free_calc_time / (double) REACH_T / 2000000000.0;
+
+    printf("log times: %.2fs %.2fs\n", log_claim_casted, log_claim_casted);
 
     // push pointers to ralloc's list single threaded
     starttime = std::chrono::system_clock::now();
@@ -1585,6 +1607,49 @@ int main(int argc, char **argv) {
 
     masstree::masstree *tree = nullptr;
 
+    if (use_log) {
+
+        puts("\tbegin preparing Log");
+
+        if (
+//                access(INODE_FN, F_OK) == 0 &&
+//                access(META_FN, F_OK) == 0 &&
+                access(LOG_FN, F_OK) == 0
+
+                ) {
+
+            if (which_memalign == RP_memalign) {
+                log_ralloc_recover();
+            } else {
+                log_recover(tree, num_thread);
+            }
+
+            goto_lookup = 1;
+        } else {
+            log_init(PMEM_POOL_SIZE);
+        }
+
+        if (num_of_gc > 0) {
+            puts("\tbegin creating Gc");
+
+            int start_cpu;
+            int end_cpu;
+
+            if (interfere) {
+                start_cpu = 1;
+                end_cpu = 1 + num_thread;
+                end_cpu = 1 + num_of_gc; // todo: delete to make update faster
+            } else {
+                start_cpu = 1 + num_thread;
+                end_cpu = start_cpu + num_of_gc;
+            }
+
+            for (int gcc = 0; gcc < num_of_gc; gcc++) {
+                log_start_gc(tree, start_cpu, end_cpu);
+            }
+        }
+    }
+
     if (require_RP_init) {
 
         int preset = 0;
@@ -1682,43 +1747,6 @@ int main(int argc, char **argv) {
             section_args[i].latencies = nullptr;
         }
 
-    }
-
-    if (use_log) {
-
-        puts("\tbegin preparing Log");
-
-        if (
-//                access(INODE_FN, F_OK) == 0 &&
-//                access(META_FN, F_OK) == 0 &&
-                access(LOG_FN, F_OK) == 0
-
-                ) {
-            log_recover(tree, num_thread);
-            goto_lookup = 1;
-        } else {
-            log_init(PMEM_POOL_SIZE);
-        }
-
-        if (num_of_gc > 0) {
-            puts("\tbegin creating Gc");
-
-            int start_cpu;
-            int end_cpu;
-
-            if (interfere) {
-                start_cpu = 1;
-                end_cpu = 1 + num_thread;
-                end_cpu = 1 + num_of_gc; // todo: delete to make update faster
-            } else {
-                start_cpu = 1 + num_thread;
-                end_cpu = start_cpu + num_of_gc;
-            }
-
-            for (int gcc = 0; gcc < num_of_gc; gcc++) {
-                log_start_gc(tree, start_cpu, end_cpu);
-            }
-        }
     }
 
 

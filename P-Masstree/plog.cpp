@@ -229,6 +229,68 @@ void log_debug_print(FILE *f, int using_log) {
     fprintf(f, "%.2f,", ((double) (used * LOG_SIZE)) / 1024. / 1024. / 1024.);
 }
 
+struct log_blk {
+    pthread_mutex_t log_set_locks;
+    std::set<char *> marked_blk;
+};
+
+struct log_blk *log_blks = nullptr;
+
+void log_rebuild_claim(void *ptr) {
+
+    auto lc = (struct log_cell *) ptr;
+    char *char_ptr = (char *) ptr;
+
+
+    // locate the log and its metadata
+    uint64_t idx = (uint64_t) (char_ptr - big_map) / LOG_SIZE;
+    struct log_blk *target = log_blks + idx;
+    struct log *target_log = log_meta + idx;
+
+    pthread_mutex_lock(&target->log_set_locks);
+
+    auto result = target->marked_blk.insert((char *) ptr);
+
+    if (result.second) {
+        target_log->available -= sizeof(struct log_cell) + lc->value_size;
+
+        char *end_ptr = (char *) (lc + 1);
+        if (end_ptr > target_log->curr) {
+            target_log->curr = end_ptr;
+        }
+    }
+
+    pthread_mutex_unlock(&target->log_set_locks);
+}
+
+void log_rebuild_compute_free() {
+
+    for (int i = 0; i < log_list.num_log; i++) {
+
+        if (log_blks[i].marked_blk.empty()) {
+            continue;
+        }
+
+        struct log *target_log = log_meta + i;
+        char *prev_end = target_log->base;
+
+
+        for (auto x: log_blks[i].marked_blk) {
+            if (x != prev_end) {
+                target_log->freed.fetch_add(x - prev_end);
+            }
+
+            auto lc = (struct log_cell *) x;
+            prev_end = x + sizeof(struct log_cell) + lc->value_size;
+        }
+
+        printf("Log %lu available %lu freed %lu\n",
+               target_log->index, target_log->available, target_log->freed.load());
+    }
+
+}
+
+
 struct log_rebuild_args {
     masstree::masstree *tree;
     int id;
@@ -322,7 +384,7 @@ void *log_rebuild_thread(void *arg) {
     return nullptr;
 }
 
-void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) {
+void log_tree_rebuild(masstree::masstree *tree, int num_threads) {
 
     for (int i = 0; i < log_list.num_log; i++) {
         struct log *target_log = log_meta + i;
@@ -334,7 +396,7 @@ void log_tree_rebuild(masstree::masstree *tree, int num_threads, int read_tree) 
         target_log->full.store(0);
     }
 
-    if (!read_tree) return;
+    if (tree == nullptr) return;
 
     printf("\n... rebuilding tree using %d threads ...\n", num_threads);
 
@@ -469,6 +531,36 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
     return mapped_len;
 }
 
+void log_ralloc_recover() {
+
+    log_structs_size_check();
+
+    uint64_t mapped_len = log_map(1, LOG_FN, 0, (void **) &big_map, nullptr, LOG_SIZE);
+    uint64_t num_logs = mapped_len / LOG_SIZE;
+
+    int preset = 0;
+    int *pptr = &preset;
+
+    log_map(0, INODE_FN, sizeof(int) * num_logs, (void **) &inodes, pptr, sizeof(int));
+    log_map(0, META_FN, sizeof(struct log) * num_logs, (void **) &log_meta, pptr, sizeof(struct log));
+
+    // inodes
+    log_list_init((int) num_logs, inodes);
+
+    // reconstruct tree
+    log_tree_rebuild(nullptr, 0);
+
+    log_blks = (struct log_blk *) calloc(num_logs, sizeof(struct log_blk));
+    for (uint64_t i = 0; i < num_logs; i++) {
+        pthread_mutex_init(&log_blks[i].log_set_locks, nullptr);
+    }
+
+    // gc
+    log_gq_init();
+
+    inited = 1;
+}
+
 void log_recover(masstree::masstree *tree, int num_threads) {
 
     log_structs_size_check();
@@ -486,7 +578,7 @@ void log_recover(masstree::masstree *tree, int num_threads) {
     log_list_init((int) num_logs, inodes);
 
     // reconstruct tree
-    log_tree_rebuild(tree, num_threads, 1);
+    log_tree_rebuild(tree, num_threads);
 
     // gc
     log_gq_init();
@@ -518,7 +610,7 @@ void log_init(uint64_t pool_size) {
     log_list_init((int) num_logs, inodes);
 
     // usage
-    log_tree_rebuild(nullptr, 0, 0);
+    log_tree_rebuild(nullptr, 0);
 
 
     // gc

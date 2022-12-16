@@ -1,33 +1,31 @@
-grand_file = open("stalled.txt", "w")
+file_maps = {
+    "l1": open("stalled_l1.txt", "w"),
+    "l2": open("stalled_l2.txt", "w"),
+    "l3": open("stalled_l3.txt", "w"),
+    "mem": open("stalled_mem.txt", "w"),
+    "total": open("stalled_total.txt", "w"),
+    "sb": open("stalled_sb.txt", "w"),
+}
 
-for size in range(40, 257, 24):
+for size in range(48, 1025, 16):
 
-    print("{}".format(size), file=grand_file, end=" ")
+    for file in file_maps.values():
+        print("{}".format(size), file=file, end=" ")
 
-    with open("../stat/insert/dram-log-best-19-8-NF0-0b-{}B-N-flush-43000000n-insert.perf.stat".format(
+    with open("../stat/update/dram-log_best-19-8-NF0-0b-{}B-N-flush-10000000n-update.perf.stat".format(
             size)) as stat_file:
-
-        misses = 0
 
         for line in stat_file.read().splitlines():
 
-            if "l1d" in line or "l2" in line:
-                # print(line.split()[0].replace(",", ""))
-                misses += int(line.split()[0].replace(",", ""))
+            for key in file_maps.keys():
+                if key in line:
+                    print("{}".format(int(line.split()[0].replace(",", ""))), file=file_maps[key], end=" ")
 
-        # print("misses: {}".format(misses), end=" ### ")
-        print("{}".format(misses), file=grand_file, end=" ")
-
-    with open("../stat/insert/dram-log-best-19-8-NF1-0b-{}B-N-flush-43000000n-insert.perf.stat".format(
+    with open("../stat/update/dram-log_best-19-8-NF1-0b-{}B-N-flush-10000000n-update.perf.stat".format(
             size)) as stat_file:
-
-        misses = 0
 
         for line in stat_file.read().splitlines():
 
-            if "l1d" in line or "l2" in line:
-                # print(line.split()[0].replace(",", ""))
-                misses += int(line.split()[0].replace(",", ""))
-
-        # print("misses: {}".format(misses))
-        print("{}".format(misses), file=grand_file)
+            for key in file_maps.keys():
+                if key in line:
+                    print("{}".format(int(line.split()[0].replace(",", ""))), file=file_maps[key])

@@ -18,12 +18,13 @@ download:
 	#scp 'xiaoxiang@labos2.cs.usyd.edu.au:/mnt/sdb/xiaoxiang/RECIPE/P-Masstree/build/max_latencies.txt' .
 
 rdtimes:
+	rm -rf rdtimes
 	mkdir rdtimes || true
 	mkdir rdtimes/insert || true
 	mkdir rdtimes/update || true
 	mkdir rdtimes/lookup || true
 	mkdir rdtimes/delete || true
-	scp 'xiaoxiang@labos2.cs.usyd.edu.au:/mnt/sdb/xiaoxiang/RECIPE/P-Masstree/build/*43000000n*.rdtimes' .
+	scp 'xiaoxiang@labos2.cs.usyd.edu.au:/mnt/sdb/xiaoxiang/RECIPE/P-Masstree/build/*-64B-*10000000n*.rdtimes' .
 	mv *insert.rdtimes rdtimes/insert
 	mv *update.rdtimes rdtimes/update
 	mv *lookup.rdtimes rdtimes/lookup
