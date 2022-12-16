@@ -1628,26 +1628,6 @@ int main(int argc, char **argv) {
         } else {
             log_init(PMEM_POOL_SIZE);
         }
-
-        if (num_of_gc > 0) {
-            puts("\tbegin creating Gc");
-
-            int start_cpu;
-            int end_cpu;
-
-            if (interfere) {
-                start_cpu = 1;
-                end_cpu = 1 + num_thread;
-                end_cpu = 1 + num_of_gc; // todo: delete to make update faster
-            } else {
-                start_cpu = 1 + num_thread;
-                end_cpu = start_cpu + num_of_gc;
-            }
-
-            for (int gcc = 0; gcc < num_of_gc; gcc++) {
-                log_start_gc(tree, start_cpu, end_cpu);
-            }
-        }
     }
 
     if (require_RP_init) {
@@ -1700,6 +1680,26 @@ int main(int argc, char **argv) {
     if (tree == nullptr) {
         puts("\t creating new tree");
         tree = new masstree::masstree();
+    }
+
+    if (num_of_gc > 0) {
+        puts("\tbegin creating Gc");
+
+        int start_cpu;
+        int end_cpu;
+
+        if (interfere) {
+            start_cpu = 1;
+            end_cpu = 1 + num_thread;
+            end_cpu = 1 + num_of_gc; // todo: delete to make update faster
+        } else {
+            start_cpu = 1 + num_thread;
+            end_cpu = start_cpu + num_of_gc;
+        }
+
+        for (int gcc = 0; gcc < num_of_gc; gcc++) {
+            log_start_gc(tree, start_cpu, end_cpu);
+        }
     }
 
 //    tbb::task_scheduler_init init(num_thread);
