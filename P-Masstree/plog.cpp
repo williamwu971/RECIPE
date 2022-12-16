@@ -229,12 +229,8 @@ void log_debug_print(FILE *f, int using_log) {
     fprintf(f, "%.2f,", ((double) (used * LOG_SIZE)) / 1024. / 1024. / 1024.);
 }
 
-struct log_blk {
-    pthread_mutex_t log_set_locks;
-    std::set<char *> marked_blk;
-};
-
-struct log_blk *log_blks = nullptr;
+pthread_mutex_t *log_set_locks;
+std::set<char *> *marked_blks;
 
 void log_rebuild_claim(void *ptr) {
 
@@ -244,12 +240,12 @@ void log_rebuild_claim(void *ptr) {
 
     // locate the log and its metadata
     uint64_t idx = (uint64_t) (char_ptr - big_map) / LOG_SIZE;
-    struct log_blk *target = log_blks + idx;
+//    struct log_blk *target = log_blks + idx;
     struct log *target_log = log_meta + idx;
 
-    pthread_mutex_lock(&target->log_set_locks);
+    pthread_mutex_lock(log_set_locks + idx);
 
-    auto result = target->marked_blk.insert((char *) ptr);
+    auto result = marked_blks[idx].insert((char *) ptr);
 
     if (result.second) {
         target_log->available -= sizeof(struct log_cell) + lc->value_size;
@@ -260,14 +256,14 @@ void log_rebuild_claim(void *ptr) {
         }
     }
 
-    pthread_mutex_unlock(&target->log_set_locks);
+    pthread_mutex_unlock(log_set_locks + idx);
 }
 
 void log_rebuild_compute_free() {
 
     for (int i = 0; i < log_list.num_log; i++) {
 
-        if (log_blks[i].marked_blk.empty()) {
+        if (marked_blks[i].empty()) {
             continue;
         }
 
@@ -275,7 +271,7 @@ void log_rebuild_compute_free() {
         char *prev_end = target_log->base;
 
 
-        for (auto x: log_blks[i].marked_blk) {
+        for (auto x: marked_blks[i]) {
             if (x != prev_end) {
                 target_log->freed.fetch_add(x - prev_end);
             }
@@ -550,11 +546,18 @@ void log_ralloc_recover() {
     // reconstruct tree
     log_tree_rebuild(nullptr, 0);
 
-    log_blks = (struct log_blk *) calloc(num_logs, sizeof(struct log_blk));
+//    log_blks = (struct log_blk *) calloc(num_logs, sizeof(struct log_blk));
+//    for (uint64_t i = 0; i < num_logs; i++) {
+//        pthread_mutex_init(&log_blks[i].log_set_locks, nullptr);
+//        log_blks[i].marked_blk = std::set<char *>();
+//    }
+
+    log_set_locks = (pthread_mutex_t *) malloc(sizeof(pthread_mutex_t) * num_logs);
     for (uint64_t i = 0; i < num_logs; i++) {
-        pthread_mutex_init(&log_blks[i].log_set_locks, nullptr);
-        log_blks[i].marked_blk = std::set<char *>();
+        pthread_mutex_init(log_set_locks + i, nullptr);
     }
+    marked_blks = new std::set<char *>[num_logs];
+
 
     // gc
     log_gq_init();
