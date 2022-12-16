@@ -756,7 +756,7 @@ void ralloc_reachability_scan(masstree::masstree *tree) {
 
     double log_calc_casted = (double) log_free_calc_time / (double) REACH_T / 2000000000.0;
 
-    printf("log times: %.2fs %.2fs\n", log_claim_casted, log_claim_casted);
+    printf("log times: %.2fs %.2fs\n", log_claim_casted, log_calc_casted);
 
     // push pointers to ralloc's list single threaded
     starttime = std::chrono::system_clock::now();
