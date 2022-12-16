@@ -280,8 +280,8 @@ void log_rebuild_compute_free() {
             prev_end = x + sizeof(struct log_cell) + lc->value_size;
         }
 
-        printf("Log %lu available %lu freed %lu\n",
-               target_log->index, target_log->available, target_log->freed.load());
+//        printf("Log %lu available %lu freed %lu\n",
+//               target_log->index, target_log->available, target_log->freed.load());
     }
 
 }
