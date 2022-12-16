@@ -704,14 +704,14 @@ void ralloc_reachability_scan(masstree::masstree *tree) {
     char perf_fn[256];
     sprintf(perf_fn, "%s-%s.perf", prefix == nullptr ? "" : prefix, section_name);
 
-    auto threads = (pthread_t *) calloc(REACH_T, sizeof(pthread_t));
-    auto ptr_lists = (struct ralloc_ptr_list **) calloc(REACH_T, sizeof(struct ralloc_ptr_list *));
+    auto threads = (pthread_t *) calloc(num_thread, sizeof(pthread_t));
+    auto ptr_lists = (struct ralloc_ptr_list **) calloc(num_thread, sizeof(struct ralloc_ptr_list *));
     RP_scan_init();
 
     log_start_perf(perf_fn);
     auto starttime = std::chrono::system_clock::now();
 
-    for (int i = 0; i < REACH_T; i++) {
+    for (int i = 0; i < num_thread; i++) {
 
         void *curr_arg = nullptr;
 
