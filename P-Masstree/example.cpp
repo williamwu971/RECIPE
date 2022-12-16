@@ -1621,6 +1621,7 @@ int main(int argc, char **argv) {
             if (which_memalign == RP_memalign) {
                 log_ralloc_recover();
             } else {
+                tree = new masstree::masstree();
                 log_recover(tree, num_thread);
             }
 
