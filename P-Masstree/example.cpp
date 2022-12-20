@@ -1318,7 +1318,9 @@ void run(
         FILE *throughput_file,
         struct section_arg *section_args,
         u_int64_t *latencies,
-        void *(*routine)(void *)) {
+        void *(*routine)(void *),
+        int interfere
+) {
 
     char perf_fn[256];
     sprintf(perf_fn, "%s-%s.perf", prefix == nullptr ? "" : prefix, section_name);
@@ -1359,14 +1361,20 @@ void run(
             std::chrono::system_clock::now() - starttime);
     if (throughput_file != nullptr)log_debug_print(throughput_file, use_log);
 
+    if (!interfere) {
+        log_stop_perf();
+        log_print_pmem_bandwidth(perf_fn, (double) duration.count() / 1000000.0, throughput_file);
+    }
+
     log_wait_all_gc();
     auto duration_with_gc = std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now() - starttime);
     if (throughput_file != nullptr)log_debug_print(throughput_file, use_log);
 
-
-    log_stop_perf();
-    log_print_pmem_bandwidth(perf_fn, (double) duration.count() / 1000000.0, throughput_file);
+    if (interfere) {
+        log_stop_perf();
+        log_print_pmem_bandwidth(perf_fn, (double) duration.count() / 1000000.0, throughput_file);
+    }
 
 
     printf("Throughput: %s,%ld,%.2f ops/us %.2f sec\n",
@@ -1762,9 +1770,9 @@ int main(int argc, char **argv) {
          */
         if (wl != nullptr) {
             puts("\t\t\t *** YCSB workload ***");
-//            run("ycsb_load", throughput_file, section_args, latencies, section_ycsb_load);
-            run("ycsb_load", throughput_file, section_args, latencies, section_insert);
-            run("ycsb_run", throughput_file, section_args, latencies, section_ycsb_run);
+//            run("ycsb_load", throughput_file, section_args, latencies, section_ycsb_load,interfere);
+            run("ycsb_load", throughput_file, section_args, latencies, section_insert, interfere);
+            run("ycsb_run", throughput_file, section_args, latencies, section_ycsb_run, interfere);
             goto end;
         }
     }
@@ -1774,7 +1782,7 @@ int main(int argc, char **argv) {
          * section INSERT
          */
         masstree_shuffle(keys, num_key);
-        run("insert", throughput_file, section_args, latencies, section_insert);
+        run("insert", throughput_file, section_args, latencies, section_insert, interfere);
     }
 
 //    printf("count RP_MALLOC %lu\n", RP_lock_count);
@@ -1784,7 +1792,7 @@ int main(int argc, char **argv) {
          * section UPDATE
          */
         masstree_shuffle(keys, num_key);
-        run("update", throughput_file, section_args, latencies, section_update);
+        run("update", throughput_file, section_args, latencies, section_update, interfere);
     }
 
 
@@ -1794,7 +1802,7 @@ int main(int argc, char **argv) {
          * section LOOKUP
          */
         masstree_shuffle(keys, num_key);
-        run("lookup", throughput_file, section_args, latencies, section_lookup);
+        run("lookup", throughput_file, section_args, latencies, section_lookup, interfere);
     }
 
 
@@ -1809,7 +1817,7 @@ int main(int argc, char **argv) {
          */
 //        throw;
         masstree_shuffle(keys, num_key);
-        run("delete", throughput_file, section_args, latencies, section_delete);
+        run("delete", throughput_file, section_args, latencies, section_delete, interfere);
     }
 
 
