@@ -76,8 +76,9 @@ cd build || exit
 
 #workload=430000000
 #workload=43000000
-workload=10000000
-workload=100000000
+#workload=10000000
+#workload=100000000
+workloads=(100000000 10000000)
 
 extra_sizes=(0)
 #extra_sizes=(256)
@@ -119,7 +120,8 @@ for fp in "${file_prefixes[@]}"; do
     "date"
   } >>"$fp".csv
 
-  echo "$fp,workload=$workload" >>"$fp".csv
+  #  echo "$fp,workload=$workload" >>"$fp".csv
+  echo "$fp," >>"$fp".csv
 
   # the header of csv file
 
@@ -169,46 +171,49 @@ done
 
 echo 0 >/proc/sys/kernel/nmi_watchdog
 
-for s in "${extra_sizes[@]}"; do
-  for t in "${total_sizes[@]}"; do
-    for iv in "${ivs[@]}"; do
-      for n in "${num_threads[@]}"; do
-        for g in "${num_of_gc[@]}"; do
-          for f in "${pmdk_no_flush[@]}"; do
-            for y in "${ycsbs[@]}"; do
-              for p in "${persist[@]}"; do
+for wl in "${workloads[@]}"; do
+  echo "workload=$wl," >>perf.csv
+  for s in "${extra_sizes[@]}"; do
+    for t in "${total_sizes[@]}"; do
+      for iv in "${ivs[@]}"; do
+        for n in "${num_threads[@]}"; do
+          for g in "${num_of_gc[@]}"; do
+            for f in "${pmdk_no_flush[@]}"; do
+              for y in "${ycsbs[@]}"; do
+                for p in "${persist[@]}"; do
 
-                # backup perf files
-                #        cd .. || exit
-                #          for pfn in *.perf; do
-                #            [ -f "$pfn" ] || break
-                #            echo "backing up $pfn"
-                #            mv "$pfn" "$pfn".old
-                #          done
-                #        cd - || exit
+                  # backup perf files
+                  #        cd .. || exit
+                  #          for pfn in *.perf; do
+                  #            [ -f "$pfn" ] || break
+                  #            echo "backing up $pfn"
+                  #            mv "$pfn" "$pfn".old
+                  #          done
+                  #        cd - || exit
 
-                # the first three columns
-                printf '%s,%s,%s,%s,%s,%s,%s,%s,' "$iv" "$n" "$g" "$f" "$s" "$t" "$y" "$p" >>perf.csv
+                  # the first three columns
+                  printf '%s,%s,%s,%s,%s,%s,%s,%s,' "$iv" "$n" "$g" "$f" "$s" "$t" "$y" "$p" >>perf.csv
 
-                # drop system cache and clear pmem device
-                echo 1 >/proc/sys/vm/drop_caches
-                rm -rf /pmem0/masstree*
-                killall -w perf >/dev/null 2>&1
-                pkill -f pcm-memory >/dev/null 2>&1
-                #      /home/blepers/linux/tools/perf/perf record -g ./example "$workload" "$n" index="$i" value="$v" key="$key_order"
-                PMEM_NO_FLUSH="$f" ./example "$workload" "$n" extra_size="$s" total_size="$t" \
-                  iv="$iv" gc="$g" ycsb="$y" persist="$p" \
-                  prefix="$iv"-"$n"-"$g"-NF"$f"-"$s"b-"$t"B-"$y"-"$p"-"$workload"n || exit
+                  # drop system cache and clear pmem device
+                  echo 1 >/proc/sys/vm/drop_caches
+                  rm -rf /pmem0/masstree*
+                  killall -w perf >/dev/null 2>&1
+                  pkill -f pcm-memory >/dev/null 2>&1
+                  #      /home/blepers/linux/tools/perf/perf record -g ./example "$workload" "$n" index="$i" value="$v" key="$key_order"
+                  PMEM_NO_FLUSH="$f" ./example "$wl" "$n" extra_size="$s" total_size="$t" \
+                    iv="$iv" gc="$g" ycsb="$y" persist="$p" \
+                    prefix="$iv"-"$n"-"$g"-NF"$f"-"$s"b-"$t"B-"$y"-"$p"-"$wl"n || exit
 
-                #      mv out.png out_"$i"_"$v".png
-                #      ./example 100 "$n" index="$i" value="$v"
+                  #      mv out.png out_"$i"_"$v".png
+                  #      ./example 100 "$n" index="$i" value="$v"
 
-                # this should result in two csv files insert.csv and lookup.csv
-                # just append a new line to it
-                for fp in "${file_prefixes[@]}"; do
-                  echo "" >>"$fp".csv
+                  # this should result in two csv files insert.csv and lookup.csv
+                  # just append a new line to it
+                  for fp in "${file_prefixes[@]}"; do
+                    echo "" >>"$fp".csv
+                  done
+
                 done
-
               done
             done
           done
