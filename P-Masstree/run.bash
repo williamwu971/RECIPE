@@ -87,9 +87,9 @@ extra_sizes=(0)
 
 #total_sizes=($(seq 40 8 256))
 #total_sizes=(64 256)
-#total_sizes=(256)
+total_sizes=(256)
 #total_sizes=($(seq 40 24 256))
-total_sizes=($(seq 48 16 1024))
+#total_sizes=($(seq 48 16 1024))
 #total_sizes=($(seq 2048 -24 40))
 
 #ivs=("dram-ralloc" "dram-log" "dram-obj" "ralloc-ralloc" "obj-obj")
@@ -104,8 +104,8 @@ num_of_gc=(8)
 pmdk_no_flush=("0")
 #pmdk_no_flush=("1")
 
-ycsbs=("N")
-#ycsbs=("au" "bu" "cu" "eu" "az" "bz" "cz" "ez")
+#ycsbs=("N")
+ycsbs=("au" "bu" "cu" "eu" "az" "bz" "cz" "ez")
 
 #persist=("flush" "non-temporal")
 persist=("flush")
