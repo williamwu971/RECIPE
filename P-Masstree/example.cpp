@@ -208,7 +208,7 @@ struct section_arg {
     u_int64_t *latencies;
 };
 
-std::vector<uint64_t> ycsb_init_keys;
+//std::vector<uint64_t> ycsb_init_keys;
 std::vector<uint64_t> ycsb_keys;
 std::vector<int> ycsb_ranges;
 std::vector<int> ycsb_ops;
@@ -339,12 +339,12 @@ void bap_ycsb_load() {
     long (*rand_next)() = zipfian ? zipf_next : uniform_next;
 
 
-    ycsb_init_keys.reserve(num_key);
+//    ycsb_init_keys.reserve(num_key);
     ycsb_keys.reserve(num_key);
     ycsb_ranges.reserve(num_key);
     ycsb_ops.reserve(num_key);
 
-    memset(&ycsb_init_keys[0], 0x00, num_key * sizeof(uint64_t));
+//    memset(&ycsb_init_keys[0], 0x00, num_key * sizeof(uint64_t));
     memset(&ycsb_keys[0], 0x00, num_key * sizeof(uint64_t));
     memset(&ycsb_ranges[0], 0x00, num_key * sizeof(int));
     memset(&ycsb_ops[0], 0x00, num_key * sizeof(int));
@@ -353,7 +353,7 @@ void bap_ycsb_load() {
     while ((count < num_key)) {
 
         uint64_t key = rand_next();
-        ycsb_init_keys.push_back(key);
+//        ycsb_init_keys.push_back(key);
         count++;
     }
 
@@ -1741,13 +1741,13 @@ int main(int argc, char **argv) {
 
         section_args[i].tree = tree;
 
-        if (wl != nullptr) {
-            section_args[i].keys = ycsb_init_keys.data();
-            section_args[i].rands = ycsb_init_keys.data();
-        } else {
+//        if (wl != nullptr) {
+//            section_args[i].keys = ycsb_init_keys.data();
+//            section_args[i].rands = ycsb_init_keys.data();
+//        } else {
             section_args[i].keys = keys;
             section_args[i].rands = rands;
-        }
+//        }
 
         if (i == 0) {
             latencies = (u_int64_t *) malloc(sizeof(u_int64_t) * section_args[i].end);
