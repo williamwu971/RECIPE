@@ -352,7 +352,7 @@ void bap_ycsb_load() {
     uint64_t count = 0;
     while ((count < num_key)) {
 
-        uint64_t key = rand_next();
+//        uint64_t key = rand_next();
 //        ycsb_init_keys.push_back(key);
         count++;
     }
