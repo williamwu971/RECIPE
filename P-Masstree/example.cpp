@@ -1771,6 +1771,7 @@ int main(int argc, char **argv) {
         if (wl != nullptr) {
             puts("\t\t\t *** YCSB workload ***");
 //            run("ycsb_load", throughput_file, section_args, latencies, section_ycsb_load,interfere);
+            masstree_shuffle(keys, num_key);
             run("ycsb_load", throughput_file, section_args, latencies, section_insert, interfere);
             run("ycsb_run", throughput_file, section_args, latencies, section_ycsb_run, interfere);
             goto end;
