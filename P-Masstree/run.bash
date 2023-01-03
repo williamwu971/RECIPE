@@ -94,8 +94,9 @@ total_sizes=(256)
 
 #ivs=("dram-ralloc" "dram-log" "dram-obj" "ralloc-ralloc" "obj-obj")
 #ivs=("dram-log_best" "dram-log" "dram-ralloc")
-ivs=("dram-log_best_256" "dram-log_256" "dram-log_best" "dram-log" "dram-ralloc")
+#ivs=("dram-log_best_256" "dram-log_256" "dram-log_best" "dram-log" "dram-ralloc")
 #ivs=("dram-log_best" "ralloc-log_best" "dram-ralloc" "ralloc-ralloc" "obj-obj")
+ivs=("ralloc-ralloc" "obj-obj")
 
 num_threads=(19)
 num_of_gc=(8)
