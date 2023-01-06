@@ -1359,7 +1359,7 @@ void run(
 
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now() - starttime);
-    if (throughput_file != nullptr)log_debug_print(throughput_file, use_log);
+//    if (throughput_file != nullptr)log_debug_print(throughput_file, use_log);
 
     if (!interfere) {
         log_stop_perf();
@@ -1369,11 +1369,11 @@ void run(
     log_wait_all_gc();
     auto duration_with_gc = std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now() - starttime);
-    if (throughput_file != nullptr)log_debug_print(throughput_file, use_log);
+//    if (throughput_file != nullptr)log_debug_print(throughput_file, use_log);
 
     if (interfere) {
         log_stop_perf();
-        log_print_pmem_bandwidth(perf_fn, (double) duration.count() / 1000000.0, throughput_file);
+        log_print_pmem_bandwidth(perf_fn, (double) duration_with_gc.count() / 1000000.0, throughput_file);
     }
 
 
