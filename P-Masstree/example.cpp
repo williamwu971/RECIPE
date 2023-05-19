@@ -1381,8 +1381,8 @@ void run(
            section_name, num_key, ((double) num_key * 1.0) / (double) duration.count(),
            (double) duration.count() / 1000000.0);
 
-    sprintf(perf_fn, "%s-%s.rdtsc", prefix, section_name);
-    dump_latencies(perf_fn, latencies, section_args[0].end);
+//    sprintf(perf_fn, "%s-%s.rdtsc", prefix, section_name);
+//    dump_latencies(perf_fn, latencies, section_args[0].end);
 
     sprintf(perf_fn, "%s-%s.rdtimes", prefix, section_name);
     dump_rdtimes(perf_fn, total_timing, num_thread);
