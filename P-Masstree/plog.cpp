@@ -836,12 +836,12 @@ int log_start_perf(const char *perf_fn) {
 
     char command[4096];
 
-//    sprintf(command,
-//            "sudo taskset -c %d-%d /home/blepers/linux-huge/tools/perf/perf record "
-//            "--call-graph dwarf -F 100 -p %d -o %s.record -g >> perf_record.out 2>&1 &",
-//            cores * 3 / 4, cores - 1, getpid(), perf_fn);
+    sprintf(command,
+            "sudo taskset -c %d-%d /home/blepers/linux-huge/tools/perf/perf record "
+            "--call-graph dwarf -F 100 -C 1-19 -o %s.record -g >> perf_record.out 2>&1 &",
+            cores * 3 / 4, cores - 1, perf_fn);
 //    puts("WARNING perf record is enabled");
-//    res &= system(command);
+    res &= system(command);
 
 
 //    sprintf(command, "sudo taskset -c %d-%d /home/blepers/linux-huge/tools/perf/perf %s", cores * 3 / 4, cores - 1,
@@ -857,17 +857,17 @@ int log_start_perf(const char *perf_fn) {
     res &= system(command);
 
 
-    sprintf(command, "sudo taskset -c %d-%d /home/blepers/linux-huge/tools/perf/perf stat "
-                     "-e cycle_activity.stalls_l1d_miss "
-                     "-e cycle_activity.stalls_l2_miss "
-                     "-e cycle_activity.stalls_l3_miss "
-                     "-e cycle_activity.stalls_mem_any "
-                     "-e cycle_activity.stalls_total "
-                     "-e resource_stalls.sb "
-                     "-p %d -o %s.stat -g >> perf_stat.out 2>&1 &",
-            cores * 3 / 4, cores - 1, getpid(), perf_fn);
-
-    res &= system(command);
+//    sprintf(command, "sudo taskset -c %d-%d /home/blepers/linux-huge/tools/perf/perf stat "
+//                     "-e cycle_activity.stalls_l1d_miss "
+//                     "-e cycle_activity.stalls_l2_miss "
+//                     "-e cycle_activity.stalls_l3_miss "
+//                     "-e cycle_activity.stalls_mem_any "
+//                     "-e cycle_activity.stalls_total "
+//                     "-e resource_stalls.sb "
+//                     "-p %d -o %s.stat -g >> perf_stat.out 2>&1 &",
+//            cores * 3 / 4, cores - 1, getpid(), perf_fn);
+//
+//    res &= system(command);
 
     sleep(1);
 
