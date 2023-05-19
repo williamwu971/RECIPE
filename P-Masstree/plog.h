@@ -84,11 +84,11 @@ uint64_t readTSC(int front, int back) {
 }
 
 
-#define declearTSC uint64_t TSCa;
+#define declearTSC uint64_t TSCa,TSCb;
 
 #define startTSC TSCa=readTSC(1,1);
 
-#define stopTSC(target) target+=(readTSC(1,1)-TSCa);
+#define stopTSC(target) TSCb=readTSC(1,1);target+=(TSCb-TSCa);TSCa=TSCb;
 
 #define INODE_FN "/pmem0/masstree_log_inodes"
 #define LOG_FN "/pmem0/masstree_log_logs"
