@@ -67,9 +67,19 @@
 
 inline
 uint64_t readTSC(int front, int back) {
-    if (front)_mm_lfence();  // optionally wait for earlier insns to retire before reading the clock
+
+    // optionally wait for earlier insns to retire before reading the clock
+//    if (front)_mm_lfence();
+    if (front)_mm_mfence();  // optionally wait for earlier insns to retire before reading the clock
+
+
     uint64_t tsc = __rdtsc();
-    if (back)_mm_lfence();  // optionally block later instructions until rdtsc retires
+
+    // optionally block later instructions until rdtsc retires
+//    if (back)_mm_lfence();
+    if (back)_mm_mfence();
+
+
     return tsc;
 }
 
