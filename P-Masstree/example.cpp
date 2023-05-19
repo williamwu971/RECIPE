@@ -190,11 +190,11 @@ void dump_rdtimes(const char *fn, struct rdtimes timing, int num_threads) {
     fprintf(rdtimes_file, "tree_time,%.2f,\n", tree_time);
     fprintf(rdtimes_file, "alloc_time,%.2f,\n", alloc_time);
     fprintf(rdtimes_file, "free_time,%.2f,\n", free_time);
-    fprintf(rdtimes_file, "free_persist_time,%.2f,\n", free_persist_time);
+//    fprintf(rdtimes_file, "free_persist_time,%.2f,\n", free_persist_time);
     fprintf(rdtimes_file, "value_write_time,%.2f,\n", value_write_time);
-    fprintf(rdtimes_file, "value_read_time,%.2f,\n", value_read_time);
+//    fprintf(rdtimes_file, "value_read_time,%.2f,\n", value_read_time);
     fprintf(rdtimes_file, "sum_time,%.2f,\n", sum_time);
-    fprintf(rdtimes_file, "scan_memset_time,%.2f,\n", scan_memset_time);
+//    fprintf(rdtimes_file, "scan_memset_time,%.2f,\n", scan_memset_time);
 
     fclose(rdtimes_file);
 }
