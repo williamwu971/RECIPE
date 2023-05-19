@@ -889,7 +889,7 @@ void masstree_log_update(masstree::masstree *tree,
 //
 //    startTSC
     cpy_persist(raw, tplate, total_size);
-    stopTSC(timing->value_write_time)
+//    stopTSC(timing->value_write_time)
 //
 //
 //    startTSC
