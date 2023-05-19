@@ -1230,9 +1230,9 @@ void *section_update(void *arg) {
 
         fs.update_func(tree, t, keys[i], keys[i], 1, tplate, timing);
 
-        if (start == 0) {
-            latencies[i] = readTSC(1, 1);
-        }
+//        if (start == 0) {
+//            latencies[i] = readTSC(1, 1);
+//        }
     }
 
 
