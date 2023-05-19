@@ -819,21 +819,21 @@ void masstree_ralloc_update(masstree::masstree *tree,
         ((uint64_t *) tplate)[1] = u_key;
     }
     if (!masstree_checksum(tplate, SUM_WRITE, u_value, iter, value_offset)) throw;
-//    stopTSC(timing->sum_time)
-//
-//    startTSC
+    stopTSC(timing->sum_time)
+
+    startTSC
     void *value = RP_malloc(total_size);
-//    stopTSC(timing->alloc_time)
-//
-//    startTSC
+    stopTSC(timing->alloc_time)
+
+    startTSC
     cpy_persist(value, tplate, total_size);
-//    stopTSC(timing->value_write_time)
-//
-//    startTSC
+    stopTSC(timing->value_write_time)
+
+    startTSC
     auto returned = (uint64_t *) tree->put_and_return(u_key, value, !no_allow_prev_null, 0, t);
-//    stopTSC(timing->tree_time)
-//
-//    startTSC
+    stopTSC(timing->tree_time)
+
+    startTSC
     if (no_allow_prev_null || returned != nullptr) {
         RP_free(returned);
         if (ralloc_extra) {
@@ -881,23 +881,23 @@ void masstree_log_update(masstree::masstree *tree,
     rdtscll(lc->version)
     *((uint64_t *) (lc + 1)) = u_value;
     if (!masstree_checksum(tplate, SUM_WRITE, u_value, iter, value_offset)) throw;
-//    stopTSC(timing->sum_time)
-//
-//    startTSC
+    stopTSC(timing->sum_time)
+
+    startTSC
     char *raw = (char *) log_malloc(total_size);
-//    stopTSC(timing->alloc_time)
-//
-//    startTSC
+    stopTSC(timing->alloc_time)
+
+    startTSC
     cpy_persist(raw, tplate, total_size);
-//    stopTSC(timing->value_write_time)
-//
-//
-//    startTSC
+    stopTSC(timing->value_write_time)
+
+
+    startTSC
     void *returned = tree->put_and_return(u_key, raw, !no_allow_prev_null, 0, t);
-//    stopTSC(timing->tree_time)
-//
-//
-//    startTSC
+    stopTSC(timing->tree_time)
+
+
+    startTSC
     if (no_allow_prev_null || returned != nullptr) {
         log_free(returned);
     }
@@ -1226,9 +1226,6 @@ void *section_update(void *arg) {
 
     auto timing = (struct rdtimes *) calloc(1, sizeof(struct rdtimes));
 
-    declearTSC
-    startTSC
-
     for (uint64_t i = start; i < end; i++) {
 
         fs.update_func(tree, t, keys[i], keys[i], 1, tplate, timing);
@@ -1237,8 +1234,6 @@ void *section_update(void *arg) {
 //            latencies[i] = readTSC(1, 1);
 //        }
     }
-
-    stopTSC(timing->tree_time)
 
 
     return timing;
