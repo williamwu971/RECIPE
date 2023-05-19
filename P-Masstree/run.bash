@@ -91,7 +91,7 @@ total_sizes=(64 128 256 512 1024)
 #total_sizes=($(seq 2048 -24 40))
 
 #ivs=("dram-ralloc" "dram-log" "dram-obj" "ralloc-ralloc" "obj-obj")
-ivs=("dram-log_best" "dram-ralloc")
+ivs=("dram-log_best_256" "dram-ralloc")
 #ivs=("dram-log_best_256" "dram-log_256" "dram-log_best" "dram-log" "dram-ralloc")
 #ivs=("dram-log_best" "ralloc-log_best" "dram-ralloc" "ralloc-ralloc" "obj-obj")
 #ivs=("ralloc-ralloc" "obj-obj")
