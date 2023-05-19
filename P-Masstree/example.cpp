@@ -1226,6 +1226,9 @@ void *section_update(void *arg) {
 
     auto timing = (struct rdtimes *) calloc(1, sizeof(struct rdtimes));
 
+    declearTSC
+    startTSC
+
     for (uint64_t i = start; i < end; i++) {
 
         fs.update_func(tree, t, keys[i], keys[i], 1, tplate, timing);
@@ -1234,6 +1237,8 @@ void *section_update(void *arg) {
 //            latencies[i] = readTSC(1, 1);
 //        }
     }
+
+    stopTSC(timing->tree_time)
 
 
     return timing;
