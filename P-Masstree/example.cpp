@@ -1802,8 +1802,8 @@ int main(int argc, char **argv) {
         /**
          * section LOOKUP
          */
-        masstree_shuffle(keys, num_key);
-        run("lookup", throughput_file, section_args, latencies, section_lookup, interfere);
+//        masstree_shuffle(keys, num_key);
+//        run("lookup", throughput_file, section_args, latencies, section_lookup, interfere);
     }
 
 
@@ -1817,8 +1817,8 @@ int main(int argc, char **argv) {
          * section DELETE
          */
 //        throw;
-        masstree_shuffle(keys, num_key);
-        run("delete", throughput_file, section_args, latencies, section_delete, interfere);
+//        masstree_shuffle(keys, num_key);
+//        run("delete", throughput_file, section_args, latencies, section_delete, interfere);
     }
 
 
