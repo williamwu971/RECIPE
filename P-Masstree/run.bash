@@ -76,9 +76,9 @@ cd build || exit
 
 #workload=430000000
 #workload=43000000
-#workload=10000000
+workload=10000000
 #workload=100000000
-workloads=(100000000 10000000)
+#workloads=(100000000 10000000)
 
 extra_sizes=(0)
 #extra_sizes=(256)
@@ -87,16 +87,16 @@ extra_sizes=(0)
 
 #total_sizes=($(seq 40 8 256))
 #total_sizes=(64 256)
-total_sizes=(256)
+total_sizes=(1024)
 #total_sizes=($(seq 40 24 256))
 #total_sizes=($(seq 48 16 1024))
 #total_sizes=($(seq 2048 -24 40))
 
 #ivs=("dram-ralloc" "dram-log" "dram-obj" "ralloc-ralloc" "obj-obj")
-#ivs=("dram-log_best" "dram-log" "dram-ralloc")
+ivs=("dram-log_best" "dram-ralloc")
 #ivs=("dram-log_best_256" "dram-log_256" "dram-log_best" "dram-log" "dram-ralloc")
 #ivs=("dram-log_best" "ralloc-log_best" "dram-ralloc" "ralloc-ralloc" "obj-obj")
-ivs=("ralloc-ralloc" "obj-obj")
+#ivs=("ralloc-ralloc" "obj-obj")
 
 num_threads=(19)
 num_of_gc=(8)
@@ -105,8 +105,8 @@ num_of_gc=(8)
 pmdk_no_flush=("0")
 #pmdk_no_flush=("1")
 
-#ycsbs=("N")
-ycsbs=("au" "bu" "cu" "eu" "az" "bz" "cz" "ez")
+ycsbs=("N")
+#ycsbs=("au" "bu" "cu" "eu" "az" "bz" "cz" "ez")
 
 #persist=("flush" "non-temporal")
 persist=("flush")
