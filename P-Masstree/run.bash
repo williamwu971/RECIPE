@@ -68,7 +68,7 @@ if screen -ls | grep -q 'Attached'; then
   echo "screen found"
 else
   echo "screen not found"
-  exit
+#  exit
 fi
 
 cd build || exit
