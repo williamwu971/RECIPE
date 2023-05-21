@@ -30,6 +30,13 @@ rdtimes:
 	mv *lookup.rdtimes rdtimes/lookup
 	mv *delete.rdtimes rdtimes/delete
 
+update_rdtimes:
+	rm -rf rdtimes
+	mkdir rdtimes || true
+	mkdir rdtimes/update || true
+	scp 'xiaoxiang@labos2.cs.usyd.edu.au:/mnt/sdb/xiaoxiang/RECIPE/P-Masstree/build/*update*.rdtimes' ./rdtimes/update/
+
+
 stat:
 	mkdir stat || true
 	mkdir stat/insert || true
