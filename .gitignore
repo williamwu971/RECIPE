@@ -27,3 +27,4 @@ cmake-build-debug/
 *.csv
 *.perf
 *.perf.old
+.vscode
