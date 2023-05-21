@@ -8,4 +8,4 @@ pfence_util.h
 *.out
 *.stat
 *.rdtimes
-rdtimes
+#rdtimes
