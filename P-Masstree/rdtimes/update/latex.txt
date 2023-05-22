@@ -1,0 +1,26 @@
+\begin{table*}[]
+    \centering
+    \begin{tabular}{c|c|c|c|c|c|c|}
+        \cline{2-7}
+	    &Section(ns) & 64B & 128B & 256B & 512B & 1024B\\
+        \cline{2-7}
+	    &Index Update & PPP & PPP & PPP & PPP & PPP\\
+        \cline{2-7}
+        &Allocation & PPP & PPP & PPP & PPP & PPP \\
+        \cline{2-7}
+        (a) &Write Value & PPP &PPP &PPP &PPP &PPP \\
+        \cline{2-7}
+        \multicolumn{6}{c}{ } \\
+        \cline{2-7}
+	    &Section(ns) & 64B & 128B & 256B & 512B & 1024B\\
+        \cline{2-7}
+	    &Index Update & PPP & PPP & PPP & PPP & PPP \\
+        \cline{2-7}
+        &Allocation & PPP & PPP & PPP & PPP & PPP\\
+        \cline{2-7}
+        (b) &Write Value & PPP & PPP & PPP & PPP & PPP \\
+        \cline{2-7}
+    \end{tabular}
+    \caption{Breakdown of the time spent when doing an update, when values are (a) kept in the cache or (b) flushed after every update. Most of the time is spent updating the index and the time increases as the value size increases, but the impact is higher when values are kept in the cache.\bl{What is the unit of these numbers? What do they represent?}}
+    \label{tab:breakdown}
+\end{table*}
