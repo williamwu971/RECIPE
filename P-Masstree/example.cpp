@@ -878,11 +878,12 @@ void masstree_ralloc_update(masstree::masstree *tree,
 
     void *value = ralloc_reuse;
     if (value== nullptr)value=RP_malloc(total_size);
-    *(uint64_t*)value=*(uint64_t*)tplate;
+//    *(uint64_t*)value=*(uint64_t*)tplate;
     stopTSC(timing->alloc_time)
 
 //    startTSC
-    cpy_persist((uint64_t *)value+1,(uint64_t*) tplate+1, total_size-sizeof(uint64_t));
+//    cpy_persist((uint64_t *)value+1,(uint64_t*) tplate+1, total_size-sizeof(uint64_t));
+    cpy_persist(value, tplate, total_size);
     stopTSC(timing->value_write_time)
 
 //    startTSC
