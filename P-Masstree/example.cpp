@@ -880,8 +880,8 @@ void masstree_ralloc_update(masstree::masstree *tree,
 //        }
 //        stopTSC(timing->value_write_time)
 
-//        RP_free(returned);
-        returned= nullptr;
+        RP_free(returned);
+//        returned= nullptr;
 //        if (ralloc_extra) {
 //            pmem_persist(returned, sizeof(void *));
 //        }
@@ -890,6 +890,9 @@ void masstree_ralloc_update(masstree::masstree *tree,
 
 //    startTSC
     void *value = RP_malloc(total_size);
+
+    if (value!=returned) throw;
+
     stopTSC(timing->alloc_time)
 
 //    startTSC
