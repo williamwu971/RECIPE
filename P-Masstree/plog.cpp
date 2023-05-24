@@ -680,10 +680,10 @@ void *log_malloc(size_t size) {
     thread_log->curr += size;
 
     // hack
-    uint16_t unusedBits = (uint16_t) size;
+    size = size << 48;
 
     // Set the unused 16 bits of the address
-    to_return |= (char *) unusedBits << 48;
+    to_return |= size;
 
     return to_return;
 }
