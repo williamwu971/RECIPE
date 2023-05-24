@@ -878,6 +878,7 @@ void masstree_ralloc_update(masstree::masstree *tree,
 
 //    void *value = returned;
 //    if (value == nullptr)value = RP_malloc(total_size);
+    if (*(uint64_t *) value!=0) throw;
     *(uint64_t *) value = *(uint64_t *) tplate;
     stopTSC(timing->alloc_time)
 
