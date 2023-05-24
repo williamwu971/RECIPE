@@ -510,6 +510,7 @@ uint64_t log_map(int use_pmem, const char *fn, uint64_t file_size,
 
         for (size_t i = 0; i < mapped_len; i += PAGE_SIZE) {
             ((char *) map)[i] = (char) value;
+            pmem_persist(((char *) map)[i], PAGE_SIZE);
         }
 
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
