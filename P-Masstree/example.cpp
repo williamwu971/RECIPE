@@ -803,7 +803,7 @@ void ralloc_reachability_scan(masstree::masstree *tree) {
 }
 
 int ralloc_extra = 0;
-__thread void *prev = nullptr;
+__thread void *returned = nullptr;
 
 void masstree_ralloc_update(masstree::masstree *tree,
                             MASS::ThreadInfo t,
@@ -836,26 +836,27 @@ void masstree_ralloc_update(masstree::masstree *tree,
     stopTSC(timing->value_write_time)
 
 //    startTSC
-    prev = (uint64_t *) tree->put_and_return(u_key, value, !no_allow_prev_null, 0, t);
-//    auto returned = (uint64_t *) tree->put_and_return(u_key, value, !no_allow_prev_null, 0, t);
+    returned = (uint64_t *) tree->put_and_return(u_key, value, !no_allow_prev_null, 0, t);
     stopTSC(timing->tree_time)
 
-//    //    startTSC
-//    if (no_allow_prev_null || returned != nullptr) {
-//
-////        if (returned[0] == 0) {
-////            throw;
-////        }
-////        stopTSC(timing->scan_memset_time)
-//
-//        RP_free(returned);
-//
-////        returned= nullptr;
-////        if (ralloc_extra) {
-////            pmem_persist(returned, sizeof(void *));
-////        }
-//    }
-//    stopTSC(timing->free_time)
+    return;
+
+    //    startTSC
+    if (no_allow_prev_null || returned != nullptr) {
+
+//        if (returned[0] == 0) {
+//            throw;
+//        }
+//        stopTSC(timing->scan_memset_time)
+
+        RP_free(returned);
+
+//        returned= nullptr;
+//        if (ralloc_extra) {
+//            pmem_persist(returned, sizeof(void *));
+//        }
+    }
+    stopTSC(timing->free_time)
 
 }
 
