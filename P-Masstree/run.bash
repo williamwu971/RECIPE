@@ -90,6 +90,7 @@ total_sizes=(64)
 #total_sizes=($(seq 40 24 256))
 #total_sizes=($(seq 48 16 1024))
 #total_sizes=($(seq 2048 -24 40))
+total_sizes=($(seq 64 64 1024))
 
 #ivs=("dram-ralloc" "dram-log" "dram-obj" "ralloc-ralloc" "obj-obj")
 ivs=("dram-log_best_256" "dram-ralloc")

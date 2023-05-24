@@ -844,12 +844,12 @@ int log_start_perf(const char *perf_fn) {
 
     char command[4096];
 
-    sprintf(command,
-            "sudo taskset -c %d-%d /home/blepers/linux-huge/tools/perf/perf record "
-            "--call-graph dwarf -F 100 -C 1-19 -o %s.record -g >> perf_record.out 2>&1 &",
-            cores * 3 / 4, cores - 1, perf_fn);
+//    sprintf(command,
+//            "sudo taskset -c %d-%d /home/blepers/linux-huge/tools/perf/perf record "
+//            "--call-graph dwarf -F 100 -C 1-19 -o %s.record -g >> perf_record.out 2>&1 &",
+//            cores * 3 / 4, cores - 1, perf_fn);
 //    puts("WARNING perf record is enabled");
-    res &= system(command);
+//    res &= system(command);
 
 
 //    sprintf(command, "sudo taskset -c %d-%d /home/blepers/linux-huge/tools/perf/perf %s", cores * 3 / 4, cores - 1,
@@ -885,11 +885,11 @@ int log_start_perf(const char *perf_fn) {
 int log_stop_perf() {
 
     char command[1024];
-    sprintf(command, "sudo killall -s INT -w perf");
-    sprintf(command, "sudo killall -s INT perf");
+//    sprintf(command, "sudo killall -s INT -w perf");
+//    sprintf(command, "sudo killall -s INT perf");
 //    printf("perf: %s\n", command);
 
-    int res = system(command);
+//    int res = system(command);
 
     sprintf(command, "sudo pkill --signal SIGHUP -f pcm-memory");
 
