@@ -823,8 +823,8 @@ void masstree_ralloc_update(masstree::masstree *tree,
     if (!masstree_checksum(tplate, SUM_WRITE, u_value, iter, value_offset)) throw;
     stopTSC(timing->sum_time)
 
-    if (prev != nullptr) {
-        RP_free(prev);
+    if (returned != nullptr) {
+        RP_free(returned);
     }
 
 //    startTSC
