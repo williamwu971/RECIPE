@@ -875,7 +875,8 @@ void masstree_ralloc_update(masstree::masstree *tree,
 
 
     //    startTSC
-    if (no_allow_prev_null || returned != nullptr) {
+//    if (no_allow_prev_null || returned != nullptr) {
+        if (  returned != nullptr) {
 
 //        if (returned[0] == 0) {
 //            throw;
