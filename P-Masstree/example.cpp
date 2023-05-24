@@ -878,8 +878,8 @@ void masstree_ralloc_update(masstree::masstree *tree,
 
 //    void *value = returned;
 //    if (value == nullptr)value = RP_malloc(total_size);
-    if (*(uint64_t *) value==0) throw;
-    *(uint64_t *) value = *(uint64_t *) tplate;
+    uint64_t check = *(uint64_t *) value;
+    *(uint64_t *) value = check;
     stopTSC(timing->alloc_time)
 
 //    startTSC
@@ -1873,8 +1873,8 @@ int main(int argc, char **argv) {
         /**
          * section LOOKUP
          */
-//        masstree_shuffle(keys, num_key);
-//        run("lookup", throughput_file, section_args, latencies, section_lookup, interfere);
+        masstree_shuffle(keys, num_key);
+        run("lookup", throughput_file, section_args, latencies, section_lookup, interfere);
     }
 
 
