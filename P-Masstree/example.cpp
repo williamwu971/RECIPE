@@ -853,6 +853,8 @@ int ralloc_extra = 0;
 //    stopTSC(timing->free_time)
 //}
 
+__thread returned= nullptr;
+
 void masstree_ralloc_update(masstree::masstree *tree,
                             MASS::ThreadInfo t,
                             uint64_t u_key,
@@ -871,20 +873,6 @@ void masstree_ralloc_update(masstree::masstree *tree,
     if (!masstree_checksum(tplate, SUM_WRITE, u_value, iter, value_offset)) throw;
     stopTSC(timing->sum_time)
 
-//    startTSC
-    void *value = RP_malloc(total_size);
-    stopTSC(timing->alloc_time)
-
-//    startTSC
-    cpy_persist(value, tplate, total_size);
-    stopTSC(timing->value_write_time)
-
-//    startTSC
-    auto returned = (uint64_t *) tree->put_and_return(u_key, value, !no_allow_prev_null, 0, t);
-    stopTSC(timing->tree_time)
-
-//    startTSC
-
     if (no_allow_prev_null || returned != nullptr) {
 
 //        if (returned[0] == 0) {
@@ -893,11 +881,28 @@ void masstree_ralloc_update(masstree::masstree *tree,
 //        stopTSC(timing->value_write_time)
 
         RP_free(returned);
+        returned= nullptr;
 //        if (ralloc_extra) {
 //            pmem_persist(returned, sizeof(void *));
 //        }
     }
     stopTSC(timing->free_time)
+
+//    startTSC
+    void *value = RP_malloc(total_size);
+    stopTSC(timing->alloc_time)
+
+//    startTSC
+    cpy_persist(value, tplate, total_size);
+    stopTSC(timing->value_write_time)
+
+//    startTSC auto
+    returned = (uint64_t *) tree->put_and_return(u_key, value, !no_allow_prev_null, 0, t);
+    stopTSC(timing->tree_time)
+
+//    startTSC
+
+
 }
 
 void masstree_ralloc_delete(
