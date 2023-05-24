@@ -823,27 +823,27 @@ void masstree_ralloc_update(masstree::masstree *tree,
     if (!masstree_checksum(tplate, SUM_WRITE, u_value, iter, value_offset)) throw;
     stopTSC(timing->sum_time)
 
-//    if (returned != nullptr) {
-//        RP_free(returned);
-//    }
+    if (returned != nullptr) {
+        RP_free(returned);
+    }
 //
 ////    startTSC
-//    void *value = RP_malloc(total_size);
-//    stopTSC(timing->alloc_time)
-
-    if (returned == nullptr) returned = RP_malloc(total_size);
-    if ((uint64_t) returned % 256 != 0) throw;
+    void *value = RP_malloc(total_size);
     stopTSC(timing->alloc_time)
 
-    cpy_persist(returned, tplate, total_size);
+//    if (returned == nullptr) returned = RP_malloc(total_size);
+//    if ((uint64_t) returned % 256 != 0) throw;
+//    stopTSC(timing->alloc_time)
+
+//    cpy_persist(returned, tplate, total_size);
 
 //    startTSC
-//    cpy_persist(value, tplate, total_size);
+    cpy_persist(value, tplate, total_size);
     stopTSC(timing->value_write_time)
 
 //    startTSC
-//    returned = (uint64_t *) tree->put_and_return(u_key, value, !no_allow_prev_null, 0, t);
-    returned = (uint64_t *) tree->put_and_return(u_key, returned, !no_allow_prev_null, 0, t);
+    returned = (uint64_t *) tree->put_and_return(u_key, value, !no_allow_prev_null, 0, t);
+//    returned = (uint64_t *) tree->put_and_return(u_key, returned, !no_allow_prev_null, 0, t);
 //    returned = nullptr;
     stopTSC(timing->tree_time)
 
