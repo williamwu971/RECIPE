@@ -665,7 +665,7 @@ void log_release(int idx) {
     log_list_push(idx);
 }
 
-void *log_malloc(size_t size) {
+void *log_malloc(uint64_t size) {
 
 
     // the "freed" space should be strictly increasing

@@ -201,7 +201,7 @@ void log_recover(masstree::masstree *tree, int num_threads);
 
 void log_init(uint64_t pool_size);
 
-void *log_malloc(size_t size);
+void *log_malloc(uint64_t size);
 
 void log_free(void *ptr);
 
