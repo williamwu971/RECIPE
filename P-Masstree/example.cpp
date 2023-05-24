@@ -893,9 +893,9 @@ void masstree_ralloc_update(masstree::masstree *tree,
         stopTSC(timing->value_write_time)
 
         RP_free(returned);
-        if (ralloc_extra) {
-            pmem_persist(returned, sizeof(void *));
-        }
+//        if (ralloc_extra) {
+//            pmem_persist(returned, sizeof(void *));
+//        }
     }
     stopTSC(timing->free_time)
 }
