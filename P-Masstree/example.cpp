@@ -946,8 +946,6 @@ void masstree_log_update(masstree::masstree *tree,
 
 //    startTSC
     cpy_persist(raw, tplate, total_size);
-    uint16_t unusedBits = (uint16_t) total_size;
-    raw |= (uint64_t) unusedBits << 48;
     stopTSC(timing->value_write_time)
 
 
@@ -958,7 +956,7 @@ void masstree_log_update(masstree::masstree *tree,
 
 //    startTSC
     if (no_allow_prev_null || returned != nullptr) {
-        log_free(returned, (uint16_t)(returned >> 48));
+        log_free(returned);
     }
     stopTSC(timing->free_time)
 

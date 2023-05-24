@@ -203,7 +203,7 @@ void log_init(uint64_t pool_size);
 
 void *log_malloc(size_t size);
 
-void log_free(void *ptr, uint16_t size);
+void log_free(void *ptr);
 
 void log_start_gc(masstree::masstree *, int start_cpu, int end_cpu);
 

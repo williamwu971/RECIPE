@@ -678,6 +678,13 @@ void *log_malloc(size_t size) {
 
     char *to_return = thread_log->curr;
     thread_log->curr += size;
+
+    // hack
+    uint16_t unusedBits = (uint16_t) size;
+
+    // Set the unused 16 bits of the address
+    to_return |= (char *) unusedBits << 48;
+
     return to_return;
 }
 
@@ -716,7 +723,7 @@ void *log_get_tombstone(uint64_t key) {
     return raw;
 }
 
-void log_free(void *ptr, uint16_t size) {
+void log_free(void *ptr) {
 
     char *char_ptr = (char *) ptr;
 
@@ -730,7 +737,7 @@ void log_free(void *ptr, uint16_t size) {
 
     // update metadata and add the log to GC queue if suitable
 //    uint64_t freed = target_log->freed.fetch_add(sizeof(struct log_cell) + lc->value_size);
-    uint64_t freed = target_log->freed.fetch_add(size);
+    uint64_t freed = target_log->freed.fetch_add(ptr >> 48);
 
 
     if (freed >= LOG_MERGE_THRESHOLD) {
@@ -786,6 +793,7 @@ void *log_garbage_collection(void *arg) {
 
                         // free if it's a tombstone
                         if (ref == 2 && current_value_in_tree->is_delete) {
+                            log_free(current_value_in_tree);
                             log_free(current_value_in_tree);
                         }
                         tree->put_to_unlock(pack.leafnode);
