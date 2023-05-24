@@ -969,7 +969,7 @@ void masstree_log_update(masstree::masstree *tree,
     if (no_allow_prev_null || returned != nullptr) {
         log_free(returned);
     }
-    stopTSC(timing->free_time)
+//    stopTSC(timing->free_time)
 
 }
 
