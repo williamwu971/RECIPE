@@ -55,7 +55,8 @@ void *(*cpy_persist)(void *, const void *, size_t) = nullptr;
 PMEMobjpool *pop = nullptr;
 
 POBJ_LAYOUT_BEGIN(masstree);
-POBJ_LAYOUT_TOID(masstree, struct masstree_obj)
+POBJ_LAYOUT_TOID(masstree,
+struct masstree_obj)
 
 POBJ_LAYOUT_END(masstree)
 
@@ -77,7 +78,7 @@ inline int RP_memalign(void **memptr, size_t alignment, size_t size) {
 
     // todo: this can be removed
     // leaf is allocated one in a while so should be okay
-    auto casted = (uint64_t) (*memptr);
+    auto casted = (uint64_t)(*memptr);
     if (unlikely(casted % alignment != 0)) {
         throw;
     }
@@ -209,7 +210,7 @@ struct section_arg {
 };
 
 //std::vector<uint64_t> ycsb_init_keys;
-std::vector<uint64_t> ycsb_keys;
+std::vector <uint64_t> ycsb_keys;
 std::vector<int> ycsb_ranges;
 std::vector<int> ycsb_ops;
 
@@ -826,6 +827,7 @@ void masstree_ralloc_update(masstree::masstree *tree,
     stopTSC(timing->alloc_time)
 
 //    startTSC
+    value = RP_malloc(total_size);
     cpy_persist(value, tplate, total_size);
     stopTSC(timing->value_write_time)
 
@@ -836,9 +838,9 @@ void masstree_ralloc_update(masstree::masstree *tree,
 //    startTSC
     if (no_allow_prev_null || returned != nullptr) {
         RP_free(returned);
-//        if (ralloc_extra) {
-//            pmem_persist(returned, sizeof(void *));
-//        }
+        if (ralloc_extra) {
+            pmem_persist(returned, sizeof(void *));
+        }
     }
     stopTSC(timing->free_time)
 }
@@ -879,7 +881,7 @@ void masstree_log_update(masstree::masstree *tree,
     auto lc = (struct log_cell *) tplate;
     lc->key = u_key;
     rdtscll(lc->version)
-    *((uint64_t *) (lc + 1)) = u_value;
+    *((uint64_t * )(lc + 1)) = u_value;
     if (!masstree_checksum(tplate, SUM_WRITE, u_value, iter, value_offset)) throw;
     stopTSC(timing->sum_time)
 
@@ -935,51 +937,52 @@ void masstree_obj_update(
 ) {
 
 
-    TX_BEGIN(pop) {
+    TX_BEGIN(pop)
+    {
 
-                    declearTSC
+        declearTSC
 
-                    startTSC
-                    PMEMoid
-                            ht_oid = pmemobj_tx_alloc(total_size, TOID_TYPE_NUM(
-                            struct masstree_obj));
-                    stopTSC(timing->alloc_time)
+        startTSC
+        PMEMoid
+        ht_oid = pmemobj_tx_alloc(total_size, TOID_TYPE_NUM(
+        struct masstree_obj));
+        stopTSC(timing->alloc_time)
 
-                    startTSC
-                    auto o = (struct masstree_obj *) tplate;
-                    o->data = u_value;
-                    o->ht_oid = ht_oid;
-                    if (!masstree_checksum(tplate, SUM_WRITE, u_value, iter, value_offset)) throw;
-                    stopTSC(timing->sum_time)
+        startTSC
+        auto o = (struct masstree_obj *) tplate;
+        o->data = u_value;
+        o->ht_oid = ht_oid;
+        if (!masstree_checksum(tplate, SUM_WRITE, u_value, iter, value_offset)) throw;
+        stopTSC(timing->sum_time)
 
-                    startTSC
-                    pmemobj_tx_add_range(ht_oid, 0, total_size);
-                    auto mo = (struct masstree_obj *) pmemobj_direct(ht_oid);
-                    memcpy(mo, tplate, total_size);
-                    stopTSC(timing->value_write_time)
-
-
-                    startTSC
-                    auto old_obj = (struct masstree_obj *) tree->put_and_return(u_key, mo, !no_allow_prev_null, 0, t);
-                    stopTSC(timing->tree_time)
-
-                    startTSC
-                    if (no_allow_prev_null || old_obj != nullptr) {
-
-                        //todo: possibly here can use same trick as Ralloc
+        startTSC
+        pmemobj_tx_add_range(ht_oid, 0, total_size);
+        auto mo = (struct masstree_obj *) pmemobj_direct(ht_oid);
+        memcpy(mo, tplate, total_size);
+        stopTSC(timing->value_write_time)
 
 
-                        pmemobj_tx_add_range(old_obj->ht_oid, sizeof(struct masstree_obj) + memset_size,
-                                             sizeof(uint64_t));
-                        if (!masstree_checksum(old_obj, SUM_INVALID, u_value, iter, value_offset)) throw;
-                        pmemobj_tx_free(old_obj->ht_oid);
-                    }
-                    stopTSC(timing->free_time)
+        startTSC
+        auto old_obj = (struct masstree_obj *) tree->put_and_return(u_key, mo, !no_allow_prev_null, 0, t);
+        stopTSC(timing->tree_time)
 
-                }
-                    TX_ONABORT {
-                    throw;
-                }
+        startTSC
+        if (no_allow_prev_null || old_obj != nullptr) {
+
+            //todo: possibly here can use same trick as Ralloc
+
+
+            pmemobj_tx_add_range(old_obj->ht_oid, sizeof(struct masstree_obj) + memset_size,
+                                 sizeof(uint64_t));
+            if (!masstree_checksum(old_obj, SUM_INVALID, u_value, iter, value_offset)) throw;
+            pmemobj_tx_free(old_obj->ht_oid);
+        }
+        stopTSC(timing->free_time)
+
+    }
+    TX_ONABORT{
+            throw;
+    }
     TX_END
 }
 
@@ -997,18 +1000,19 @@ void masstree_obj_delete(
     stopTSC(timing->tree_time)
 
 
-    TX_BEGIN(pop) {
+    TX_BEGIN(pop)
+    {
 
-                    startTSC
-                    pmemobj_tx_add_range(old_obj->ht_oid, sizeof(struct masstree_obj) + memset_size,
-                                         sizeof(uint64_t));
-                    if (!masstree_checksum(old_obj, SUM_INVALID, d_key, iter, value_offset))throw;
-                    pmemobj_tx_free(old_obj->ht_oid);
-                    stopTSC(timing->free_time)
-                }
-                    TX_ONABORT {
-                    throw;
-                }
+        startTSC
+        pmemobj_tx_add_range(old_obj->ht_oid, sizeof(struct masstree_obj) + memset_size,
+                             sizeof(uint64_t));
+        if (!masstree_checksum(old_obj, SUM_INVALID, d_key, iter, value_offset))throw;
+        pmemobj_tx_free(old_obj->ht_oid);
+        stopTSC(timing->free_time)
+    }
+    TX_ONABORT{
+            throw;
+    }
     TX_END
 
 
@@ -1745,8 +1749,8 @@ int main(int argc, char **argv) {
 //            section_args[i].keys = ycsb_init_keys.data();
 //            section_args[i].rands = ycsb_init_keys.data();
 //        } else {
-            section_args[i].keys = keys;
-            section_args[i].rands = rands;
+        section_args[i].keys = keys;
+        section_args[i].rands = rands;
 //        }
 
         if (i == 0) {
