@@ -1719,6 +1719,8 @@ int main(int argc, char **argv) {
         puts("\tbegin preparing Ralloc");
         int should_recover = RP_init("masstree", PMEM_POOL_SIZE, &preset);
 
+        if ((uint64_t)RP_malloc(1024)%4096!=0) throw;
+
 //        int should_recover=(access("/pmem0/masstree_sb", F_OK) != -1);
 //        RP_init("masstree", PMEM_POOL_SIZE, &preset);
 
