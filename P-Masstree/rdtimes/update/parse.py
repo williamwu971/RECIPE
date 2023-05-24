@@ -41,8 +41,8 @@ for k, v in times.items():
 for k, v in times.items():
     for i in range(len(v)):
         # v[i] = v[i] / sum_list[i] * 100
-        # v[i] = "{} ({:.2f}\%)".format(int(v[i] * 100 * 19), v[i] / sum_list[i] * 100)
-        v[i] *= (100 * 19)
+        v[i] = "{} ({:.2f}\%)".format(int(v[i] * 100 * 19), v[i] / sum_list[i] * 100)
+        # v[i] *= (100 * 19)
 
 # outfile = open("out.csv", "w")
 outfile = sys.stdout
@@ -62,9 +62,9 @@ for k in order:
     for number in v:
         # print("{:.2f}".format(number), end=",", file=outfile)
 
-        # template = template.replace("PPP", number, 1)
+        template = template.replace("PPP", number, 1)
         # template = template.replace("PPP", "{:.2f}\%".format(number), 1)
-        # continue
+        continue
 
         if base == 0.0:
             template = template.replace("PPP", "{}".format(int(number)), 1)
