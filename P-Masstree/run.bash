@@ -74,7 +74,6 @@ fi
 cd build || exit
 #rm -f ./*.rdtsc ./*.png ./*.csv ./max_latencies.txt
 
-
 #workloads=(100000000 10000000)
 workloads=(10000000)
 
@@ -86,6 +85,7 @@ extra_sizes=(0)
 #total_sizes=($(seq 40 8 256))
 #total_sizes=()
 total_sizes=(64 128 256 512 1024)
+total_sizes=(1024)
 #total_sizes=(48 112 224 448 928)
 #total_sizes=($(seq 40 24 256))
 #total_sizes=($(seq 48 16 1024))
