@@ -23,7 +23,7 @@ void log_structs_size_check() {
 
     // some structs are required to occupy a cache line
     assert(sizeof(char) == 1);
-    assert (sizeof(struct log) == CACHE_LINE_SIZE);
+    assert(sizeof(struct log) == CACHE_LINE_SIZE);
 }
 
 void log_list_init(int num_log, int *list_area) {
@@ -189,7 +189,7 @@ void log_wait_all_gc() {
     while (true) {
         pthread_cond_broadcast(&gq.cond);
         pthread_mutex_lock(&gq.lock);
-        if (gq.num == 0) {
+        if (gq.num == 0 || gq.num_gcs == 0) {
             pthread_mutex_unlock(&gq.lock);
             break;
         }
@@ -239,7 +239,7 @@ void log_rebuild_claim(void *ptr) {
 
 
     // locate the log and its metadata
-    uint64_t idx = (uint64_t) (char_ptr - big_map) / LOG_SIZE;
+    uint64_t idx = (uint64_t)(char_ptr - big_map) / LOG_SIZE;
 //    struct log_blk *target = log_blks + idx;
     struct log *target_log = log_meta + idx;
 
@@ -353,7 +353,7 @@ void *log_rebuild_thread(void *arg) {
             // replaced a value, should free some space in other log
             if (res != nullptr) {
 
-                uint64_t idx = (uint64_t) ((char *) res - big_map) / LOG_SIZE;
+                uint64_t idx = (uint64_t)((char *) res - big_map) / LOG_SIZE;
                 struct log *target_log = log_meta + idx;
                 target_log->freed.fetch_add(sizeof(struct log_cell) + res->value_size);
 
@@ -725,7 +725,7 @@ void log_free(void *ptr) {
 
 
     // locate the log and its metadata
-    uint64_t idx = (uint64_t) (char_ptr - big_map) / LOG_SIZE;
+    uint64_t idx = (uint64_t)(char_ptr - big_map) / LOG_SIZE;
     struct log *target_log = log_meta + idx;
 
     // update metadata and add the log to GC queue if suitable
