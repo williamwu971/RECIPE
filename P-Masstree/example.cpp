@@ -887,10 +887,10 @@ void masstree_ralloc_update(masstree::masstree *tree,
 
     if (no_allow_prev_null || returned != nullptr) {
 
-        if (returned[0] == 0) {
-            throw;
-        }
-        stopTSC(timing->value_write_time)
+//        if (returned[0] == 0) {
+//            throw;
+//        }
+//        stopTSC(timing->value_write_time)
 
         RP_free(returned);
 //        if (ralloc_extra) {
