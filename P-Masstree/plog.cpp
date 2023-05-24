@@ -683,7 +683,7 @@ void *log_malloc(size_t size) {
     size = size << 48;
 
     // Set the unused 16 bits of the address
-    to_return |= (char *) size;
+    (uint64_t) to_return |= size;
 
     return to_return;
 }
