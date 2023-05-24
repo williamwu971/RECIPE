@@ -803,57 +803,55 @@ void ralloc_reachability_scan(masstree::masstree *tree) {
 }
 
 int ralloc_extra = 0;
-__thread void *ralloc_reuse = NULL;
-__thread void *ralloc_free_list[4] = {NULL, NULL, NULL, NULL};
-__thread int ralloc_free_idx = 0;
-
-void masstree_ralloc_cross_update(masstree::masstree *tree,
-                                  MASS::ThreadInfo t,
-                                  uint64_t u_key,
-                                  uint64_t u_value,
-                                  int no_allow_prev_null,
-                                  void *tplate,
-                                  struct rdtimes *timing) {
-
-    declearTSC
-
-    startTSC
-    *((uint64_t *) tplate) = u_value;
-    if (ralloc_extra) {
-        ((uint64_t *) tplate)[1] = u_key;
-    }
-    if (!masstree_checksum(tplate, SUM_WRITE, u_value, iter, value_offset)) throw;
-    stopTSC(timing->sum_time)
-
+//__thread void *ralloc_free_list[4] = {NULL, NULL, NULL, NULL};
+//__thread int ralloc_free_idx = 0;
+//
+//void masstree_ralloc_cross_update(masstree::masstree *tree,
+//                                  MASS::ThreadInfo t,
+//                                  uint64_t u_key,
+//                                  uint64_t u_value,
+//                                  int no_allow_prev_null,
+//                                  void *tplate,
+//                                  struct rdtimes *timing) {
+//
+//    declearTSC
+//
 //    startTSC
-    ralloc_free_list[ralloc_free_idx++] = RP_malloc(total_size);
-    ralloc_free_idx %= 4;
-    stopTSC(timing->alloc_time)
-
-//    startTSC
-    if (ralloc_reuse == NULL) {
-        ralloc_reuse = RP_malloc(total_size);
-    }
-    cpy_persist(ralloc_reuse, tplate, total_size);
-    stopTSC(timing->value_write_time)
-
-//    startTSC
-    ralloc_reuse = tree->put_and_return(u_key, ralloc_reuse, !no_allow_prev_null, 0, t);
-    stopTSC(timing->tree_time)
-
-//    startTSC
-    int to_free = ralloc_free_idx - 3;
-    if (to_free < 0) to_free += 4;
-    void *free_me = ralloc_free_list[to_free];
-
-    if (free_me != NULL) {
-        RP_free(free_me);
-        if (ralloc_extra) {
-            pmem_persist(free_me, sizeof(void *));
-        }
-    }
-    stopTSC(timing->free_time)
-}
+//    *((uint64_t *) tplate) = u_value;
+//    if (ralloc_extra) {
+//        ((uint64_t *) tplate)[1] = u_key;
+//    }
+//    if (!masstree_checksum(tplate, SUM_WRITE, u_value, iter, value_offset)) throw;
+//    stopTSC(timing->sum_time)
+//
+////    startTSC
+//    RP_malloc(total_size);
+//    stopTSC(timing->alloc_time)
+//
+////    startTSC
+//    if (ralloc_reuse == NULL) {
+//        ralloc_reuse = RP_malloc(total_size);
+//    }
+//    cpy_persist(ralloc_reuse, tplate, total_size);
+//    stopTSC(timing->value_write_time)
+//
+////    startTSC
+//    ralloc_reuse = tree->put_and_return(u_key, ralloc_reuse, !no_allow_prev_null, 0, t);
+//    stopTSC(timing->tree_time)
+//
+////    startTSC
+//    int to_free = ralloc_free_idx - 3;
+//    if (to_free < 0) to_free += 4;
+//    void *free_me = ralloc_free_list[to_free];
+//
+//    if (free_me != NULL) {
+//        RP_free(free_me);
+//        if (ralloc_extra) {
+//            pmem_persist(free_me, sizeof(void *));
+//        }
+//    }
+//    stopTSC(timing->free_time)
+//}
 
 void masstree_ralloc_update(masstree::masstree *tree,
                             MASS::ThreadInfo t,
@@ -886,6 +884,12 @@ void masstree_ralloc_update(masstree::masstree *tree,
     stopTSC(timing->tree_time)
 
 //    startTSC
+    if (returned[1] != u_key) {
+        throw;
+    }
+    stopTSC(timing->value_write_time)
+
+
     if (no_allow_prev_null || returned != nullptr) {
         RP_free(returned);
         if (ralloc_extra) {
@@ -1539,7 +1543,7 @@ int main(int argc, char **argv) {
                 printf("value=ralloc ");
 
                 fs.update_func = masstree_ralloc_update;
-                fs.update_func = masstree_ralloc_cross_update;
+//                fs.update_func = masstree_ralloc_cross_update;
                 fs.delete_func = masstree_ralloc_delete;
 
             } else if (strcasestr(value_loc, "log")) {
