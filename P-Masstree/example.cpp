@@ -976,7 +976,7 @@ void masstree_log_delete(
     stopTSC(timing->tree_time)
 
     startTSC
-    log_free(target, (uint16_t)(target >> 48));
+    log_free(target);
     stopTSC(timing->free_time)
 
 }

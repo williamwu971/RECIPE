@@ -794,7 +794,6 @@ void *log_garbage_collection(void *arg) {
                         // free if it's a tombstone
                         if (ref == 2 && current_value_in_tree->is_delete) {
                             log_free(current_value_in_tree);
-                            log_free(current_value_in_tree);
                         }
                         tree->put_to_unlock(pack.leafnode);
 
