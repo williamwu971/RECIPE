@@ -840,22 +840,22 @@ void masstree_ralloc_update(masstree::masstree *tree,
 //    auto returned = (uint64_t *) tree->put_and_return(u_key, value, !no_allow_prev_null, 0, t);
     stopTSC(timing->tree_time)
 
-    //    startTSC
-    if (no_allow_prev_null || returned != nullptr) {
-
-//        if (returned[0] == 0) {
-//            throw;
-//        }
-//        stopTSC(timing->scan_memset_time)
-
-        RP_free(returned);
-
-//        returned= nullptr;
-//        if (ralloc_extra) {
-//            pmem_persist(returned, sizeof(void *));
-//        }
-    }
-    stopTSC(timing->free_time)
+//    //    startTSC
+//    if (no_allow_prev_null || returned != nullptr) {
+//
+////        if (returned[0] == 0) {
+////            throw;
+////        }
+////        stopTSC(timing->scan_memset_time)
+//
+//        RP_free(returned);
+//
+////        returned= nullptr;
+////        if (ralloc_extra) {
+////            pmem_persist(returned, sizeof(void *));
+////        }
+//    }
+//    stopTSC(timing->free_time)
 
 }
 
