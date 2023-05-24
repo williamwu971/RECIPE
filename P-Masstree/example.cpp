@@ -890,7 +890,7 @@ void masstree_ralloc_update(masstree::masstree *tree,
     auto returned = (uint64_t *) tree->put_and_return(u_key, value, !no_allow_prev_null, 0, t);
     stopTSC(timing->tree_time)
 
-    ralloc_reuse = returned;
+//    ralloc_reuse = returned;
 
 
     //    startTSC
