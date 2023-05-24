@@ -101,6 +101,7 @@ ivs=("dram-log_best_256" "dram-ralloc")
 
 num_threads=(19)
 num_of_gc=(8)
+num_of_gc=(0)
 
 #pmdk_no_flush=("0" "1")
 pmdk_no_flush=("0")
