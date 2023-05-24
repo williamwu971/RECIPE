@@ -897,7 +897,7 @@ void masstree_ralloc_update(masstree::masstree *tree,
         if (returned[0] == 0) {
             throw;
         }
-        stopTSC(timing->value_write_time)
+        stopTSC(timing->scan_memset_time)
 
         RP_free(returned);
 
