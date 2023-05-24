@@ -887,7 +887,7 @@ void masstree_ralloc_update(masstree::masstree *tree,
 
     if (no_allow_prev_null || returned != nullptr) {
 
-        if (returned[1] != u_key) {
+        if (returned[0] == 0) {
             throw;
         }
         stopTSC(timing->value_write_time)
