@@ -163,10 +163,10 @@ struct log_list_pack {
 
 // metadata for the current log, should be in DRAM
 struct log {
-    std::atomic<uint64_t> freed;
+    std::atomic <uint64_t> freed;
     uint64_t available;
     uint64_t index;
-    std::atomic<uint64_t> full;
+    std::atomic <uint64_t> full;
     char *base;
     char *curr;
     char padding[16];
@@ -203,7 +203,7 @@ void log_init(uint64_t pool_size);
 
 void *log_malloc(size_t size);
 
-void log_free(void *ptr);
+void log_free(void *ptr, uint16_t size);
 
 void log_start_gc(masstree::masstree *, int start_cpu, int end_cpu);
 

@@ -716,12 +716,12 @@ void *log_get_tombstone(uint64_t key) {
     return raw;
 }
 
-void log_free(void *ptr) {
+void log_free(void *ptr, uint16_t size) {
 
     char *char_ptr = (char *) ptr;
 
     // commit a dummy log to represent that this entry has been freed
-    auto lc = (struct log_cell *) ptr;
+//    auto lc = (struct log_cell *) ptr;
 
 
     // locate the log and its metadata
@@ -729,7 +729,8 @@ void log_free(void *ptr) {
     struct log *target_log = log_meta + idx;
 
     // update metadata and add the log to GC queue if suitable
-    uint64_t freed = target_log->freed.fetch_add(sizeof(struct log_cell) + lc->value_size);
+//    uint64_t freed = target_log->freed.fetch_add(sizeof(struct log_cell) + lc->value_size);
+    uint64_t freed = target_log->freed.fetch_add(size);
 
 
     if (freed >= LOG_MERGE_THRESHOLD) {
