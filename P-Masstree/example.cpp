@@ -1539,6 +1539,7 @@ int main(int argc, char **argv) {
                 printf("value=ralloc ");
 
                 fs.update_func = masstree_ralloc_update;
+                fs.update_func = masstree_ralloc_cross_update;
                 fs.delete_func = masstree_ralloc_delete;
 
             } else if (strcasestr(value_loc, "log")) {
