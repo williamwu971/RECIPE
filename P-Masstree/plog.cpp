@@ -728,7 +728,7 @@ void log_free(void *ptr) {
     char *char_ptr = (char *) ptr;
 
     // commit a dummy log to represent that this entry has been freed
-//    auto lc = (struct log_cell *) ptr;
+    auto lc = (struct log_cell *) ptr;
 
 
     // locate the log and its metadata
