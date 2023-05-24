@@ -945,10 +945,10 @@ void masstree_log_update(masstree::masstree *tree,
     stopTSC(timing->alloc_time)
 
 //    startTSC
-    uint64_t test_addr = (uint64_t) raw;
-    test_addr << 16 >> 16;
+    uint64_t work_around = (uint64_t) raw;
+    work_around << 16 >> 16;
 
-    cpy_persist((void *) test_addr, tplate, total_size);
+    cpy_persist((void *) work_around, tplate, total_size);
     stopTSC(timing->value_write_time)
 
 
