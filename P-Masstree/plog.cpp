@@ -737,7 +737,7 @@ void log_free(void *ptr) {
 
     // update metadata and add the log to GC queue if suitable
 //    uint64_t freed = target_log->freed.fetch_add(sizeof(struct log_cell) + lc->value_size);
-    uint64_t freed = target_log->freed.fetch_add(ptr >> 48);
+    uint64_t freed = target_log->freed.fetch_add((uint64_t) ptr >> 48);
 
 
     if (freed >= LOG_MERGE_THRESHOLD) {
