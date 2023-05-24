@@ -1821,7 +1821,7 @@ int main(int argc, char **argv) {
         /**
          * section INSERT
          */
-        masstree_shuffle(keys, num_key);
+//        masstree_shuffle(keys, num_key);
         run("insert", throughput_file, section_args, latencies, section_insert, interfere);
     }
 
@@ -1831,7 +1831,7 @@ int main(int argc, char **argv) {
         /**
          * section UPDATE
          */
-        masstree_shuffle(keys, num_key);
+//        masstree_shuffle(keys, num_key);
         run("update", throughput_file, section_args, latencies, section_update, interfere);
     }
 
