@@ -853,7 +853,7 @@ int ralloc_extra = 0;
 //    stopTSC(timing->free_time)
 //}
 
-__thread returned= nullptr;
+__thread void* returned= nullptr;
 
 void masstree_ralloc_update(masstree::masstree *tree,
                             MASS::ThreadInfo t,
