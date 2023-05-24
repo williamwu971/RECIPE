@@ -880,8 +880,8 @@ void masstree_ralloc_update(masstree::masstree *tree,
     cpy_persist(value, tplate, total_size);
     stopTSC(timing->value_write_time)
 
-//    startTSC auto
-    returned = (uint64_t *) tree->put_and_return(u_key, value, !no_allow_prev_null, 0, t);
+//    startTSC
+    auto returned = (uint64_t *) tree->put_and_return(u_key, value, !no_allow_prev_null, 0, t);
     stopTSC(timing->tree_time)
 
 //    startTSC
