@@ -87,11 +87,11 @@ inline int RP_memalign(void **memptr, size_t alignment, size_t size) {
 }
 
 void *memcpy_then_persist(void *pmemdest, const void *src, size_t len) {
-//    memcpy(pmemdest, src, len);
+    memcpy(pmemdest, src, len);
 
-    for (size_t i = 0; i < len; i++) {
-        ((char *) pmemdest)[i] = ((char *) src)[i];
-    }
+//    for (size_t i = 0; i < len; i++) {
+//        ((char *) pmemdest)[i] = ((char *) src)[i];
+//    }
 
     pmem_persist(pmemdest, len);
     return pmemdest;
@@ -109,11 +109,11 @@ __thread uint64_t log_memcpy_prev_size = 0;
 
 void *log_memcpy_then_persist(void *pmemdest, const void *src, size_t len) {
 
-//    memcpy(pmemdest, src, len);
+    memcpy(pmemdest, src, len);
 
-    for (size_t i = 0; i < len; i++) {
-        ((char *) pmemdest)[i] = ((char *) src)[i];
-    }
+//    for (size_t i = 0; i < len; i++) {
+//        ((char *) pmemdest)[i] = ((char *) src)[i];
+//    }
 
     if (len % 256 == 0) {
         alignment_check(pmemdest);
