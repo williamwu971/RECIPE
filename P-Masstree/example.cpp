@@ -853,7 +853,7 @@ int ralloc_extra = 0;
 //    stopTSC(timing->free_time)
 //}
 
-__thread uint64_t *returned = nullptr;
+//__thread uint64_t *returned = nullptr;
 
 void masstree_ralloc_update(masstree::masstree *tree,
                             MASS::ThreadInfo t,
@@ -873,30 +873,11 @@ void masstree_ralloc_update(masstree::masstree *tree,
     if (!masstree_checksum(tplate, SUM_WRITE, u_value, iter, value_offset)) throw;
     stopTSC(timing->sum_time)
 
-
-    //    startTSC
-//    if (no_allow_prev_null || returned != nullptr) {
-//
-////        if (returned[0] == 0) {
-////            throw;
-////        }
-////        stopTSC(timing->value_write_time)
-//
-//        RP_free(returned);
-//
-////        returned= nullptr;
-////        if (ralloc_extra) {
-////            pmem_persist(returned, sizeof(void *));
-////        }
-//    }
-//    stopTSC(timing->free_time)
-
-
 //    startTSC
-//    void *value = RP_malloc(total_size);
+    void *value = RP_malloc(total_size);
 
-    void *value = returned;
-    if (value== nullptr)value=RP_malloc(total_size);
+//    void *value = returned;
+//    if (value == nullptr)value = RP_malloc(total_size);
 //    *(uint64_t*)value=*(uint64_t*)tplate;
     stopTSC(timing->alloc_time)
 
@@ -905,10 +886,26 @@ void masstree_ralloc_update(masstree::masstree *tree,
     cpy_persist(value, tplate, total_size);
     stopTSC(timing->value_write_time)
 
-//    startTSC auto
-    returned = (uint64_t *) tree->put_and_return(u_key, value, !no_allow_prev_null, 0, t);
+//    startTSC
+    auto returned = (uint64_t *) tree->put_and_return(u_key, value, !no_allow_prev_null, 0, t);
     stopTSC(timing->tree_time)
 
+    //    startTSC
+    if (no_allow_prev_null || returned != nullptr) {
+
+//        if (returned[0] == 0) {
+//            throw;
+//        }
+//        stopTSC(timing->value_write_time)
+
+//        RP_free(returned);
+
+//        returned= nullptr;
+//        if (ralloc_extra) {
+//            pmem_persist(returned, sizeof(void *));
+//        }
+    }
+    stopTSC(timing->free_time)
 
 }
 
@@ -1718,8 +1715,6 @@ int main(int argc, char **argv) {
 
         puts("\tbegin preparing Ralloc");
         int should_recover = RP_init("masstree", PMEM_POOL_SIZE, &preset);
-
-        printf("rp malloc %p\n",RP_malloc(1024));
 
 //        int should_recover=(access("/pmem0/masstree_sb", F_OK) != -1);
 //        RP_init("masstree", PMEM_POOL_SIZE, &preset);
