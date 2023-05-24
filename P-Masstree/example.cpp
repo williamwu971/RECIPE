@@ -945,7 +945,10 @@ void masstree_log_update(masstree::masstree *tree,
     stopTSC(timing->alloc_time)
 
 //    startTSC
-    cpy_persist(raw, tplate, total_size);
+    uint64_t test_addr = (uint64_t) raw;
+    test_addr << 16 >> 16;
+
+    cpy_persist(test_addr, tplate, total_size);
     stopTSC(timing->value_write_time)
 
 
