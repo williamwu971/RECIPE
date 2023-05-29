@@ -813,6 +813,35 @@ void ralloc_reachability_scan(masstree::masstree *tree) {
 }
 
 int ralloc_extra = 0;
+
+void masstree_ralloc_update_by_get(masstree::masstree *tree,
+                                   MASS::ThreadInfo t,
+                                   uint64_t u_key,
+                                   uint64_t u_value,
+                                   int no_allow_prev_null,
+                                   void *tplate,
+                                   struct rdtimes *timing) {
+
+    declearTSC
+
+    startTSC
+    *((uint64_t *) tplate) = u_value;
+    if (ralloc_extra) {
+        ((uint64_t *) tplate)[1] = u_key;
+    }
+    if (!masstree_checksum(tplate, SUM_WRITE, u_value, iter, value_offset)) throw;
+    stopTSC(timing->sum_time)
+
+
+    void *value = tree->get(u_key, t);
+    stopTSC(timing->tree_time)
+
+
+    cpy_persist(value, tplate, total_size);
+    stopTSC(timing->value_write_time)
+
+}
+
 __thread void *returned = nullptr;
 
 void masstree_ralloc_update(masstree::masstree *tree,
@@ -1523,7 +1552,7 @@ int main(int argc, char **argv) {
                 printf("value=ralloc ");
 
                 fs.update_func = masstree_ralloc_update;
-//                fs.update_func = masstree_ralloc_cross_update;
+                fs.update_func = masstree_ralloc_update_by_get;
                 fs.delete_func = masstree_ralloc_delete;
 
             } else if (strcasestr(value_loc, "log")) {
