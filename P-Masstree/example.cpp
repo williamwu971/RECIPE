@@ -837,6 +837,11 @@ void masstree_ralloc_update_by_get(masstree::masstree *tree,
     stopTSC(timing->tree_time)
 
 
+    RP_free(value);
+    RP_malloc(total_size);
+    stopTSC(timing->alloc_time)
+
+
     cpy_persist(value, tplate, total_size);
     stopTSC(timing->value_write_time)
 
