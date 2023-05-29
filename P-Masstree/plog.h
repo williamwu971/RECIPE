@@ -191,10 +191,10 @@ struct garbage_queue {
 // metadata for each cell in a log
 struct log_cell {
 
-    uint32_t value_size;
-    uint32_t is_delete;
+    uint16_t value_size;
+    uint16_t is_delete;
+    uint32_t key;
     uint64_t version;
-    uint64_t key;
 };
 
 void log_recover(masstree::masstree *tree, int num_threads);
