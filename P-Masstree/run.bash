@@ -100,7 +100,7 @@ ivs=("dram-log_best_256")
 #ivs=("dram-log_best" "ralloc-log_best" "dram-ralloc" "ralloc-ralloc" "obj-obj")
 #ivs=("ralloc-ralloc" "obj-obj")
 
-num_threads=(19)
+num_threads=(27)
 #num_of_gc=(8)
 num_of_gc=(0)
 
