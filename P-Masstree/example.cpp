@@ -879,12 +879,12 @@ void masstree_ralloc_update(masstree::masstree *tree,
     //    startTSC
     if (no_allow_prev_null || returned != nullptr) {
 
-        uint64_t rd_time =timing->scan_memset_time;
-
-        if (returned[0] == 0) {
-            throw;
-        }
-        stopTSC(timing->scan_memset_time)
+//        uint64_t rd_time =timing->scan_memset_time;
+//
+//        if (returned[0] == 0) {
+//            throw;
+//        }
+//        stopTSC(timing->scan_memset_time)
 
         RP_free(returned);
 
@@ -898,7 +898,7 @@ void masstree_ralloc_update(masstree::masstree *tree,
         stopTSC(timing->free_time)
 
         if (u_key%1000==0){
-            printf("exp time %lu vs %lu\n",timing->scan_memset_time-rd_time,timing->free_time-tmp_time);
+//            printf("exp time %lu vs %lu\n",timing->scan_memset_time-rd_time,timing->free_time-tmp_time);
         }
 
     }
