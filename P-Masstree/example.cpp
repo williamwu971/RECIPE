@@ -1845,7 +1845,7 @@ int main(int argc, char **argv) {
         /**
          * section UPDATE
          */
-        if (fs.update_func == masstree_ralloc_update)fs.update_func = masstree_ralloc_update_by_get;
+//        if (fs.update_func == masstree_ralloc_update)fs.update_func = masstree_ralloc_update_by_get;
         masstree_shuffle(keys, num_key);
         run("update", throughput_file, section_args, latencies, section_update, interfere);
     }
