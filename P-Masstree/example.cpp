@@ -890,8 +890,15 @@ void masstree_ralloc_update(masstree::masstree *tree,
 //        if (ralloc_extra) {
 //            pmem_persist(returned, sizeof(void *));
 //        }
+
+        stopTSC(timing->free_time)
+
+        if (u_key%1000==0){
+            printf("")
+        }
+
     }
-    stopTSC(timing->free_time)
+
 
 }
 
