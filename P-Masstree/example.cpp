@@ -891,10 +891,12 @@ void masstree_ralloc_update(masstree::masstree *tree,
 //            pmem_persist(returned, sizeof(void *));
 //        }
 
+        uint64_t tmp_time =timing->free_time;
+
         stopTSC(timing->free_time)
 
         if (u_key%1000==0){
-            printf("")
+            printf("exp time %lu\n",timing->free_time-tmp_time);
         }
 
     }
